@@ -2,5 +2,5 @@
 	"Disabled": false,
 	"ContactsPerPage": 20,
 	"ShowGlobalContactsInAddressBook": true,
-	"GlobalAddressBookVisibility": "DomainWide"
+	"GlobalAddressBookVisibility": 1
 }
