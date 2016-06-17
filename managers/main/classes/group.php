@@ -24,7 +24,7 @@
  * @package Contactsmain
  * @subpackage Classes
  */
-class CGroup extends APropertyBag
+class CGroup extends AEntity
 {
 	const STR_PREFIX = '5765624D61696C50726F';
 
