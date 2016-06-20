@@ -83,7 +83,7 @@ class CContact extends AEntity
 
 		$this->__USE_TRIM_IN_STRINGS__ = true;
 
-		self::$aStaticMap = array(
+		$this->setStaticMap(array(
 			'IdContact'		=> array('string', ''), //  'id_addr', false, false),
 			'IdContactStr'	=> array('string', ''), // 'str_id', false),
 			'IdUser'		=> array('int', 0), // 'id_user'),
@@ -153,9 +153,7 @@ class CContact extends AEntity
 			'Auto'				=> array('bool', false), // 'auto_create'),
 			'SharedToAll'		=> array('bool', false), // 'shared_to_all'),
 			'HideInGAB'			=> array('bool', false), // 'hide_in_gab')
-		);
-		
-		$this->SetDefaults();
+		));
 
 		$this->__LOCK_DATE_MODIFIED__ = false;
 		$this->__SKIP_VALIDATE__ = false;
