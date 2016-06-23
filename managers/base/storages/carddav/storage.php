@@ -14,7 +14,7 @@ class CApiContactsBaseCarddavStorage extends CApiContactsBaseStorage
 	protected $Dav;
 
 	/**
-	 * @var api_Settings
+	 * @var CApiSettings
 	 */
 	protected $Settings;
 
