@@ -160,7 +160,7 @@ class CApiContactsBaseLdapStorage extends CApiContactsBaseStorage
 	private function getAccountFromUserId($iUserId)
 	{
 		/* @var $oApiUsersManager CApiUsersManager */
-		$oApiUsersManager = CApi::GetCoreManager('users');
+		$oApiUsersManager = CApi::GetSystemManager('users');
 
 		if (0 < $iUserId && $oApiUsersManager)
 		{

@@ -104,7 +104,7 @@ class CApiContactsBaseCarddavStorage extends CApiContactsBaseStorage
 
 		$this->DbPrefix = $this->Settings->GetConf('DBPrefix');
 
-		$this->ApiUsersManager = CApi::GetCoreManager('users');
+		$this->ApiUsersManager = CApi::GetSystemManager('users');
 		$this->ApiDavManager = CApi::Manager('dav');
 	}
 

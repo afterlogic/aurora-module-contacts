@@ -640,7 +640,7 @@ class CApiContactsMainManager extends AApiManager
 	 */
 	public function import($iUserId, $sSyncType, $sTempFileName, &$iParsedCount, $iGroupId, $bIsShared)
 	{
-		$oApiUsersManager = CApi::GetCoreManager('users');
+		$oApiUsersManager = CApi::GetSystemManager('users');
 		$oAccount = $oApiUsersManager->getDefaultAccount($iUserId);
 
 		if ($sSyncType === \EContactFileType::CSV)
@@ -1057,7 +1057,7 @@ class CApiContactsMainManager extends AApiManager
 		$aEvents = $this->oApiContactsBaseManager->getGroupEvents($iGroupId);
 		if (is_array($aEvents) && 0 < count($aEvents))
 		{
-			$oApiUsersManager = CApi::GetCoreManager('users');
+			$oApiUsersManager = CApi::GetSystemManager('users');
 			$iAccountId =  $oApiUsersManager->getDefaultAccountId($iUserId);
 			$oAccount = $oApiUsersManager->getAccountById($iAccountId);
 			

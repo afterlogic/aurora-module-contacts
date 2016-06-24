@@ -95,7 +95,7 @@ class CApiContactsSyncCsv
 			$aCsv = api_Utils::CsvToArray($sTempFileName);
 			if (is_array($aCsv))
 			{
-				$oApiUsersManager = CApi::GetCoreManager('users');
+				$oApiUsersManager = CApi::GetSystemManager('users');
 				$oAccount = $oApiUsersManager->getDefaultAccount($iUserId);
 
 				$iCount = 0;

@@ -277,7 +277,7 @@ class ContactsModule extends AApiModule
 	public function GetPersonalContacts()
 	{
 		$sAuthToken = $this->getParamValue('AuthToken');
-		$iUserId = \CApi::GetCoreManager('integrator')->getLogginedUserId($sAuthToken);
+		$iUserId = \CApi::GetSystemManager('integrator')->getLogginedUserId($sAuthToken);
 		
 		$oUser = \CApi::ExecuteMethod('Core::GetUser', array(
 			'AuthToken' => $sAuthToken,
@@ -781,7 +781,7 @@ class ContactsModule extends AApiModule
 			throw new \System\Exceptions\ClientException(\System\Notifications::InvalidInputParameter);
 		}
 
-		$oApiFileCache = /* @var $oApiFileCache \CApiFilecacheManager */ \CApi::GetCoreManager('filecache');
+		$oApiFileCache = /* @var $oApiFileCache \CApiFilecacheManager */ \CApi::GetSystemManager('filecache');
 		$sData = $oApiFileCache->get($oAccount, $sTempFile);
 		if (!empty($sData))
 		{
@@ -1033,7 +1033,7 @@ class ContactsModule extends AApiModule
 
 			if ($bIsCsvVcfExtension) {
 				
-				$oApiFileCacheManager = \CApi::GetCoreManager('filecache');
+				$oApiFileCacheManager = \CApi::GetSystemManager('filecache');
 				$sSavedName = 'import-post-' . md5($aFileData['name'] . $aFileData['tmp_name']);
 				if ($oApiFileCacheManager->moveUploadedFile($oAccount, $sSavedName, $aFileData['tmp_name'])) {
 						$iParsedCount = 0;
@@ -1083,7 +1083,7 @@ class ContactsModule extends AApiModule
 	public function onExtendMessageData($oAccount, &$oMessage, $aData)
 	{
 		$oApiCapa = /* @var CApiCapabilityManager */ $this->oApiCapabilityManager;
-		$oApiFileCache = /* @var CApiFilecacheManager */ CApi::GetCoreManager('filecache');
+		$oApiFileCache = /* @var CApiFilecacheManager */ CApi::GetSystemManager('filecache');
 
 		foreach ($aData as $aDataItem) {
 			

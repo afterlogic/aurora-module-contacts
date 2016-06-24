@@ -55,7 +55,7 @@ class CApiContactsBaseCommandCreator extends api_CommandCreator
 			{
 				if (null === $this->oUsersManager)
 				{
-					$this->oUsersManager = CApi::GetCoreManager('users');
+					$this->oUsersManager = CApi::GetSystemManager('users');
 				}
 
 				$oAccount = $this->oUsersManager ? $this->oUsersManager->getDefaultAccount($iIdUser) : null;

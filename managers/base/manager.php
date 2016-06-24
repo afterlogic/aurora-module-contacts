@@ -26,7 +26,7 @@ class CApiContactsBaseManager extends AApiManagerWithStorage
 		parent::__construct('base', $oManager, $sForcedStorage, $oModule);
 //		parent::__construct('base', $oManager, $oModule);
 
-		$this->oEavManager = \CApi::GetCoreManager('eav', 'db');
+		$this->oEavManager = \CApi::GetSystemManager('eav', 'db');
 		
 		$this->incClass('contact-list-item');
 		$this->incClass('contact');
@@ -579,7 +579,7 @@ class CApiContactsBaseManager extends AApiManagerWithStorage
 		try
 		{
 			$mResult = array();
-			$oApiCapaManager = /* @var $oApiCapaManager CApiCapabilityManager */ CApi::GetCoreManager('capability');
+			$oApiCapaManager = /* @var $oApiCapaManager CApiCapabilityManager */ CApi::GetSystemManager('capability');
 			if ($oApiCapaManager)
 			{
 				if ($oApiCapaManager->isPersonalContactsSupported($oAccount))
@@ -616,7 +616,7 @@ class CApiContactsBaseManager extends AApiManagerWithStorage
 		try
 		{
 			$mResult = array();
-			$oApiCapaManager = /* @var $oApiCapaManager CApiCapabilityManager */ CApi::GetCoreManager('capability');
+			$oApiCapaManager = /* @var $oApiCapaManager CApiCapabilityManager */ CApi::GetSystemManager('capability');
 
 			if (!$bGlobalOnly && $oApiCapaManager->isPersonalContactsSupported($oAccount))
 			{

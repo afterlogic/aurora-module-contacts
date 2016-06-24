@@ -46,7 +46,7 @@ class CApiContactsBaseSabredavStorage extends CApiContactsBaseStorage
 		$this->GroupsCache = array();
 		$this->AccountsCache = array();
 
-		$this->ApiUsersManager = CApi::GetCoreManager('users');
+		$this->ApiUsersManager = CApi::GetSystemManager('users');
 	}
 
 	/**
