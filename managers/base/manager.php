@@ -27,11 +27,6 @@ class CApiContactsBaseManager extends AApiManagerWithStorage
 //		parent::__construct('base', $oManager, $oModule);
 
 		$this->oEavManager = \CApi::GetSystemManager('eav', 'db');
-		
-		$this->incClass('contact-list-item');
-		$this->incClass('contact');
-		$this->incClass('group');
-		$this->incClass('vcard-helper');
 	}
 
 	/**

@@ -6,6 +6,11 @@ class ContactsModule extends AApiModule
 	
 	public function init() 
 	{
+		$this->incClass('contact-list-item');
+		$this->incClass('contact');
+		$this->incClass('group');
+		$this->incClass('vcard-helper');
+
 		$this->oApiContactsManager = $this->GetManager('main');
 		
 		$this->subscribeEvent('Mail::GetBodyStructureParts', array($this, 'onGetBodyStructureParts'));
