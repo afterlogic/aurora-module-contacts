@@ -16,6 +16,7 @@ class ContactsModule extends AApiModule
 		$this->subscribeEvent('Mail::GetBodyStructureParts', array($this, 'onGetBodyStructureParts'));
 		$this->subscribeEvent('Mail::ExtendMessageData', array($this, 'onExtendMessageData'));
 		$this->subscribeEvent('CreateAccount', array($this, 'onCreateAccountEvent'));
+		$this->subscribeEvent('MobileSync::GetInfo', array($this, 'onGetMobileSyncInfo'));
 	}
 	
 	public function GetAppData($oUser = null)
@@ -1153,5 +1154,21 @@ class ContactsModule extends AApiModule
 			$this->oApiContactsManager->createContact($oContact);
 		}
 	}
+	
+    public function onGetMobileSyncInfo(&$aData)
+	{
+		$oDavModule = \CApi::GetModuleDecorator('Dav');
+
+		$sDavLogin = $oDavModule->GetLogin();
+		$sDavServer = $oDavModule->GetServerUrl();
+
+		$aData['Dav']['Contacts'] = array(
+			'PersonalContactsUrl' => $sDavServer.'/addressbooks/'.$sDavLogin.'/'.\Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME,
+			'CollectedAddressesUrl' => $sDavServer.'/addressbooks/'.$sDavLogin.'/'.\Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_NAME,
+			'SharedWithAllUrl' => $sDavServer.'/addressbooks/'.$sDavLogin.'/'.\Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME,
+			'GlobalAddressBookUrl' => $sDavServer.'/gab'
+		);
+	}
+	
 	
 }
