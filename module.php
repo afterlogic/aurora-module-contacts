@@ -19,7 +19,7 @@ class ContactsModule extends AApiModule
 		$this->subscribeEvent('MobileSync::GetInfo', array($this, 'onGetMobileSyncInfo'));
 	}
 	
-	public function GetAppData($oUser = null)
+	public function GetAppData()
 	{
 		return array(
 			'ContactsPerPage' => 20, // AppData.User.ContactsPerPage
