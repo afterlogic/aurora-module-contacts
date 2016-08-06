@@ -176,7 +176,7 @@ class ContactsModule extends AApiModule
 	public function GetGroups($iUserId = 0)
 	{
 //		$sAuthToken = $this->getParamValue('AuthToken');
-//		$iUserId = \CApi::GetCoreManager('integrator')->getLogginedUserId($sAuthToken);
+//		$iUserId = \CApi::getAuthenticatedUserId($sAuthToken);
 //		$oAccount = $this->getDefaultAccountFromParam();
 
 		$aList = false;
@@ -283,7 +283,7 @@ class ContactsModule extends AApiModule
 	public function GetPersonalContacts()
 	{
 		$sAuthToken = $this->getParamValue('AuthToken');
-		$iUserId = \CApi::GetSystemManager('integrator')->getLogginedUserId($sAuthToken);
+		$iUserId = \CApi::getAuthenticatedUserId($sAuthToken);
 		
 		$oUser = \CApi::ExecuteMethod('Core::GetUser', array(
 			'AuthToken' => $sAuthToken,
@@ -1157,7 +1157,7 @@ class ContactsModule extends AApiModule
 	
     public function onGetMobileSyncInfo(&$aData)
 	{
-		$iUserId = \CApi::getLogginedUserId();
+		$iUserId = \CApi::getAuthenticatedUserId();
 		$oDavModule = \CApi::GetModuleDecorator('Dav');
 
 		$sDavLogin = $oDavModule->GetLogin();
