@@ -21,6 +21,8 @@ class ContactsModule extends AApiModule
 	
 	public function GetAppData()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::Anonymous);
+		
 		return array(
 			'ContactsPerPage' => 20, // AppData.User.ContactsPerPage
 			'ImportContactsLink' => '', // AppData.Links.ImportingContacts
@@ -151,7 +153,7 @@ class ContactsModule extends AApiModule
 		);
 	}	
 	
-	private function DownloadContacts($sSyncType)
+	private function downloadContacts($sSyncType)
 	{
 		$oAccount = $this->getDefaultAccountFromParam();
 		if ($this->oApiCapabilityManager->isContactsSupported($oAccount))
@@ -175,6 +177,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function GetGroups($iUserId = 0)
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 //		$sAuthToken = $this->getParamValue('AuthToken');
 //		$iUserId = \CApi::getAuthenticatedUserId($sAuthToken);
 //		$oAccount = $this->getDefaultAccountFromParam();
@@ -201,6 +205,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function GetGroup()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$oGroup = false;
 		$oAccount = $this->getDefaultAccountFromParam();
 
@@ -222,6 +228,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function GetGroupEvents()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$aEvents = array();
 		$oAccount = $this->getDefaultAccountFromParam();
 
@@ -243,6 +251,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function GetContacts()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$sStorage = $this->getParamValue('Storage', 'personal');
 		$sMethod = 'Get' . ucfirst($sStorage) . 'Contacts';
 		if (method_exists($this, $sMethod))
@@ -258,6 +268,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function GetContact()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$sStorage = $this->getParamValue('Storage', 'personal');
 		$sMethod = 'Get' . ucfirst($sStorage) . 'Contact';
 		if (method_exists($this, $sMethod))
@@ -270,18 +282,24 @@ class ContactsModule extends AApiModule
 
 	public function GetAllContacts()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$this->setParamValue('All', '1');
 		return $this->GetPersonalContacts();
 	}
 
 	public function GetSharedContacts()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$this->setParamValue('SharedToAll', '1');
 		return $this->GetPersonalContacts();
 	}
 
 	public function GetPersonalContacts()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$sAuthToken = $this->getParamValue('AuthToken');
 		$iUserId = \CApi::getAuthenticatedUserId($sAuthToken);
 		
@@ -365,6 +383,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function GetContactsByEmails()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$aResult = array();
 		$oAccount = $this->getDefaultAccountFromParam();
 
@@ -409,6 +429,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function GetGlobalContacts()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$oAccount = $this->getDefaultAccountFromParam();
 		$oApiGlobalContacts = $this->GetManager('global');
 
@@ -457,6 +479,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function GetGlobalContact()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$oContact = false;
 		$oAccount = $this->getDefaultAccountFromParam();
 		$sContactId = (string) $this->getParamValue('ContactId', '');
@@ -476,6 +500,8 @@ class ContactsModule extends AApiModule
 	
 	public function GetPersonalContact()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$oContact = false;
 		$oAccount = $this->getDefaultAccountFromParam();
 		$sContactId = (string) $this->getParamValue('ContactId', '');
@@ -496,6 +522,8 @@ class ContactsModule extends AApiModule
 	
 	public function GetSharedContact()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$this->setParamValue('SharedToAll', '1');
 		return $this->GetPersonalContact();
 	}
@@ -503,12 +531,16 @@ class ContactsModule extends AApiModule
 	
 	public function DownloadContactsAsCSV()
 	{
-		return $this->DownloadContacts('csv');
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
+		return $this->downloadContacts('csv');
 	}
 	
 	public function DownloadContactsAsVCF()
 	{
-		return $this->DownloadContacts('vcf');
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
+		return $this->downloadContacts('vcf');
 	}
 
 	/**
@@ -516,6 +548,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function GetContactByEmail()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$oContact = false;
 		$oAccount = $this->getDefaultAccountFromParam();
 		
@@ -543,6 +577,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function GetSuggestions()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$oAccount = $this->getDefaultAccountFromParam();
 
 		$sSearch = (string) $this->getParamValue('Search', '');
@@ -580,6 +616,8 @@ class ContactsModule extends AApiModule
 	
 	public function DeleteSuggestion()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$mResult = false;
 		$oAccount = $this->getDefaultAccountFromParam();
 
@@ -598,6 +636,8 @@ class ContactsModule extends AApiModule
 	
 	public function UpdateSuggestTable()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$oAccount = $this->getDefaultAccountFromParam();
 		$aEmails = $this->getParamValue('Emails', array());
 		$this->oApiContactsManager->updateSuggestTable($oAccount->IdUser, $aEmails);
@@ -608,6 +648,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function CreateContact()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$oAccount = $this->getDefaultAccountFromParam();
 		
 		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
@@ -638,6 +680,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function UpdateContact()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$oAccount = $this->getDefaultAccountFromParam();
 
 		$bGlobal = '1' === $this->getParamValue('Global', '0');
@@ -690,6 +734,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function DeleteContacts()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$oAccount = $this->getDefaultAccountFromParam();
 
 		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
@@ -715,6 +761,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function UpdateShared()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$oAccount = $this->getDefaultAccountFromParam();
 		
 		$aContactsId = explode(',', $this->getParamValue('ContactsId', ''));
@@ -772,6 +820,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function AddContactsFromFile()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$oAccount = $this->getDefaultAccountFromParam();
 
 		$mResult = false;
@@ -810,6 +860,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function CreateGroup()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$oAccount = $this->getDefaultAccountFromParam();
 
 		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
@@ -837,6 +889,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function UpdateGroup()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$oAccount = $this->getDefaultAccountFromParam();
 
 		$sGroupId = $this->getParamValue('GroupId', '');
@@ -877,6 +931,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function DeleteGroup()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$oAccount = $this->getDefaultAccountFromParam();
 
 		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
@@ -898,6 +954,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function AddContactsToGroup()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$oAccount = $this->getDefaultAccountFromParam();
 
 		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
@@ -965,6 +1023,8 @@ class ContactsModule extends AApiModule
 	 */
 	public function RemoveContactsFromGroup()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$oAccount = $this->getDefaultAccountFromParam();
 
 		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount) ||
@@ -993,6 +1053,8 @@ class ContactsModule extends AApiModule
 	
 	public function SynchronizeExternalContacts()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$oAccount = $this->getParamValue('Account', null);
 		if ($oAccount)
 		{
@@ -1015,6 +1077,8 @@ class ContactsModule extends AApiModule
 	
 	public function UploadContacts()
 	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
 		$oAccount = $this->getDefaultAccountFromParam();
 
 		if (!$this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
