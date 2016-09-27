@@ -175,9 +175,6 @@ class CApiContactsGlobalLdapStorage extends CApiContactsGlobalStorage
 						foreach ($aReturn as $aItem)
 						{
 							$oContactItem = false;
-							CApi::Plugin()->RunHook('gcontacts.contact-list-item-pre-filter', array(
-								&$oContactItem, $aItem
-							));
 
 							if (false === $oContactItem && is_array($aItem))
 							{
@@ -195,10 +192,6 @@ class CApiContactsGlobalLdapStorage extends CApiContactsGlobalStorage
 									$oContactItem->ItsMe = $oContactItem->Email === $oAccount->Email;
 								}
 							}
-
-							CApi::Plugin()->RunHook('gcontacts.contact-list-item-post-filter', array(
-								&$oContactItem, $aItem, $oAccount
-							));
 
 							if ($oContactItem)
 							{
@@ -235,8 +228,6 @@ class CApiContactsGlobalLdapStorage extends CApiContactsGlobalStorage
 			'physicalDeliveryOfficeName' => 'BusinessOffice'
 		);
 		
-		CApi::Plugin()->RunHook('gcontacts.contact-map-filter', array(&$aMap));
-
 		return $aMap;
 	}
 
@@ -253,9 +244,6 @@ class CApiContactsGlobalLdapStorage extends CApiContactsGlobalStorage
 		$aItem = $oLdap->ResultItem();
 
 		$oContact = false;
-		CApi::Plugin()->RunHook('gcontacts.contact-item-pre-filter', array(
-			&$oContact, $aItem
-		));
 
 		if (false === $oContact && is_array($aItem))
 		{
@@ -287,10 +275,6 @@ class CApiContactsGlobalLdapStorage extends CApiContactsGlobalStorage
 				$oContact->ItsMe = $oContact->ViewEmail === $oAccount->Email;
 			}
 		}
-
-		CApi::Plugin()->RunHook('gcontacts.contact-item-post-filter', array(
-			&$oContact, $aItem, $oAccount
-		));
 
 		return $oContact ? $oContact : false;
 	}

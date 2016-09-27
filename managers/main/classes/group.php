@@ -37,8 +37,6 @@ class CGroup extends AEntity
 		$this->__USE_TRIM_IN_STRINGS__ = true;
 
 		$this->SetDefaults();
-
-		CApi::Plugin()->RunHook('api-group-construct', array(&$this));
 	}
 
 	/**

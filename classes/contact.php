@@ -157,8 +157,6 @@ class CContact extends AEntity
 
 		$this->__LOCK_DATE_MODIFIED__ = false;
 		$this->__SKIP_VALIDATE__ = false;
-
-		CApi::Plugin()->RunHook('api-contact-construct', array(&$this));
 	}
 	
 	public static function createInstance($sModule = 'Contacts', $oParams = array())

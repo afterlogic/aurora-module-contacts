@@ -426,8 +426,6 @@ class CApiContactsBaseLdapStorage extends CApiContactsBaseStorage
 			}
 		}
 
-		CApi::Plugin()->RunHook('api-ldap-get-entry-from-contact', array($oAccount, &$oContact, &$aE, $bIsUpdate));
-
 		if (empty($aE['sn']))
 		{
 			$aE['sn'] = '-';
@@ -468,8 +466,6 @@ class CApiContactsBaseLdapStorage extends CApiContactsBaseStorage
 		{
 			unset($aE['objectClass']);
 		}
-
-		CApi::Plugin()->RunHook('api-ldap-get-entry-from-group', array($oAccount, &$oGroup, &$aE, $bIsUpdate));
 
 		return $aE;
 	}

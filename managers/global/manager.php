@@ -66,8 +66,6 @@ class CApiContactsGlobalManager extends AApiManagerWithStorage
 			$oDefAccount = $this->_getDefaultAccount($oAccount);
 			if ($oDefAccount)
 			{
-				CApi::Plugin()->RunHook('api-get-global-contact-items-count', array(&$oDefAccount, &$sSearch));
-
 				$iResult = $this->oStorage->getContactItemsCount($oDefAccount, $sSearch);
 			}
 		}
@@ -103,9 +101,6 @@ class CApiContactsGlobalManager extends AApiManagerWithStorage
 			$oDefAccount = $this->_getDefaultAccount($oAccount);
 			if ($oDefAccount)
 			{
-				CApi::Plugin()->RunHook('api-get-global-contact-items',
-					array(&$oDefAccount, &$iSortField, &$iSortOrder, &$iOffset, &$iRequestLimit, &$sSearch));
-
 				$mResult = $this->oStorage->getContactItems($oDefAccount,
 					$iSortField, $iSortOrder, $iOffset, $iRequestLimit, $sSearch);
 			}
@@ -136,8 +131,6 @@ class CApiContactsGlobalManager extends AApiManagerWithStorage
 			$oDefAccount = $this->_getDefaultAccount($oAccount);
 			if ($oDefAccount)
 			{
-				CApi::Plugin()->RunHook('api-get-global-contact-by-id', array(&$oDefAccount, &$mGlobalContactId));
-
 				$oContact = $this->oStorage->getContactById($oDefAccount, $mGlobalContactId, $bIgnoreHideInGab);
 			}
 		}
@@ -167,8 +160,6 @@ class CApiContactsGlobalManager extends AApiManagerWithStorage
 			$oDefAccount = $this->_getDefaultAccount($oAccount);
 			if ($oDefAccount)
 			{
-				CApi::Plugin()->RunHook('api-get-global-contact-by-type-id', array(&$oDefAccount, &$mGlobalContactTypeId));
-
 				$oContact = $this->oStorage->getContactByTypeId($oDefAccount, $mGlobalContactTypeId, $bIgnoreHideInGab);
 			}
 		}
@@ -220,8 +211,6 @@ class CApiContactsGlobalManager extends AApiManagerWithStorage
 			$oDefAccount = $this->_getDefaultAccount($oAccount);
 			if ($oDefAccount)
 			{
-				CApi::Plugin()->RunHook('api-get-global-contact-by-email',	array(&$oDefAccount, &$sEmail));
-
 				$oContact = $this->oStorage->getContactByEmail($oDefAccount, $sEmail);
 			}
 		}

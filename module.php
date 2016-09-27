@@ -611,8 +611,6 @@ class ContactsModule extends AApiModule
 
 		$aCounts = array(0, 0);
 		
-		\CApi::Plugin()->RunHook('webmail.change-suggest-list', array($oAccount, $sSearch, &$aList, &$aCounts));
-
 		return array(
 			'Search' => $sSearch,
 			'List' => $aList

@@ -56,8 +56,6 @@ class CGroup extends api_AContainer
 			'Web'		=> '',
 			'Events'	=> array()
 		));
-
-		CApi::Plugin()->RunHook('api-group-construct', array(&$this));
 	}
 
 	/**
