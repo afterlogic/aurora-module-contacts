@@ -31,107 +31,68 @@ class ContactsModule extends AApiModule
 		return array(
 			'ContactsPerPage' => 20, // AppData.User.ContactsPerPage
 			'ImportContactsLink' => '', // AppData.Links.ImportingContacts
-			'Storages' => array('personal', 'global', 'shared') // AppData.User.ShowPersonalContacts, AppData.User.ShowGlobalContacts, AppData.App.AllowContactsSharing
+			'Storages' => array('personal', 'global', 'shared'), // AppData.User.ShowPersonalContacts, AppData.User.ShowGlobalContacts, AppData.App.AllowContactsSharing
+			'EContactsPrimaryEmail' => (new \EContactsPrimaryEmail)->getMap(),
+			'EContactsPrimaryPhone' => (new \EContactsPrimaryPhone)->getMap(),
+			'EContactsPrimaryAddress' => (new \EContactsPrimaryAddress)->getMap(),
+			'EContactSortField' => (new \EContactSortField)->getMap(),
 		);
 	}
 	
-	private function populateSortParams( &$iSortField, &$iSortOrder)
-	{
-		$sSortField = (string) $this->getParamValue('SortField', 'Email');
-		$iSortOrder = '1' === (string) $this->getParamValue('SortOrder', '0') ?
-			\ESortOrder::ASC : \ESortOrder::DESC;
-
-		switch (strtolower($sSortField))
-		{
-			case 'email':
-				$iSortField = \EContactSortField::EMail;
-				break;
-			case 'name':
-				$iSortField = \EContactSortField::Name;
-				break;
-			case 'frequency':
-				$iSortField = \EContactSortField::Frequency;
-				break;
-		}
-	}	
-	
 	/**
 	 * @param \CContact $oContact
-	 * @param bool $bItsMe = false
+	 * @param array $aContact
 	 */
-	private function populateContactObject(&$oContact, $bItsMe = false)
+	private function populateContactObject(&$oContact, $aContact)
 	{
-		$iPrimaryEmail = $oContact->PrimaryEmail;
-		switch (strtolower($this->getParamValue('PrimaryEmail', '')))
-		{
-			case 'home':
-			case 'personal':
-				$iPrimaryEmail = \EPrimaryEmailType::Home;
-				break;
-			case 'business':
-				$iPrimaryEmail = \EPrimaryEmailType::Business;
-				break;
-			case 'other':
-				$iPrimaryEmail = \EPrimaryEmailType::Other;
-				break;
-		}
+		$bItsMe = $oContact->ItsMe;
+		$oContact->PrimaryEmail = $aContact['PrimaryEmail'];
 
-		$oContact->PrimaryEmail = $iPrimaryEmail;
-
-		$this->paramToObject('UseFriendlyName', $oContact, 'bool');
-
-		$this->paramsStrToObjectHelper($oContact, 
-				array(
-					'Title', 
-					'FullName', 
-					'FirstName', 
-					'LastName', 
-					'NickName', 
-					'Skype', 
-					'Facebook',
-
-					'HomeEmail', 
-					'HomeStreet', 
-					'HomeCity', 
-					'HomeState', 
-					'HomeZip',
-					'HomeCountry', 
-					'HomeFax', 
-					'HomePhone', 
-					'HomeMobile', 
-					'HomeWeb',
-
-					'BusinessCompany', 
-					'BusinessJobTitle', 
-					'BusinessDepartment',
-					'BusinessOffice', 
-					'BusinessStreet', 
-					'BusinessCity', 
-					'BusinessState',  
-					'BusinessZip',
-					'BusinessCountry', 
-					'BusinessFax',
-					'BusinessPhone', 
-					'BusinessMobile',  
-					'BusinessWeb',
-
-					'OtherEmail', 
-					'Notes', 
-					'ETag'
-		));
-
+		$oContact->FullName = $aContact['FullName'];
+		$oContact->FirstName = $aContact['FirstName'];
+		$oContact->LastName = $aContact['LastName'];
+		$oContact->NickName = $aContact['NickName'];
+		$oContact->Skype = $aContact['Skype'];
+		$oContact->Facebook = $aContact['Facebook'];
+		
+		$oContact->HomeEmail = $aContact['HomeEmail'];
+		$oContact->HomeStreet = $aContact['HomeStreet'];
+		$oContact->HomeCity = $aContact['HomeCity'];
+		$oContact->HomeState = $aContact['HomeState'];
+		$oContact->HomeZip = $aContact['HomeZip'];
+		$oContact->HomeCountry = $aContact['HomeCountry'];
+		$oContact->HomeFax = $aContact['HomeFax'];
+		$oContact->HomePhone = $aContact['HomePhone'];
+		$oContact->HomeMobile = $aContact['HomeMobile'];
+		$oContact->HomeWeb = $aContact['HomeWeb'];
+		
+		$oContact->BusinessCompany = $aContact['BusinessCompany'];
+		$oContact->BusinessJobTitle = $aContact['BusinessJobTitle'];
+		$oContact->BusinessDepartment = $aContact['BusinessDepartment'];
+		$oContact->BusinessOffice = $aContact['BusinessOffice'];
+		$oContact->BusinessStreet = $aContact['BusinessStreet'];
+		$oContact->BusinessCity = $aContact['BusinessCity'];
+		$oContact->BusinessState = $aContact['BusinessState'];
+		$oContact->BusinessZip = $aContact['BusinessZip'];
+		$oContact->BusinessCountry = $aContact['BusinessCountry'];
+		$oContact->BusinessFax = $aContact['BusinessFax'];
+		$oContact->BusinessPhone = $aContact['BusinessPhone'];
+		$oContact->BusinessWeb = $aContact['BusinessWeb'];
+		
+		$oContact->OtherEmail = $aContact['OtherEmail'];
+		$oContact->Notes = $aContact['Notes'];
 		if (!$bItsMe)
 		{
-			$this->paramToObject('BusinessEmail', $oContact);
+			$oContact->BusinessEmail = $aContact['BusinessEmail'];
 		}
+		$oContact->BirthdayDay = $aContact['BirthdayDay'];
+		$oContact->BirthdayMonth = $aContact['BirthdayMonth'];
+		$oContact->BirthdayYear = $aContact['BirthdayYear'];
 
-		$this->paramToObject('BirthdayDay', $oContact, 'int');
-		$this->paramToObject('BirthdayMonth', $oContact, 'int');
-		$this->paramToObject('BirthdayYear', $oContact, 'int');
 
-		$aGroupsIds = $this->getParamValue('GroupsIds');
+		$aGroupsIds = $aContact['GroupsIds'];
 		$aGroupsIds = is_array($aGroupsIds) ? array_map('trim', $aGroupsIds) : array();
-		$oContact->GroupsIds = array_unique($aGroupsIds);
+		$oContact->GroupsIds = implode(',', array_unique($aGroupsIds));
 	}	
 	
 	/**
@@ -254,15 +215,14 @@ class ContactsModule extends AApiModule
 	/**
 	 * @return array
 	 */
-	public function GetContacts()
+	public function GetContacts($Offset = 0, $Limit = 20, $SortField = 'Name', $SortOrder = 1, $Search = '', $GroupId = '', $Storage = 'all')
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$sStorage = $this->getParamValue('Storage', 'personal');
-		$sMethod = 'Get' . ucfirst($sStorage) . 'Contacts';
+		$sMethod = 'Get' . ucfirst($Storage) . 'Contacts';
 		if (method_exists($this, $sMethod))
 		{
-			return call_user_func(array($this, $sMethod));
+			return call_user_func(array($this, $sMethod), $Offset, $Limit, $SortField, $SortOrder, $Search, $GroupId);
 		}
 		
 		return false;
@@ -285,12 +245,11 @@ class ContactsModule extends AApiModule
 		return false;
 	}	
 
-	public function GetAllContacts()
+	public function GetAllContacts($Offset = 0, $Limit = 20, $SortField = 'Name', $SortOrder = 1, $Search = '', $GroupId = '')
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$this->setParamValue('All', '1');
-		return $this->GetPersonalContacts();
+		return $this->GetPersonalContacts($Offset, $Limit, $SortField, $SortOrder, $Search, $GroupId, true);
 	}
 
 	public function GetSharedContacts()
@@ -301,72 +260,47 @@ class ContactsModule extends AApiModule
 		return $this->GetPersonalContacts();
 	}
 
-	public function GetPersonalContacts()
+	public function GetPersonalContacts($Offset = 0, $Limit = 20, $SortField = \EContactSortField::Name, $SortOrder = 1, $Search = '', $GroupId = '', $All = false, $SharedToAll = false)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$sAuthToken = $this->getParamValue('AuthToken');
-		$iUserId = \CApi::getAuthenticatedUserId($sAuthToken);
+		$iUserId = \CApi::getAuthenticatedUserId();
+		$oUser = \CApi::getAuthenticatedUser();
 		
-		$oUser = \CApi::ExecuteMethod('Core::GetUser', array(
-			'AuthToken' => $sAuthToken,
-			'UserId' => $iUserId
-		));
+		$iTenantId = $SharedToAll ? $oUser->IdTenant : null;
 		
-//		$oAccount = $this->getDefaultAccountFromParam();
-
-		$iOffset = (int) $this->getParamValue('Offset', 0);
-		$iLimit = (int) $this->getParamValue('Limit', 20);
-		$sGroupId = (string) $this->getParamValue('GroupId', '');
-		$sSearch = (string) $this->getParamValue('Search', '');
-		$sFirstCharacter = (string) $this->getParamValue('FirstCharacter', '');
-		$bSharedToAll = '1' === (string) $this->getParamValue('SharedToAll', '0');
-		$bAll = '1' === (string) $this->getParamValue('All', '0');
-
-		$iSortField = \EContactSortField::Name;
-		$iSortOrder = \ESortOrder::ASC;
-		
-		$iTenantId = $bSharedToAll ? $oUser->IdTenant : null;
-		
-		$this->populateSortParams($iSortField, $iSortOrder);
-		
-		//TODO use real user settings
-//		$bAllowContactsSharing = $this->oApiCapabilityManager->isSharedContactsSupported($oAccount);
 		$bAllowContactsSharing = true;
-		if ($bAll && !$bAllowContactsSharing &&
-			!$this->oApiCapabilityManager->isGlobalContactsSupported($oAccount))
+		$bAllowGlobalContacts = true;
+		$bAllowPersonalContacts = true;
+		if ($All && !$bAllowContactsSharing && $bAllowGlobalContacts)
 		{
-			$bAll = false;
+			$All = false;
 		}
 
 		$iCount = 0;
 		$aList = array();
 		
-		//TODO use real user settings
-//		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
-		if (true)
+		if ($bAllowPersonalContacts)
 		{
-			$iGroupId = ('' === $sGroupId) ? 0 : (int) $sGroupId;
-			
-			if ($bAllowContactsSharing && 0 < $iGroupId)
+			if ($bAllowContactsSharing && 0 < $GroupId)
 			{
 				$iTenantId = $oUser->IdTenant;
 			}
 			
-			$iCount = $this->oApiContactsManager->getContactItemsCount(
-				$iUserId, $sSearch, $sFirstCharacter, $iGroupId, $iTenantId, $bAll);
-
-			if (0 < $iCount)
-			{
+//			$iCount = $this->oApiContactsManager->getContactItemsCount(
+//				$iUserId, $Search, '', $GroupId, $iTenantId, $All);
+//
+//			if (0 < $iCount)
+//			{
 				$aContacts = $this->oApiContactsManager->getContactItems(
-					$iUserId, $iSortField, $iSortOrder, $iOffset,
-					$iLimit, $sSearch, $sFirstCharacter, $sGroupId, $iTenantId, $bAll);
+					$iUserId, $SortField, $SortOrder, $Offset,
+					$Limit, $Search, '', $GroupId, $iTenantId, $All);
 
 				if (is_array($aContacts))
 				{
 					$aList = $aContacts;
 				}
-			}
+//			}
 		}
 		else
 		{
@@ -375,10 +309,10 @@ class ContactsModule extends AApiModule
 
 		return array(
 			'ContactCount' => $iCount,
-			'GroupId' => $sGroupId,
-			'Search' => $sSearch,
-			'FirstCharacter' => $sFirstCharacter,
-			'All' => $bAll,
+			'GroupId' => $GroupId,
+			'Search' => $Search,
+			'FirstCharacter' => '',
+			'All' => $All,
 			'List' => \CApiResponseManager::GetResponseObject($aList)
 		);		
 	}
@@ -443,10 +377,10 @@ class ContactsModule extends AApiModule
 		$iLimit = (int) $this->getParamValue('Limit', 20);
 		$sSearch = (string) $this->getParamValue('Search', '');
 
-		$iSortField = \EContactSortField::EMail;
-		$iSortOrder = \ESortOrder::ASC;
-
-		$this->populateSortParams($iSortField, $iSortOrder);
+//		$iSortField = \EContactSortField::Email;
+//		$iSortOrder = \ESortOrder::ASC;
+//
+//		$this->populateSortParams($iSortField, $iSortOrder);
 
 		$iCount = 0;
 		$aList = array();
@@ -609,8 +543,6 @@ class ContactsModule extends AApiModule
 			}
 		}
 
-		$aCounts = array(0, 0);
-		
 		return array(
 			'Search' => $sSearch,
 			'List' => $aList
@@ -647,27 +579,30 @@ class ContactsModule extends AApiModule
 	}
 	
 	/**
-	 * @return array
+	 * 
+	 * @param array $Contact
+	 * @return boolean
+	 * @throws \System\Exceptions\AuroraApiException
 	 */
-	public function CreateContact()
+	public function CreateContact($Contact)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oAccount = $this->getDefaultAccountFromParam();
+		$oUser = \CApi::getAuthenticatedUser();
 		
-		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
+		$bAllowPersonalContacts = true;
+		if ($bAllowPersonalContacts)
 		{
 			$oContact = \CContact::createInstance();
-			$oContact->IdUser = $oAccount->IdUser;
-			$oContact->IdTenant = $oAccount->IdTenant;
-			$oContact->IdDomain = $oAccount->IdDomain;
-			$oContact->SharedToAll = '1' === $this->getParamValue('SharedToAll', '0');
+			$oContact->IdUser = $oUser->iId;
+			$oContact->IdTenant = $oUser->IdTenant;
+			$oContact->SharedToAll = $Contact['SharedToAll'];
 
-			$this->populateContactObject($oContact);
+			$this->populateContactObject($oContact, $Contact);
 
 			$this->oApiContactsManager->createContact($oContact);
 			return $oContact ? array(
-				'IdContact' => $oContact->IdContact
+				'IdContact' => $oContact->iId
 			) : false;
 		}
 		else
@@ -707,7 +642,7 @@ class ContactsModule extends AApiModule
 			$oContact = $oApiContacts->getContactById($bGlobal ? $oAccount : $oAccount->IdUser, $sContactId, false, $iTenantId);
 			if ($oContact)
 			{
-				$this->populateContactObject($oContact, $oContact->ItsMe);
+				$this->populateContactObject($oContact);
 
 				if ($oApiContacts->updateContact($oContact))
 				{
@@ -1115,9 +1050,7 @@ class ContactsModule extends AApiModule
 							$oAccount->IdUser,
 							$sFileType,
 							$oApiFileCacheManager->generateFullFilePath($oAccount, $sSavedName),
-							$iParsedCount,
-							$iGroupId = $aAdditionalData['GroupId'],
-							$bIsShared = $aAdditionalData['IsShared']
+							$iParsedCount
 						);
 
 					if (false !== $iImportedCount && -1 !== $iImportedCount) {
@@ -1173,11 +1106,11 @@ class ContactsModule extends AApiModule
 					$oContact->IdContact = 0;
 
 					$bContactExists = false;
-					if (0 < strlen($oContact->ViewEmail)) {
-						
+					if (0 < strlen($oContact->ViewEmail))
+					{
 						$oLocalContact = $this->oApiContactsManager->getContactByEmail($oAccount->IdUser, $oContact->ViewEmail);
-						if ($oLocalContact) {
-							
+						if ($oLocalContact)
+						{
 							$oContact->IdContact = $oLocalContact->IdContact;
 							$bContactExists = true;
 						}
@@ -1206,11 +1139,11 @@ class ContactsModule extends AApiModule
 	
 	public function onCreateAccountEvent($oAccount)
 	{
-		if ($oAccount instanceof \CAccount) {
-			
+		if ($oAccount instanceof \CAccount)
+		{
 			$oContact = $this->oApiContactsManager->createContactObject();
 			$oContact->BusinessEmail = $oAccount->Email;
-			$oContact->PrimaryEmail = EPrimaryEmailType::Business;
+			$oContact->PrimaryEmail = EContactsPrimaryEmail::Business;
 			$oContact->FullName = $oAccount->FriendlyName;
 			$oContact->Type = EContactType::GlobalAccounts;
 

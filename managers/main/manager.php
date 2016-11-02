@@ -23,6 +23,8 @@ class CApiContactsMainManager extends AApiManager
 	 * @var $oApiContactsBaseManagerDAV CApiContactsBaseManager
 	 */
 	private $oApiContactsBaseManagerDAV;
+	
+	private $oEavManager = null;
 
 	/**
 	 * @param CApiGlobalManager &$oManager
@@ -36,6 +38,7 @@ class CApiContactsMainManager extends AApiManager
 			$this->oApiContactsGlobalManager = $oModule->GetManager('global', $sForcedStorage);
 			$this->oApiContactsBaseManager = $oModule->GetManager('base', $sForcedStorage);
 			$this->oApiContactsBaseManagerDAV = $oModule->GetManager('base', 'sabredav');
+			$this->oEavManager = \CApi::GetSystemManager('eav', 'db');
 		}
 	}
 	
@@ -282,7 +285,7 @@ class CApiContactsMainManager extends AApiManager
 		{
 			$oGroup->IdGroup = $oGroupDb->Name;
 
-			$oContactItems = $this->oApiContactsBaseManager->getContactItems($oGroup->IdUser, EContactSortField::EMail,
+			$oContactItems = $this->oApiContactsBaseManager->getContactItems($oGroup->IdUser, EContactSortField::Email,
 				ESortOrder::ASC, 0, 999, '', '', $oGroupDb->IdGroup);
 			
 			if (is_array($oContactItems))
@@ -356,10 +359,10 @@ class CApiContactsMainManager extends AApiManager
 	 * @param int $iSortField Sort field. Accepted values:
 	 *
 	 *		EContactSortField::Name
-	 *		EContactSortField::EMail
+	 *		EContactSortField::Email
 	 *		EContactSortField::Frequency
 	 *
-	 * Default value is **EContactSortField::EMail**.
+	 * Default value is **EContactSortField::Email**.
 	 * @param int $iSortOrder Sorting order. Accepted values:
 	 *
 	 *		ESortOrder::ASC
@@ -377,11 +380,18 @@ class CApiContactsMainManager extends AApiManager
 	 * @return array|bool
 	 */
 	public function getContactItems($mUserId,
-		$iSortField = EContactSortField::EMail, $iSortOrder = ESortOrder::ASC,
+		$iSortField = EContactSortField::Email, $iSortOrder = ESortOrder::ASC,
 		$iOffset = 0, $iRequestLimit = 20, $sSearch = '', $sFirstCharacter = '', $mGroupId = '', $iTenantId = null, $bAll = false)
 	{
-		return $this->oApiContactsBaseManager->getContactItems($mUserId, $iSortField, $iSortOrder,
-			$iOffset, $iRequestLimit, $sSearch, $sFirstCharacter, $mGroupId, $iTenantId, $bAll);
+		return $this->oEavManager->getEntities(
+			'CContact', 
+			array(),
+			$iOffset,
+			$iRequestLimit,
+			array(),
+			$iSortField,
+			$iSortOrder
+		);
 	}
 
 	/**
@@ -453,7 +463,8 @@ class CApiContactsMainManager extends AApiManager
 	{
 		$res1 = $res2 = false;
 
-		$res1 = $this->oApiContactsBaseManager->createContact($oContact);
+//		$res1 = $this->oApiContactsBaseManager->createContact($oContact);
+		$res1 = $this->oEavManager->saveEntity($oContact);
 		if ('sabredav' !== CApi::GetManager()->GetStorageByType('contacts'))
 		{
 			$this->updateContactGroupsIdsWithNames($oContact);
@@ -566,7 +577,7 @@ class CApiContactsMainManager extends AApiManager
 	 * todo
 	 *
 	 * @param int $iUserId User ID
-	 * @param mixed $mGroupId Group ID
+	 * @param string $sContactId Contact ID
 	 *
 	 * @return bool
 	 */
@@ -821,18 +832,18 @@ class CApiContactsMainManager extends AApiManager
 	 */
 	public function updateContactGroupsIdsWithNames(&$oContact)
 	{
-		$aResult = array();
-
-		foreach ($oContact->GroupsIds as $mGroupId)
-		{
-			$oGroup = $this->oApiContactsBaseManager->getGroupById($oContact->IdUser, $mGroupId);
-			if ($oGroup)
-			{
-				$aResult[] = (string) $oGroup->Name;
-			}
-		}
-		
-		$oContact->GroupsIds = $aResult;
+//		$aResult = array();
+//
+//		foreach ($oContact->GroupsIds as $mGroupId)
+//		{
+//			$oGroup = $this->oApiContactsBaseManager->getGroupById($oContact->IdUser, $mGroupId);
+//			if ($oGroup)
+//			{
+//				$aResult[] = (string) $oGroup->Name;
+//			}
+//		}
+//		
+//		$oContact->GroupsIds = $aResult;
 	}
 
 	/**

@@ -143,7 +143,7 @@ class CApiContactsVCardHelper
 						else
 						{
 							$bFindHome = false;
-							if ($oContact->PrimaryEmail == EPrimaryEmailType::Home)
+							if ($oContact->PrimaryEmail == EContactsPrimaryEmail::Personal)
 							{
 								$oTypes->addValue('PREF');
 							}
@@ -159,7 +159,7 @@ class CApiContactsVCardHelper
 						else
 						{
 							$bFindWork = false;
-							if ($oContact->PrimaryEmail == EPrimaryEmailType::Business)
+							if ($oContact->PrimaryEmail == EContactsPrimaryEmail::Business)
 							{
 								$oTypes->addValue('PREF');
 							}
@@ -175,7 +175,7 @@ class CApiContactsVCardHelper
 						else
 						{
 							$bFindOther = false;
-							if ($oContact->PrimaryEmail == EPrimaryEmailType::Other)
+							if ($oContact->PrimaryEmail == EContactsPrimaryEmail::Other)
 							{
 								$oTypes->addValue('PREF');
 							}
@@ -194,7 +194,7 @@ class CApiContactsVCardHelper
 						else
 						{
 							$bFindOther = false;
-							if ($oContact->PrimaryEmail == EPrimaryEmailType::Other)
+							if ($oContact->PrimaryEmail == EContactsPrimaryEmail::Other)
 							{
 								$oTypes->addValue('PREF');
 							}
@@ -213,7 +213,7 @@ class CApiContactsVCardHelper
 		if ($bFindHome)
 		{
 			$aTypes = array('HOME');
-			if ($oContact->PrimaryEmail == EPrimaryEmailType::Home)
+			if ($oContact->PrimaryEmail == EContactsPrimaryEmail::Personal)
 			{
 				$aTypes[] = 'PREF';
 			}
@@ -222,7 +222,7 @@ class CApiContactsVCardHelper
 		if ($bFindWork)
 		{
 			$aTypes = array('WORK');
-			if ($oContact->PrimaryEmail == EPrimaryEmailType::Business)
+			if ($oContact->PrimaryEmail == EContactsPrimaryEmail::Business)
 			{
 				$aTypes[] = 'PREF';
 			}
@@ -231,7 +231,7 @@ class CApiContactsVCardHelper
 		if ($bFindOther)
 		{
 			$aTypes = array('OTHER');
-			if ($oContact->PrimaryEmail == EPrimaryEmailType::Other)
+			if ($oContact->PrimaryEmail == EContactsPrimaryEmail::Other)
 			{
 				$aTypes[] = 'PREF';
 			}			

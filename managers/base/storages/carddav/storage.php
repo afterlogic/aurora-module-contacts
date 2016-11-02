@@ -287,7 +287,7 @@ class CApiContactsBaseCarddavStorage extends CApiContactsBaseStorage
 	protected function sortItems(&$aItems, $iSortField, $iSortOrder)
 	{
 		$aMapSortField = array(
-			EContactSortField::EMail => 'Email',
+			EContactSortField::Email => 'Email',
 			EContactSortField::Name => 'Name',
 			EContactSortField::Frequency => 'Frequency'
 		);

@@ -164,7 +164,7 @@ class CApiContactsGlobalLdapStorage extends CApiContactsGlobalStorage
 			if ($oLdap->Search($sFilter))
 			{
 				$aReturn = $oLdap->SortPaginate(
-					EContactSortField::EMail === $iSortField ? $this->sEmailFieldName : $this->sNameFieldName,
+					EContactSortField::Email === $iSortField ? $this->sEmailFieldName : $this->sNameFieldName,
 					ESortOrder::ASC === $iSortOrder, $iOffset, $iRequestLimit);
 
 				if ($aReturn && is_array($aReturn))
@@ -261,7 +261,7 @@ class CApiContactsGlobalLdapStorage extends CApiContactsGlobalStorage
 				$oContact->Global = true;
 				$oContact->IdContact = $aItem[$this->sUidFieldName][0];
 				$oContact->IdContactStr = $oContact->IdContact;
-				$oContact->PrimaryEmail = EPrimaryEmailType::Business;
+				$oContact->PrimaryEmail = EContactsPrimaryEmail::Business;
 
 				foreach ($aMap as $sKey => $sField)
 				{

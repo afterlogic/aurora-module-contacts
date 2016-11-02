@@ -126,17 +126,17 @@ class CApiContactsSyncCsv
 					
 					if (0 !== strlen($oContact->HomeEmail))
 					{
-						$oContact->PrimaryEmail = \EPrimaryEmailType::Home;
+						$oContact->PrimaryEmail = \EContactsPrimaryEmail::Personal;
 						$oContact->ViewEmail = $oContact->HomeEmail;
 					}
 					else if (0 !== strlen($oContact->BusinessEmail))
 					{
-						$oContact->PrimaryEmail = \EPrimaryEmailType::Business;
+						$oContact->PrimaryEmail = \EContactsPrimaryEmail::Business;
 						$oContact->ViewEmail = $oContact->BusinessEmail;
 					}
 					else if (0 !== strlen($oContact->OtherEmail))
 					{
-						$oContact->PrimaryEmail = \EPrimaryEmailType::Other;
+						$oContact->PrimaryEmail = \EContactsPrimaryEmail::Other;
 						$oContact->ViewEmail = $oContact->OtherEmail;
 					}
 					

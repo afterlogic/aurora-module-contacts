@@ -249,7 +249,7 @@ WHERE acc.hide_in_gab = 0 AND
 				$sEmail,
 				$sEmail,
 				$sFullName,
-				EPrimaryEmailType::Business,
+				EContactsPrimaryEmail::Business,
 				$sNow,
 				$sNow,
 				$this->escapeString(1 === (int) $aItem['mailing_list'] ? $aItem['id_acct'] : $aItem['id_user']),

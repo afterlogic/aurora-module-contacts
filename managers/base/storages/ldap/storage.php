@@ -654,7 +654,7 @@ class CApiContactsBaseLdapStorage extends CApiContactsBaseStorage
 		if ($oLdap && $oLdap->Search($this->buildContactFilter($sSearch, $sFirstCharacter, $mGroupId)))
 		{
 			$mLdapContactsItems = $oLdap->SortPaginate(
-				EContactSortField::EMail === $iSortField ? $this->sEmailFieldName : $this->sContactNameFieldName,
+				EContactSortField::Email === $iSortField ? $this->sEmailFieldName : $this->sContactNameFieldName,
 				ESortOrder::ASC === $iSortOrder, $iOffset, $iRequestLimit);
 			
 			$aContacts = array();
@@ -810,7 +810,7 @@ class CApiContactsBaseLdapStorage extends CApiContactsBaseStorage
 	 */
 	public function GetSuggestContactItems($iUserId, $sSearch, $iRequestLimit, $bPhoneOnly = false)
 	{
-		return $this->getContactItems($iUserId, EContactSortField::EMail, ESortOrder::ASC, 0, $iRequestLimit, $sSearch, '', '');
+		return $this->getContactItems($iUserId, EContactSortField::Email, ESortOrder::ASC, 0, $iRequestLimit, $sSearch, '', '');
 	}
 
 	/**

@@ -90,20 +90,22 @@ class CContact extends AEntity
 			'IdDomain'		=> array('int', 0), // 'id_domain'),
 			'IdTenant'		=> array('int', 0), // 'id_tenant', true),
 
-			'GroupsIds'			=> array('array', ''), //), array
+			'GroupsIds'			=> array('string', ''), //), array
 
 			'Type'			=> array('int', EContactType::Personal), // 'type'),
 			'IdTypeLink'	=> array('string', ''), // 'type_id'),
 
-			'ViewEmail'			=> array('string', ''), // 'view_email'),
-			'PrimaryEmail'		=> array('int', ''), // 'primary_email'),
+			'ViewEmail'			=> array('string', ''),
+			'PrimaryEmail'		=> array('int', EContactsPrimaryEmail::Personal),
+			'PrimaryPhone'		=> array('int', EContactsPrimaryPhone::Personal),
+			'PrimaryAddress'	=> array('int', EContactsPrimaryAddress::Personal),
 
 			'DateCreated'		=> array('datetime', ''), // 'date_created', true, false),
 			'DateModified'		=> array('datetime', ''), // 'date_modified'),
 
 			'UseFriendlyName'	=> array('bool', true), // 'use_friendly_nm'),
 
-			'Title'			=> array('string'),
+			'Title'			=> array('string', ''),
 			'FullName'		=> array('string', ''), // 'fullname'),
 			'FirstName'		=> array('string', ''), // 'firstname'),
 			'LastName'		=> array('string', ''), // 'surname'),
@@ -163,14 +165,6 @@ class CContact extends AEntity
 	{
 		return new CContact($sModule, $oParams);
 	}
-	
-	/**
-	 * temp method
-	 */
-	public function setInheritedSettings($oParams = array())
-	{
-		$this->PrimaryEmail = CApi::GetConf('contacts.default-primary-email', EPrimaryEmailType::Home);
-	}
 
 	/**
 	 * @param string $sKey
@@ -219,7 +213,7 @@ class CContact extends AEntity
 	 */
 	public function initBeforeChange()
 	{
-		parent::initBeforeChange();
+//		parent::initBeforeChange();
 
 		if (0 === strlen($this->IdContactStr) &&
 			((is_int($this->IdContact) && 0 < $this->IdContact) ||
@@ -237,13 +231,13 @@ class CContact extends AEntity
 		switch ((int) $this->PrimaryEmail)
 		{
 			//ReadOnly
-			case EPrimaryEmailType::Home:
+			case EContactsPrimaryEmail::Personal:
 				$this->ViewEmail = (string) $this->HomeEmail;
 				break;
-			case EPrimaryEmailType::Business:
+			case EContactsPrimaryEmail::Business:
 				$this->ViewEmail = (string) $this->BusinessEmail;
 				break;
-			case EPrimaryEmailType::Other:
+			case EContactsPrimaryEmail::Other:
 				$this->ViewEmail = (string) $this->OtherEmail;
 				break;
 		}
@@ -421,7 +415,7 @@ class CContact extends AEntity
 							$this->BusinessEmail = (string)$oEmail;
 							if ($oType->has('PREF'))
 							{
-								$this->PrimaryEmail = EPrimaryEmailType::Business;
+								$this->PrimaryEmail = EContactsPrimaryEmail::Business;
 							}
 						}
 						else if ($oType->has('HOME'))
@@ -429,7 +423,7 @@ class CContact extends AEntity
 							$this->HomeEmail = (string)$oEmail;
 							if ($oType->has('PREF'))
 							{
-								$this->PrimaryEmail = EPrimaryEmailType::Home;
+								$this->PrimaryEmail = EContactsPrimaryEmail::Personal;
 							}
 						}
 						else if ($oType->has('OTHER'))
@@ -437,7 +431,7 @@ class CContact extends AEntity
 							$this->OtherEmail = (string)$oEmail;
 							if ($oType->has('PREF'))
 							{
-								$this->PrimaryEmail = EPrimaryEmailType::Other;
+								$this->PrimaryEmail = EContactsPrimaryEmail::Other;
 							}
 						}
 						else if ($oEmail->group && isset($oVCardObject->{$oEmail->group.'.X-ABLABEL'}) &&
@@ -446,7 +440,7 @@ class CContact extends AEntity
 							$this->OtherEmail = (string)$oEmail;
 							if ($oType->has('PREF'))
 							{
-								$this->PrimaryEmail = EPrimaryEmailType::Other;
+								$this->PrimaryEmail = EContactsPrimaryEmail::Other;
 							}
 						}
 					}
@@ -455,15 +449,15 @@ class CContact extends AEntity
 				{
 					if (!empty($this->HomeEmail))
 					{
-						$this->PrimaryEmail = EPrimaryEmailType::Home;
+						$this->PrimaryEmail = EContactsPrimaryEmail::Personal;
 					}
 					else if (!empty($this->BusinessEmail))
 					{
-						$this->PrimaryEmail = EPrimaryEmailType::Business;
+						$this->PrimaryEmail = EContactsPrimaryEmail::Business;
 					}
 					else if (!empty($this->OtherEmail))
 					{
-						$this->PrimaryEmail = EPrimaryEmailType::Other;
+						$this->PrimaryEmail = EContactsPrimaryEmail::Other;
 					}
 				}
 			}

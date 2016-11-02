@@ -437,7 +437,7 @@ class CApiContactsBaseManager extends AApiManagerWithStorage
 
 	/**
 	 * @param string $mUserId
-	 * @param int $iSortField Default value is **EContactSortField::EMail 2**,
+	 * @param int $iSortField Default value is **EContactSortField::Email 2**,
 	 * @param int $iSortOrder Default value is **ESortOrder::ASC 0**,
 	 * @param int $iOffset Default value is **0**
 	 * @param int $iRequestLimit Default value is **20**
@@ -449,7 +449,7 @@ class CApiContactsBaseManager extends AApiManagerWithStorage
 	 *
 	 * @return bool|array
 	 */
-	public function getContactItems($mUserId, $iSortField = EContactSortField::EMail, $iSortOrder = ESortOrder::ASC, $iOffset = 0, $iRequestLimit = 20, $sSearch = '', $sFirstCharacter = '', $mGroupId = '', $iTenantId = null, $bAll = false)
+	public function getContactItems($mUserId, $iSortField = EContactSortField::Email, $iSortOrder = ESortOrder::ASC, $iOffset = 0, $iRequestLimit = 20, $sSearch = '', $sFirstCharacter = '', $mGroupId = '', $iTenantId = null, $bAll = false)
 	{
 		$mResult = false;
 		try

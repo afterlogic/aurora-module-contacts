@@ -277,13 +277,13 @@ class CContactListItem
 
 					switch ((int) $oRow->primary_email)
 					{
-						case EPrimaryEmailType::Home:
+						case EContactsPrimaryEmail::Personal:
 							$this->Email = (string) $oRow->h_email;
 							break;
-						case EPrimaryEmailType::Business:
+						case EContactsPrimaryEmail::Business:
 							$this->Email = (string) $oRow->b_email;
 							break;
-						case EPrimaryEmailType::Other:
+						case EContactsPrimaryEmail::Other:
 							$this->Email = (string) $oRow->other_email;
 							break;
 					}
@@ -341,13 +341,13 @@ class CContactListItem
 					
 					switch ((int) $oRow->primary_email)
 					{
-						case EPrimaryEmailType::Home:
+						case EContactsPrimaryEmail::Personal:
 							$this->Email = (string) $oRow->h_email;
 							break;
-						case EPrimaryEmailType::Business:
+						case EContactsPrimaryEmail::Business:
 							$this->Email = (string) $oRow->b_email;
 							break;
-						case EPrimaryEmailType::Other:
+						case EContactsPrimaryEmail::Other:
 							$this->Email = (string) $oRow->other_email;
 							break;
 					}

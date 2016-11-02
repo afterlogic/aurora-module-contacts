@@ -16,7 +16,7 @@ class CApiContactsBaseSabredavStorage extends CApiContactsBaseStorage
 	/**
 	 * @var CAccount
 	 */
-	protected $Account;
+//	protected $Account;
 
 	/**
 	 * @var $oApiUsersManager CApiUsersManager
@@ -27,7 +27,7 @@ class CApiContactsBaseSabredavStorage extends CApiContactsBaseStorage
 	protected $aContactItemsCache;
 	protected $aGroupItemsCache;
 	protected $ContactsCache;
-	protected $AccountsCache;
+//	protected $AccountsCache;
 
 	/**
 	 * @param CApiGlobalManager &$oManager
@@ -36,7 +36,7 @@ class CApiContactsBaseSabredavStorage extends CApiContactsBaseStorage
 	{
 		parent::__construct('sabredav', $oManager);
 
-		$this->Account = null;
+//		$this->Account = null;
 
 		$this->aAddressBooksCache = array();
 		$this->aContactItemsCache = array();
@@ -44,7 +44,7 @@ class CApiContactsBaseSabredavStorage extends CApiContactsBaseStorage
 
 		$this->ContactsCache = array();
 		$this->GroupsCache = array();
-		$this->AccountsCache = array();
+//		$this->AccountsCache = array();
 
 		$this->ApiUsersManager = CApi::GetSystemManager('users');
 	}
@@ -52,12 +52,14 @@ class CApiContactsBaseSabredavStorage extends CApiContactsBaseStorage
 	/**
 	 * @param CAccount $oAccount
 	 */
-	public function InitByAccount($oAccount)
+	public function InitByAccount()
 	{
 		$bResult = false;
-		if ($oAccount && (!$this->Account || $this->Account->Email !== $oAccount->Email))
+		$oUser = \CApi::getAuthenticatedUser();
+//		if ($oAccount && (!$this->Account || $this->Account->Email !== $oAccount->Email))
+		if ($oUser)
 		{
-			$this->Account = $oAccount;
+//			$this->Account = $oAccount;
 			$this->aAddressBooksCache = array();
 			$this->aContactItemsCache = array();
 			$this->aGroupItemsCache = array();
@@ -66,7 +68,8 @@ class CApiContactsBaseSabredavStorage extends CApiContactsBaseStorage
 			$this->GroupsCache = array();
 
 //			\Afterlogic\DAV\Server::getInstance()->setAccount($oAccount);
-			$aPrincipalProperties = \Afterlogic\DAV\Backend::Principal()->getPrincipalByPath(\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $oAccount->Email);
+//			$aPrincipalProperties = \Afterlogic\DAV\Backend::Principal()->getPrincipalByPath(\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $oAccount->Email);
+			$aPrincipalProperties = \Afterlogic\DAV\Backend::Principal()->getPrincipalByPath(\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $oUser->sUUID);
 			if ($aPrincipalProperties)
 			{
 				if (isset($aPrincipalProperties['uri']))
@@ -74,27 +77,28 @@ class CApiContactsBaseSabredavStorage extends CApiContactsBaseStorage
 					$this->Principal = $aPrincipalProperties['uri'];
 				}
 			}
-		}
-
-		if ($this->Account)
-		{
 			$bResult = true;
 		}
+
+//		if ($this->Account)
+//		{
+//			$bResult = true;
+//		}
 
 		return $bResult;
 	}
 
-	protected function GetDefaultAccountByUserId($iUserId)
-	{
-		if (!isset($this->AccountsCache[$iUserId]))
-		{
-			$iAccountId = $this->ApiUsersManager->getDefaultAccountId($iUserId);
-			$oAccount = $this->ApiUsersManager->getAccountById($iAccountId);
-			$this->AccountsCache[$iUserId] = $oAccount;
-		}
-
-		return $this->AccountsCache[$iUserId];
-	}
+//	protected function GetDefaultAccountByUserId($iUserId)
+//	{
+//		if (!isset($this->AccountsCache[$iUserId]))
+//		{
+//			$iAccountId = $this->ApiUsersManager->getDefaultAccountId($iUserId);
+//			$oAccount = $this->ApiUsersManager->getAccountById($iAccountId);
+//			$this->AccountsCache[$iUserId] = $oAccount;
+//		}
+//
+//		return $this->AccountsCache[$iUserId];
+//	}
 
 
 	/**
@@ -103,8 +107,8 @@ class CApiContactsBaseSabredavStorage extends CApiContactsBaseStorage
 	 */
 	public function init($iUserId)
 	{
-		$oAccount = $this->GetDefaultAccountByUserId($iUserId);
-		return $this->InitByAccount($oAccount);
+//		$oAccount = $this->GetDefaultAccountByUserId($iUserId);
+		return $this->InitByAccount();
 	}
 
 	/**
@@ -505,7 +509,7 @@ class CApiContactsBaseSabredavStorage extends CApiContactsBaseStorage
 	protected function sortItems(&$aItems, $iSortField, $iSortOrder)
 	{
 		$aMapSortField = array(
-			EContactSortField::EMail => 'Email',
+			EContactSortField::Email => 'Email',
 			EContactSortField::Name => 'Name',
 			EContactSortField::Frequency => 'Frequency'
 		);
@@ -1266,7 +1270,7 @@ class CApiContactsBaseSabredavStorage extends CApiContactsBaseStorage
 	public function clearAllContactsAndGroups($oAccount)
 	{
 		$bResult = false;
-		$this->InitByAccount($oAccount);
+		$this->InitByAccount();
 
 		$oAddressBooks = new \Sabre\CardDAV\UserAddressBooks(
 			\Afterlogic\DAV\Backend::Carddav(), $this->Principal);
