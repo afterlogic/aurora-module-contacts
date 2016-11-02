@@ -24,16 +24,16 @@ class CApiContactsVCardHelper
 		$sADRHome = array(
 			'',
 			'',
-			$oContact->HomeStreet,
-			$oContact->HomeCity,
-			$oContact->HomeState,
-			$oContact->HomeZip,
-			$oContact->HomeCountry
+			$oContact->PersonalAddress,
+			$oContact->PersonalCity,
+			$oContact->PersonalState,
+			$oContact->PersonalZip,
+			$oContact->PersonalCountry
 		);
 
-		if (empty($oContact->HomeStreet) && empty($oContact->HomeCity) &&
-				empty($oContact->HomeState) && empty($oContact->HomeZip) &&
-						empty($oContact->HomeCountry))
+		if (empty($oContact->PersonalAddress) && empty($oContact->PersonalCity) &&
+				empty($oContact->PersonalState) && empty($oContact->PersonalZip) &&
+						empty($oContact->PersonalCountry))
 		{
 			$bFindHome = true;
 		}
@@ -41,14 +41,14 @@ class CApiContactsVCardHelper
 		$sADRWork = array(
 			'',
 			'',
-			$oContact->BusinessStreet,
+			$oContact->BusinessAddress,
 			$oContact->BusinessCity,
 			$oContact->BusinessState,
 			$oContact->BusinessZip,
 			$oContact->BusinessCountry
 		);
 
-		if (empty($oContact->BusinessStreet) && empty($oContact->BusinessCity) &&
+		if (empty($oContact->BusinessAddress) && empty($oContact->BusinessCity) &&
 				empty($oContact->BusinessState) && empty($oContact->BusinessZip) &&
 						empty($oContact->BusinessCountry))
 		{
@@ -111,7 +111,7 @@ class CApiContactsVCardHelper
 	*/
 	public static function UpdateVCardEmailsFromContact($oContact, &$oVCard)
 	{
-		$bFindHome = (empty($oContact->HomeEmail)) ? false : true;
+		$bFindHome = (empty($oContact->PersonalEmail)) ? false : true;
 		$bFindWork = (empty($oContact->BusinessEmail)) ? false : true;
 		$bFindOther = (empty($oContact->OtherEmail)) ? false : true;
 
@@ -147,7 +147,7 @@ class CApiContactsVCardHelper
 							{
 								$oTypes->addValue('PREF');
 							}
-							$oEmail->setValue($oContact->HomeEmail);
+							$oEmail->setValue($oContact->PersonalEmail);
 						}
 					}
 					else if ($oTypes->has('WORK'))
@@ -217,7 +217,7 @@ class CApiContactsVCardHelper
 			{
 				$aTypes[] = 'PREF';
 			}
-			$oEmail = $oVCard->add('EMAIL', $oContact->HomeEmail, array('TYPE' => $aTypes));
+			$oEmail = $oVCard->add('EMAIL', $oContact->PersonalEmail, array('TYPE' => $aTypes));
 		}
 		if ($bFindWork)
 		{
@@ -249,7 +249,7 @@ class CApiContactsVCardHelper
 		$bFindHome = false;
 		$bFindWork = false;
 
-		if (empty($oContact->HomeWeb))
+		if (empty($oContact->PersonalWeb))
 		{
 			$bFindHome = true;
 		}
@@ -272,7 +272,7 @@ class CApiContactsVCardHelper
 						}
 						else
 						{
-							$oUrl->setValue($oContact->HomeWeb);
+							$oUrl->setValue($oContact->PersonalWeb);
 							$bFindHome = true;
 						}
 					}
@@ -294,7 +294,7 @@ class CApiContactsVCardHelper
 
 		if (!$bFindHome)
 		{
-			$oVCard->add('URL', $oContact->HomeWeb, array('TYPE' => array('HOME')));
+			$oVCard->add('URL', $oContact->PersonalWeb, array('TYPE' => array('HOME')));
 		}
 		if (!$bFindWork)
 		{
@@ -312,12 +312,12 @@ class CApiContactsVCardHelper
 		$bFindHome = false;
 		$bFindWork = false;
 		$bFindCell = false;
-		$bFindHomeFax = false;
+		$bFindPersonalFax = false;
 		$bFindWorkFax = false;
 
 		$oVCardCopy = clone $oVCard;
 
-		if (empty($oContact->HomePhone))
+		if (empty($oContact->PersonalPhone))
 		{
 			$bFindHome = true;
 		}
@@ -325,13 +325,13 @@ class CApiContactsVCardHelper
 		{
 			$bFindWork = true;
 		}
-		if (empty($oContact->HomeMobile))
+		if (empty($oContact->PersonalMobile))
 		{
 			$bFindCell = true;
 		}
-		if (empty($oContact->HomeFax))
+		if (empty($oContact->PersonalFax))
 		{
-			$bFindHomeFax = true;
+			$bFindPersonalFax = true;
 		}
 		if (empty($oContact->BusinessFax))
 		{
@@ -355,7 +355,7 @@ class CApiContactsVCardHelper
 							}
 							else
 							{
-								$oTel->setValue($oContact->HomePhone);
+								$oTel->setValue($oContact->PersonalPhone);
 								$bFindHome = true;
 							}
 						}
@@ -379,7 +379,7 @@ class CApiContactsVCardHelper
 							}
 							else
 							{
-								$oTel->setValue($oContact->HomeMobile);
+								$oTel->setValue($oContact->PersonalMobile);
 								$bFindCell = true;
 							}
 						}
@@ -388,14 +388,14 @@ class CApiContactsVCardHelper
 					{
 						if ($oTypes->has('HOME'))
 						{
-							if ($bFindHomeFax)
+							if ($bFindPersonalFax)
 							{
 								unset($oTel);
 							}
 							else
 							{
-								$oTel->setValue($oContact->HomeFax);
-								$bFindHomeFax = true;
+								$oTel->setValue($oContact->PersonalFax);
+								$bFindPersonalFax = true;
 							}
 						}
 						if ($oTypes->has('WORK'))
@@ -421,7 +421,7 @@ class CApiContactsVCardHelper
 
 		if (!$bFindHome)
 		{
-			$oVCard->add('TEL', $oContact->HomePhone, array('TYPE' => array('VOICE', 'HOME')));
+			$oVCard->add('TEL', $oContact->PersonalPhone, array('TYPE' => array('VOICE', 'HOME')));
 		}
 		if (!$bFindWork)
 		{
@@ -429,11 +429,11 @@ class CApiContactsVCardHelper
 		}
 		if (!$bFindCell)
 		{
-			$oVCard->add('TEL', $oContact->HomeMobile, array('TYPE' => array('VOICE', 'CELL')));
+			$oVCard->add('TEL', $oContact->PersonalMobile, array('TYPE' => array('VOICE', 'CELL')));
 		}
-		if (!$bFindHomeFax)
+		if (!$bFindPersonalFax)
 		{
-			$oVCard->add('TEL', $oContact->HomeFax, array('TYPE' => array('FAX', 'HOME')));
+			$oVCard->add('TEL', $oContact->PersonalFax, array('TYPE' => array('FAX', 'HOME')));
 		}
 		if (!$bFindWorkFax)
 		{

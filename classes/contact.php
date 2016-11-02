@@ -21,19 +21,19 @@
  * @property string $NickName
  * @property string $Skype
  * @property string $Facebook
- * @property string $HomeEmail
- * @property string $HomeStreet
- * @property string $HomeCity
- * @property string $HomeState
- * @property string $HomeZip
- * @property string $HomeCountry
- * @property string $HomePhone
- * @property string $HomeFax
- * @property string $HomeMobile
- * @property string $HomeWeb
+ * @property string $PersonalEmail
+ * @property string $PersonalAddress
+ * @property string $PersonalCity
+ * @property string $PersonalState
+ * @property string $PersonalZip
+ * @property string $PersonalCountry
+ * @property string $PersonalWeb
+ * @property string $PersonalFax
+ * @property string $PersonalPhone
+ * @property string $PersonalMobile
  * @property string $BusinessEmail
  * @property string $BusinessCompany
- * @property string $BusinessStreet
+ * @property string $BusinessAddress
  * @property string $BusinessCity
  * @property string $BusinessState
  * @property string $BusinessZip
@@ -113,20 +113,20 @@ class CContact extends AEntity
 			'Skype'			=> array('string', ''), // 'skype'),
 			'Facebook'		=> array('string', ''), // 'facebook'),
 
-			'HomeEmail'		=> array('string', ''), // 'h_email'),
-			'HomeStreet'	=> array('string', ''), // 'h_street'),
-			'HomeCity'		=> array('string', ''), // 'h_city'),
-			'HomeState'		=> array('string', ''), // 'h_state'),
-			'HomeZip'		=> array('string', ''), // 'h_zip'),
-			'HomeCountry'	=> array('string', ''), // 'h_country'),
-			'HomePhone'		=> array('string', ''), // 'h_phone'),
-			'HomeFax'		=> array('string', ''), // 'h_fax'),
-			'HomeMobile'	=> array('string', ''), // 'h_mobile'),
-			'HomeWeb'		=> array('string', ''), // 'h_web'),
+			'PersonalEmail'		=> array('string', ''), // 'h_email'),
+			'PersonalAddress'	=> array('string', ''), // 'h_street'),
+			'PersonalCity'		=> array('string', ''), // 'h_city'),
+			'PersonalState'		=> array('string', ''), // 'h_state'),
+			'PersonalZip'		=> array('string', ''), // 'h_zip'),
+			'PersonalCountry'	=> array('string', ''), // 'h_country'),
+			'PersonalWeb'		=> array('string', ''), // 'h_web'),
+			'PersonalFax'		=> array('string', ''), // 'h_fax'),
+			'PersonalPhone'		=> array('string', ''), // 'h_phone'),
+			'PersonalMobile'	=> array('string', ''), // 'h_mobile'),
 
 			'BusinessEmail'		=> array('string', ''), // 'b_email'),
 			'BusinessCompany'	=> array('string', ''), // 'b_company'),
-			'BusinessStreet'	=> array('string', ''), // 'b_street'),
+			'BusinessAddress'	=> array('string', ''), // 'b_street'),
 			'BusinessCity'		=> array('string', ''), // 'b_city'),
 			'BusinessState'		=> array('string', ''), // 'b_state'),
 			'BusinessZip'		=> array('string', ''), // 'b_zip'),
@@ -232,7 +232,7 @@ class CContact extends AEntity
 		{
 			//ReadOnly
 			case EContactsPrimaryEmail::Personal:
-				$this->ViewEmail = (string) $this->HomeEmail;
+				$this->ViewEmail = (string) $this->PersonalEmail;
 				break;
 			case EContactsPrimaryEmail::Business:
 				$this->ViewEmail = (string) $this->BusinessEmail;
@@ -256,7 +256,7 @@ class CContact extends AEntity
 			{
 				case
 					api_Validate::IsEmpty($this->FullName) &&
-					api_Validate::IsEmpty($this->HomeEmail) &&
+					api_Validate::IsEmpty($this->PersonalEmail) &&
 					api_Validate::IsEmpty($this->BusinessEmail) &&
 					api_Validate::IsEmpty($this->OtherEmail):
 
@@ -288,9 +288,9 @@ class CContact extends AEntity
 
 		foreach (array(
 			'Title', 'FullName', 'FirstName', 'LastName', 'NickName', 'PrimaryEmail',
-			'HomeEmail', 'HomeStreet', 'HomeCity', 'HomeState', 'HomeZip', 'HomeCountry',
-			'HomePhone', 'HomeFax', 'HomeMobile', 'HomeWeb',
-			'BusinessEmail', 'BusinessCompany', 'BusinessStreet', 'BusinessCity', 'BusinessState', 'BusinessZip', 'BusinessCountry',
+			'PersonalEmail', 'PersonalAddress', 'PersonalCity', 'PersonalState', 'PersonalZip', 'PersonalCountry',
+			'PersonalPhone', 'PersonalFax', 'PersonalMobile', 'PersonalWeb',
+			'BusinessEmail', 'BusinessCompany', 'BusinessAddress', 'BusinessCity', 'BusinessState', 'BusinessZip', 'BusinessCountry',
 			'BusinessJobTitle', 'BusinessDepartment', 'BusinessOffice', 'BusinessPhone', 'BusinessMobile', 'BusinessFax', 'BusinessWeb',
 			'OtherEmail', 'Notes', 'Skype', 'Facebook', 'BirthdayDay', 'BirthdayMonth', 'BirthdayYear', 'HideInGAB'
 		) as $Prop)
@@ -386,7 +386,7 @@ class CContact extends AEntity
 					{
 						if ($oTypes->has('WORK'))
 						{
-							$this->BusinessStreet = isset($aAdrs[2]) ? $aAdrs[2] : '';
+							$this->BusinessAddress = isset($aAdrs[2]) ? $aAdrs[2] : '';
 							$this->BusinessCity = isset($aAdrs[3]) ? $aAdrs[3] : '';
 							$this->BusinessState = isset($aAdrs[4]) ? $aAdrs[4] : '';
 							$this->BusinessZip = isset($aAdrs[5]) ? $aAdrs[5] : '';
@@ -394,11 +394,11 @@ class CContact extends AEntity
 						}
 						if ($oTypes->has('HOME'))
 						{
-							$this->HomeStreet = isset($aAdrs[2]) ? $aAdrs[2] : '';
-							$this->HomeCity = isset($aAdrs[3]) ? $aAdrs[3] : '';
-							$this->HomeState = isset($aAdrs[4]) ? $aAdrs[4] : '';
-							$this->HomeZip = isset($aAdrs[5]) ? $aAdrs[5] : '';
-							$this->HomeCountry = isset($aAdrs[6]) ? $aAdrs[6] : '';
+							$this->PersonalAddress = isset($aAdrs[2]) ? $aAdrs[2] : '';
+							$this->PersonalCity = isset($aAdrs[3]) ? $aAdrs[3] : '';
+							$this->PersonalState = isset($aAdrs[4]) ? $aAdrs[4] : '';
+							$this->PersonalZip = isset($aAdrs[5]) ? $aAdrs[5] : '';
+							$this->PersonalCountry = isset($aAdrs[6]) ? $aAdrs[6] : '';
 						}
 					}
 				}
@@ -420,7 +420,7 @@ class CContact extends AEntity
 						}
 						else if ($oType->has('HOME'))
 						{
-							$this->HomeEmail = (string)$oEmail;
+							$this->PersonalEmail = (string)$oEmail;
 							if ($oType->has('PREF'))
 							{
 								$this->PrimaryEmail = EContactsPrimaryEmail::Personal;
@@ -447,7 +447,7 @@ class CContact extends AEntity
 				}
 				if (empty($this->PrimaryEmail))
 				{
-					if (!empty($this->HomeEmail))
+					if (!empty($this->PersonalEmail))
 					{
 						$this->PrimaryEmail = EContactsPrimaryEmail::Personal;
 					}
@@ -470,7 +470,7 @@ class CContact extends AEntity
 					{
 						if ($oTypes->has('HOME'))
 						{
-							$this->HomeWeb = (string)$oUrl;
+							$this->PersonalWeb = (string)$oUrl;
 						}
 						else if ($oTypes->has('WORK'))
 						{
@@ -490,7 +490,7 @@ class CContact extends AEntity
 						{
 							if ($oTypes->has('HOME'))
 							{
-								$this->HomeFax = (string)$oTel;
+								$this->PersonalFax = (string)$oTel;
 							}
 							if ($oTypes->has('WORK'))
 							{
@@ -501,11 +501,11 @@ class CContact extends AEntity
 						{
 							if ($oTypes->has('CELL'))
 							{
-								$this->HomeMobile = (string)$oTel;
+								$this->PersonalMobile = (string)$oTel;
 							}
 							else if ($oTypes->has('HOME'))
 							{
-								$this->HomePhone = (string)$oTel;
+								$this->PersonalPhone = (string)$oTel;
 							}
 							else if ($oTypes->has('WORK'))
 							{
@@ -551,20 +551,20 @@ class CContact extends AEntity
 			'Skype' => $this->Skype,
 			'Facebook' => $this->Facebook,
 
-			'HomeEmail' => $this->HomeEmail,
-			'HomeStreet' => $this->HomeStreet,
-			'HomeCity' => $this->HomeCity,
-			'HomeState' => $this->HomeState,
-			'HomeZip' => $this->HomeZip,
-			'HomeCountry' => $this->HomeCountry,
-			'HomePhone' => $this->HomePhone,
-			'HomeFax' => $this->HomeFax,
-			'HomeMobile' => $this->HomeMobile,
-			'HomeWeb' => $this->HomeWeb,
+			'PersonalEmail' => $this->PersonalEmail,
+			'PersonalAddress' => $this->PersonalAddress,
+			'PersonalCity' => $this->PersonalCity,
+			'PersonalState' => $this->PersonalState,
+			'PersonalZip' => $this->PersonalZip,
+			'PersonalCountry' => $this->PersonalCountry,
+			'PersonalWeb' => $this->PersonalWeb,
+			'PersonalFax' => $this->PersonalFax,
+			'PersonalPhone' => $this->PersonalPhone,
+			'PersonalMobile' => $this->PersonalMobile,
 
 			'BusinessEmail' => $this->BusinessEmail,
 			'BusinessCompany' => $this->BusinessCompany,
-			'BusinessStreet' => $this->BusinessStreet,
+			'BusinessAddress' => $this->BusinessAddress,
 			'BusinessCity' => $this->BusinessCity,
 			'BusinessState' => $this->BusinessState,
 			'BusinessZip' => $this->BusinessZip,

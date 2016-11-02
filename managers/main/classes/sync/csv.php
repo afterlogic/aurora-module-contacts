@@ -124,10 +124,10 @@ class CApiContactsSyncCsv
 						$oContact->FullName = trim($oContact->FirstName.' '.$oContact->LastName);
 					}
 					
-					if (0 !== strlen($oContact->HomeEmail))
+					if (0 !== strlen($oContact->PersonalEmail))
 					{
 						$oContact->PrimaryEmail = \EContactsPrimaryEmail::Personal;
-						$oContact->ViewEmail = $oContact->HomeEmail;
+						$oContact->ViewEmail = $oContact->PersonalEmail;
 					}
 					else if (0 !== strlen($oContact->BusinessEmail))
 					{

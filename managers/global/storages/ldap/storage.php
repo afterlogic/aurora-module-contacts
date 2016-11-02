@@ -271,7 +271,7 @@ class CApiContactsGlobalLdapStorage extends CApiContactsGlobalStorage
 					}
 				}
 
-				$oContact->ViewEmail = 0 < strlen($oContact->BusinessEmail) ? $oContact->BusinessEmail : $oContact->HomeEmail;
+				$oContact->ViewEmail = 0 < strlen($oContact->BusinessEmail) ? $oContact->BusinessEmail : $oContact->PersonalEmail;
 				$oContact->ItsMe = $oContact->ViewEmail === $oAccount->Email;
 			}
 		}

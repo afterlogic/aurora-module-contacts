@@ -88,6 +88,21 @@ class CApiContactsMainManager extends AApiManager
 		return $this->oApiContactsBaseManager->getContactById($iUserId, $mContactId, $bIgnoreHideInGab, $iSharedTenantId, $bIgnoreAutoCreate);
 	}
 
+	public function getContact($iContactId)
+	{
+		return $this->oEavManager->getEntities(
+			'CContact', 
+			array(),
+			0,
+			0,
+			array(
+				'id' => $iContactId
+			),
+			EContactSortField::Name,
+			ESortOrder::ASC
+		);
+	}
+	
 	/**
 	 * Returns contact item identified by email address. 
 	 * 
@@ -379,9 +394,8 @@ class CApiContactsMainManager extends AApiManager
 	 * 
 	 * @return array|bool
 	 */
-	public function getContactItems($mUserId,
-		$iSortField = EContactSortField::Email, $iSortOrder = ESortOrder::ASC,
-		$iOffset = 0, $iRequestLimit = 20, $sSearch = '', $sFirstCharacter = '', $mGroupId = '', $iTenantId = null, $bAll = false)
+	public function getContactItems($mUserId, $iSortField = EContactSortField::Name, $iSortOrder = ESortOrder::ASC,
+		$iOffset = 0, $iRequestLimit = 20, $sSearch = '', $mGroupId = '', $iTenantId = null)
 	{
 		return $this->oEavManager->getEntities(
 			'CContact', 

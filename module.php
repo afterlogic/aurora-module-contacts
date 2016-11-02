@@ -32,6 +32,7 @@ class ContactsModule extends AApiModule
 			'ContactsPerPage' => 20, // AppData.User.ContactsPerPage
 			'ImportContactsLink' => '', // AppData.Links.ImportingContacts
 			'Storages' => array('personal', 'global', 'shared'), // AppData.User.ShowPersonalContacts, AppData.User.ShowGlobalContacts, AppData.App.AllowContactsSharing
+			'EContactsStorage' => (new \EContactsStorage)->getMap(),
 			'EContactsPrimaryEmail' => (new \EContactsPrimaryEmail)->getMap(),
 			'EContactsPrimaryPhone' => (new \EContactsPrimaryPhone)->getMap(),
 			'EContactsPrimaryAddress' => (new \EContactsPrimaryAddress)->getMap(),
@@ -55,22 +56,22 @@ class ContactsModule extends AApiModule
 		$oContact->Skype = $aContact['Skype'];
 		$oContact->Facebook = $aContact['Facebook'];
 		
-		$oContact->HomeEmail = $aContact['HomeEmail'];
-		$oContact->HomeStreet = $aContact['HomeStreet'];
-		$oContact->HomeCity = $aContact['HomeCity'];
-		$oContact->HomeState = $aContact['HomeState'];
-		$oContact->HomeZip = $aContact['HomeZip'];
-		$oContact->HomeCountry = $aContact['HomeCountry'];
-		$oContact->HomeFax = $aContact['HomeFax'];
-		$oContact->HomePhone = $aContact['HomePhone'];
-		$oContact->HomeMobile = $aContact['HomeMobile'];
-		$oContact->HomeWeb = $aContact['HomeWeb'];
+		$oContact->PersonalEmail = $aContact['PersonalEmail'];
+		$oContact->PersonalAddress = $aContact['PersonalAddress'];
+		$oContact->PersonalCity = $aContact['PersonalCity'];
+		$oContact->PersonalState = $aContact['PersonalState'];
+		$oContact->PersonalZip = $aContact['PersonalZip'];
+		$oContact->PersonalCountry = $aContact['PersonalCountry'];
+		$oContact->PersonalWeb = $aContact['PersonalWeb'];
+		$oContact->PersonalFax = $aContact['PersonalFax'];
+		$oContact->PersonalPhone = $aContact['PersonalPhone'];
+		$oContact->PersonalMobile = $aContact['PersonalMobile'];
 		
 		$oContact->BusinessCompany = $aContact['BusinessCompany'];
 		$oContact->BusinessJobTitle = $aContact['BusinessJobTitle'];
 		$oContact->BusinessDepartment = $aContact['BusinessDepartment'];
 		$oContact->BusinessOffice = $aContact['BusinessOffice'];
-		$oContact->BusinessStreet = $aContact['BusinessStreet'];
+		$oContact->BusinessAddress = $aContact['BusinessAddress'];
 		$oContact->BusinessCity = $aContact['BusinessCity'];
 		$oContact->BusinessState = $aContact['BusinessState'];
 		$oContact->BusinessZip = $aContact['BusinessZip'];
@@ -215,34 +216,49 @@ class ContactsModule extends AApiModule
 	/**
 	 * @return array
 	 */
-	public function GetContacts($Offset = 0, $Limit = 20, $SortField = 'Name', $SortOrder = 1, $Search = '', $GroupId = '', $Storage = 'all')
+	public function GetContacts($Offset = 0, $Limit = 20, $SortField = EContactSortField::Name, $SortOrder = ESortOrder::ASC, $Search = '', $GroupId = '', $Storage = EContactsStorage::All)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$sMethod = 'Get' . ucfirst($Storage) . 'Contacts';
-		if (method_exists($this, $sMethod))
+		$oUser = \CApi::getAuthenticatedUser();
+		$iTenantId = $Storage === EContactsStorage::Shared ? $oUser->IdTenant : null;
+		$aContacts = $this->oApiContactsManager->getContactItems($oUser->iId, $SortField, $SortOrder, $Offset, $Limit, $Search, $GroupId, $iTenantId);
+		$aList = array();
+		if (is_array($aContacts))
 		{
-			return call_user_func(array($this, $sMethod), $Offset, $Limit, $SortField, $SortOrder, $Search, $GroupId);
+			foreach ($aContacts as $oContact)
+			{
+				$aList[] = array(
+					'Id' => $oContact->iId,
+					'Name' => $oContact->FullName,
+					'Email' => $oContact->ViewEmail,
+					'IsGroup' => false,
+					'IsOrganization' => false,
+					'ReadOnly' => false,
+					'ItsMe' => false,
+					'Global' => false,
+					'SharedToAll' => false
+				);
+			}
 		}
-		
-		return false;
+
+		return array(
+			'ContactCount' => count($aList),
+			'GroupId' => $GroupId,
+			'Search' => $Search,
+			'Storage' => $Storage,
+			'List' => \CApiResponseManager::GetResponseObject($aList)
+		);		
 	}	
 	
 	/**
 	 * @return array
 	 */
-	public function GetContact()
+	public function GetContact($ContactId, $Storage)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$sStorage = $this->getParamValue('Storage', 'personal');
-		$sMethod = 'Get' . ucfirst($sStorage) . 'Contact';
-		if (method_exists($this, $sMethod))
-		{
-			return call_user_func(array($this, $sMethod));
-		}
-		
-		return false;
+		return $this->oApiContactsManager->getContact($ContactId);
 	}	
 
 	public function GetAllContacts($Offset = 0, $Limit = 20, $SortField = 'Name', $SortOrder = 1, $Search = '', $GroupId = '')

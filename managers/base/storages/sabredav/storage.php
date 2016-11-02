@@ -1162,7 +1162,7 @@ class CApiContactsBaseSabredavStorage extends CApiContactsBaseStorage
 					$sUUID = \Sabre\DAV\UUIDUtil::getUUID();
 					$oContact = new CContact();
 					$oContact->FullName = $sName;
-					$oContact->HomeEmail = $sEmail;
+					$oContact->PersonalEmail = $sEmail;
 					$oContact->IdContactStr = $sUUID;
 
 					$oVCard = new \Sabre\VObject\Component\VCard();
