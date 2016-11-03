@@ -857,7 +857,7 @@ class CApiContactsBaseCarddavStorage extends CApiContactsBaseStorage
 			$bResult = true;
 /*
 			$oContact->initBeforeChange();
-			$sEmail = $oContact->ViewEmail;
+			$sEmail = $oContact->GetViewEmail();
 			$oAddressBook = $this->getAddressBook($oContact->IdUser, 'Collected');
 			$aContactsIds = $this->searchContactItemsByEmail($oContact->IdUser, $sEmail, $oAddressBook);
 

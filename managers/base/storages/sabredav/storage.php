@@ -994,7 +994,7 @@ class CApiContactsBaseSabredavStorage extends CApiContactsBaseStorage
 			}
 
 			$oAddressBook = $this->getAddressBook($oContact->IdUser, \Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_NAME);
-			$aContactsIds = $this->searchContactItemsByEmail($oContact->IdUser, $oContact->ViewEmail, $oAddressBook);
+			$aContactsIds = $this->searchContactItemsByEmail($oContact->IdUser, $oContact->GetViewEmail(), $oAddressBook);
 
 			$this->deleteContactsByAddressBook($oContact->IdUser, $aContactsIds, $oAddressBook);
 		}

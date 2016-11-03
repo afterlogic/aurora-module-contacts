@@ -231,7 +231,7 @@ class ContactsModule extends AApiModule
 				$aList[] = array(
 					'Id' => $oContact->iId,
 					'Name' => $oContact->FullName,
-					'Email' => $oContact->ViewEmail,
+					'Email' => $oContact->GetViewEmail(),
 					'IsGroup' => false,
 					'IsOrganization' => false,
 					'ReadOnly' => false,
@@ -632,82 +632,92 @@ class ContactsModule extends AApiModule
 	/**
 	 * @return array
 	 */
-	public function UpdateContact()
+	public function UpdateContact($Contact)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oAccount = $this->getDefaultAccountFromParam();
-
-		$bGlobal = '1' === $this->getParamValue('Global', '0');
-		$sContactId = $this->getParamValue('ContactId', '');
-
-		$bSharedToAll = '1' === $this->getParamValue('SharedToAll', '0');
-		$iTenantId = $bSharedToAll ? $oAccount->IdTenant : null;
-
-		if ($bGlobal && $this->oApiCapabilityManager->isGlobalContactsSupported($oAccount, true))
+		$oContact = $this->oApiContactsManager->getContact($Contact['ContactId']);
+		$this->populateContactObject($oContact, $Contact);
+		if (!$this->oApiContactsManager->updateContact($oContact, false))
 		{
-			$oApiContacts = $this->GetManager('global');
+			return false;
 		}
-		else if (!$bGlobal && $this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
-		{
-			$oApiContacts = $this->oApiContactsManager;
-		}
-
-		if ($oApiContacts)
-		{
-			$oContact = $oApiContacts->getContactById($bGlobal ? $oAccount : $oAccount->IdUser, $sContactId, false, $iTenantId);
-			if ($oContact)
-			{
-				$this->populateContactObject($oContact);
-
-				if ($oApiContacts->updateContact($oContact))
-				{
-					return true;
-				}
-				else
-				{
-					switch ($oApiContacts->getLastErrorCode())
-					{
-						case \Errs::Sabre_PreconditionFailed:
-							throw new \System\Exceptions\AuroraApiException(
-								\System\Notifications::ContactDataHasBeenModifiedByAnotherApplication);
-					}
-				}
-			}
-		}
-		else
-		{
-			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
-		}
-
-		return false;
+		return true;
+		
+//		$oAccount = $this->getDefaultAccountFromParam();
+//
+//		$bGlobal = '1' === $this->getParamValue('Global', '0');
+//		$sContactId = $this->getParamValue('ContactId', '');
+//
+//		$bSharedToAll = '1' === $this->getParamValue('SharedToAll', '0');
+//		$iTenantId = $bSharedToAll ? $oAccount->IdTenant : null;
+//
+//		if ($bGlobal && $this->oApiCapabilityManager->isGlobalContactsSupported($oAccount, true))
+//		{
+//			$oApiContacts = $this->GetManager('global');
+//		}
+//		else if (!$bGlobal && $this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
+//		{
+//			$oApiContacts = $this->oApiContactsManager;
+//		}
+//
+//		if ($oApiContacts)
+//		{
+//			$oContact = $oApiContacts->getContactById($bGlobal ? $oAccount : $oAccount->IdUser, $sContactId, false, $iTenantId);
+//			if ($oContact)
+//			{
+//				$this->populateContactObject($oContact);
+//
+//				if ($oApiContacts->updateContact($oContact))
+//				{
+//					return true;
+//				}
+//				else
+//				{
+//					switch ($oApiContacts->getLastErrorCode())
+//					{
+//						case \Errs::Sabre_PreconditionFailed:
+//							throw new \System\Exceptions\AuroraApiException(
+//								\System\Notifications::ContactDataHasBeenModifiedByAnotherApplication);
+//					}
+//				}
+//			}
+//		}
+//		else
+//		{
+//			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
+//		}
 	}
 	
 	/**
 	 * @return array
 	 */
-	public function DeleteContacts()
+	public function DeleteContacts($ContactsId, $SharedToAll)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oAccount = $this->getDefaultAccountFromParam();
-
-		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
-		{
-			$aContactsId = explode(',', $this->getParamValue('ContactsId', ''));
-			$aContactsId = array_map('trim', $aContactsId);
-			
-			$bSharedToAll = '1' === (string) $this->getParamValue('SharedToAll', '0');
-			$iTenantId = $bSharedToAll ? $oAccount->IdTenant : null;
-
-			return $this->oApiContactsManager->deleteContacts($oAccount->IdUser, $aContactsId, $iTenantId);
-		}
-		else
-		{
-			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
-		}
-
-		return false;
+		$aContacts = explode(',', $ContactsId);
+		
+		return $this->oApiContactsManager->deleteContacts($aContacts);
+		
+//		$oAccount = $this->getDefaultAccountFromParam();
+//
+//		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
+//		{
+//			$aContactsId = explode(',', $this->getParamValue('ContactsId', ''));
+//			$aContactsId = array_map('trim', $aContactsId);
+//			
+//			$bSharedToAll = '1' === (string) $this->getParamValue('SharedToAll', '0');
+//			$iTenantId = $bSharedToAll ? $oAccount->IdTenant : null;
+//
+//			return $this->oApiContactsManager->deleteContacts($oAccount->IdUser, $aContactsId, $iTenantId);
+//		}
+//		else
+//		{
+//			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
+//		}
+//
+//		return false;
 	}	
 	
 	/**
@@ -1122,9 +1132,9 @@ class ContactsModule extends AApiModule
 					$oContact->IdContact = 0;
 
 					$bContactExists = false;
-					if (0 < strlen($oContact->ViewEmail))
+					if (0 < strlen($oContact->GetViewEmail()))
 					{
-						$oLocalContact = $this->oApiContactsManager->getContactByEmail($oAccount->IdUser, $oContact->ViewEmail);
+						$oLocalContact = $this->oApiContactsManager->getContactByEmail($oAccount->IdUser, $oContact->GetViewEmail());
 						if ($oLocalContact)
 						{
 							$oContact->IdContact = $oLocalContact->IdContact;
@@ -1141,7 +1151,7 @@ class ContactsModule extends AApiModule
 						$oVcard->File = $sTemptFile;
 						$oVcard->Exists = !!$bContactExists;
 						$oVcard->Name = $oContact->FullName;
-						$oVcard->Email = $oContact->ViewEmail;
+						$oVcard->Email = $oContact->GetViewEmail();
 
 						$oMessage->addExtend('VCARD', $oVcard);
 					} else {

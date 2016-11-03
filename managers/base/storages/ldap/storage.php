@@ -367,7 +367,7 @@ class CApiContactsBaseLdapStorage extends CApiContactsBaseStorage
 		$sId = $oContact->IdContact;
 		if (!$bIsUpdate)
 		{
-			$sId = 'contact'.md5($oContact->FullName.$oContact->ViewEmail.time().rand(1000, 9999));
+			$sId = 'contact'.md5($oContact->FullName.$oContact->GetViewEmail().time().rand(1000, 9999));
 		}
 
 		$oContact->IdContact = (string) $sId;

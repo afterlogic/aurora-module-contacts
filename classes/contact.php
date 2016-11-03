@@ -3,7 +3,6 @@
 /* -AFTERLOGIC LICENSE HEADER- */
 
 /**
- * @property mixed $IdContact
  * @property string $IdContactStr
  * @property int $IdUser
  * @property int $IdDomain
@@ -13,7 +12,6 @@
  * @property string $IdTypeLink
  * @property string $FullName
  * @property bool $UseFriendlyName
- * @property string $ViewEmail
  * @property int $PrimaryEmail
  * @property string $Title
  * @property string $FirstName
@@ -42,7 +40,6 @@
  * @property string $BusinessDepartment
  * @property string $BusinessOffice
  * @property string $BusinessPhone
- * @property string $BusinessMobile
  * @property string $BusinessFax
  * @property string $BusinessWeb
  * @property string $OtherEmail
@@ -84,7 +81,6 @@ class CContact extends AEntity
 		$this->__USE_TRIM_IN_STRINGS__ = true;
 
 		$this->setStaticMap(array(
-			'IdContact'		=> array('string', ''), //  'id_addr', false, false),
 			'IdContactStr'	=> array('string', ''), // 'str_id', false),
 			'IdUser'		=> array('int', 0), // 'id_user'),
 			'IdDomain'		=> array('int', 0), // 'id_domain'),
@@ -95,7 +91,6 @@ class CContact extends AEntity
 			'Type'			=> array('int', EContactType::Personal), // 'type'),
 			'IdTypeLink'	=> array('string', ''), // 'type_id'),
 
-			'ViewEmail'			=> array('string', ''),
 			'PrimaryEmail'		=> array('int', EContactsPrimaryEmail::Personal),
 			'PrimaryPhone'		=> array('int', EContactsPrimaryPhone::Personal),
 			'PrimaryAddress'	=> array('int', EContactsPrimaryAddress::Personal),
@@ -135,7 +130,6 @@ class CContact extends AEntity
 			'BusinessDepartment'=> array('string', ''), // 'b_department'),
 			'BusinessOffice'	=> array('string', ''), // 'b_office'),
 			'BusinessPhone'		=> array('string', ''), // 'b_phone'),
-			'BusinessMobile'	=> array('string', ''), //),
 			'BusinessFax'		=> array('string', ''), // 'b_fax'),
 			'BusinessWeb'		=> array('string', ''), // 'b_web'),
 
@@ -180,7 +174,21 @@ class CContact extends AEntity
 
 		parent::__set($sKey, $mValue);
 	}
-
+	
+	public function GetViewEmail()
+	{
+		switch ((int) $this->PrimaryEmail)
+		{
+			default:
+			case EContactsPrimaryEmail::Personal:
+				return (string) $this->PersonalEmail;
+			case EContactsPrimaryEmail::Business:
+				return (string) $this->BusinessEmail;
+			case EContactsPrimaryEmail::Other:
+				return (string) $this->OtherEmail;
+		}
+	}
+	
 	/**
 	 * @return string
 	 */
@@ -216,8 +224,8 @@ class CContact extends AEntity
 //		parent::initBeforeChange();
 
 		if (0 === strlen($this->IdContactStr) &&
-			((is_int($this->IdContact) && 0 < $this->IdContact) ||
-			(is_string($this->IdContact) && 0 < strlen($this->IdContact)))
+			((is_int($this->iId) && 0 < $this->iId) ||
+			(is_string($this->iId) && 0 < strlen($this->iId)))
 		)
 		{
 			$this->IdContactStr = $this->GenerateStrId();
@@ -226,20 +234,6 @@ class CContact extends AEntity
 		if (!$this->__LOCK_DATE_MODIFIED__)
 		{
 			$this->DateModified = time();
-		}
-
-		switch ((int) $this->PrimaryEmail)
-		{
-			//ReadOnly
-			case EContactsPrimaryEmail::Personal:
-				$this->ViewEmail = (string) $this->PersonalEmail;
-				break;
-			case EContactsPrimaryEmail::Business:
-				$this->ViewEmail = (string) $this->BusinessEmail;
-				break;
-			case EContactsPrimaryEmail::Other:
-				$this->ViewEmail = (string) $this->OtherEmail;
-				break;
 		}
 
 		return true;
@@ -291,7 +285,7 @@ class CContact extends AEntity
 			'PersonalEmail', 'PersonalAddress', 'PersonalCity', 'PersonalState', 'PersonalZip', 'PersonalCountry',
 			'PersonalPhone', 'PersonalFax', 'PersonalMobile', 'PersonalWeb',
 			'BusinessEmail', 'BusinessCompany', 'BusinessAddress', 'BusinessCity', 'BusinessState', 'BusinessZip', 'BusinessCountry',
-			'BusinessJobTitle', 'BusinessDepartment', 'BusinessOffice', 'BusinessPhone', 'BusinessMobile', 'BusinessFax', 'BusinessWeb',
+			'BusinessJobTitle', 'BusinessDepartment', 'BusinessOffice', 'BusinessPhone', 'BusinessFax', 'BusinessWeb',
 			'OtherEmail', 'Notes', 'Skype', 'Facebook', 'BirthdayDay', 'BirthdayMonth', 'BirthdayYear', 'HideInGAB'
 		) as $Prop)
 		{
@@ -324,8 +318,7 @@ class CContact extends AEntity
 			
 			$this->IdUser = $iUserId;
 			$this->UseFriendlyName = true;
-			$this->IdContact = $sUid . '.vcf';
-			$this->IdContactStr = $this->IdContact;
+			$this->IdContactStr = $sUid . '.vcf';
 
 			$aResultGroupsIds = $this->GroupsIds;
 			if (isset($oVCardObject->CATEGORIES))
@@ -532,7 +525,7 @@ class CContact extends AEntity
 	{
 		return array(
 			'IdUser' => $this->IdUser,
-			'IdContact' => $this->IdContact,
+			'IdContact' => $this->iId,
 			'IdContactStr' => $this->IdContactStr,
 
 			'Global' => $this->Global,
@@ -573,7 +566,6 @@ class CContact extends AEntity
 			'BusinessDepartment' => $this->BusinessDepartment,
 			'BusinessOffice' => $this->BusinessOffice,
 			'BusinessPhone' => $this->BusinessPhone,
-			'BusinessMobile' => $this->BusinessMobile,
 			'BusinessFax' => $this->BusinessFax,
 			'BusinessWeb' => $this->BusinessWeb,
 

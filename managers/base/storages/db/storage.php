@@ -611,7 +611,7 @@ class CApiContactsBaseDbStorage extends CApiContactsBaseStorage
 			$bResult = $this->updateContact($oContact);
 
 			$this->oConnection->Execute($this->oCommandCreator->DeleteAutoCreateContacts(
-				$oContact->IdUser, $oContact->ViewEmail));
+				$oContact->IdUser, $oContact->GetViewEmail()));
 		}
 		return $bResult;
 	}
