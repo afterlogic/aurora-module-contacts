@@ -96,30 +96,6 @@ class ContactsModule extends AApiModule
 		$oContact->GroupsIds = implode(',', array_unique($aGroupsIds));
 	}	
 	
-	/**
-	 * @param \CGroup $oGroup
-	 */
-	private function populateGroupObject(&$oGroup)
-	{
-		$this->paramToObject('IsOrganization', $oGroup, 'bool');
-
-		$this->paramsStrToObjectHelper($oGroup, 
-				array(
-					'Name', 
-					'Email', 
-					'Country', 
-					'City', 
-					'Company', 
-					'Fax', 
-					'Phone',
-					'State', 
-					'Street', 
-					'Web', 
-					'Zip'			
-				)
-		);
-	}	
-	
 	private function downloadContacts($sSyncType)
 	{
 		$oAccount = $this->getDefaultAccountFromParam();
@@ -142,7 +118,7 @@ class ContactsModule extends AApiModule
 	/**
 	 * @return array
 	 */
-	public function GetGroups($iUserId = 0)
+	public function GetGroups()
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
@@ -153,11 +129,10 @@ class ContactsModule extends AApiModule
 		$aList = false;
 		//TODO use real user settings
 //		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
-		
+		$iUserId = \CApi::getAuthenticatedUserId();
 		if ($iUserId > 0)
 		{
-			$aList = $this->oApiContactsManager->getGroupItems($iUserId,
-				\EContactSortField::Name, \ESortOrder::ASC, 0, 999);
+			$aList = $this->oApiContactsManager->getGroupItems($iUserId);
 		}
 		else
 		{
@@ -822,70 +797,70 @@ class ContactsModule extends AApiModule
 	/**
 	 * @return array
 	 */
-	public function CreateGroup()
+	public function CreateGroup($Group)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oAccount = $this->getDefaultAccountFromParam();
-
-		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
-		{
-			$oGroup = new \CGroup();
-			$oGroup->IdUser = $oAccount->IdUser;
-
-			$this->populateGroupObject($oGroup);
-
+//		$oAccount = $this->getDefaultAccountFromParam();
+//
+//		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
+//		{
+			$oGroup = \CGroup::createInstance();
+			$oGroup->IdUser = \CApi::getAuthenticatedUserId();
+			
+			$oGroup->populate($Group);
+			
 			$this->oApiContactsManager->createGroup($oGroup);
 			return $oGroup ? array(
-				'IdGroup' => $oGroup->IdGroup
+				'IdGroup' => $oGroup->iId
 			) : false;
-		}
-		else
-		{
-			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
-		}
-
-		return false;
+//		}
+//		else
+//		{
+//			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
+//		}
+//
+//		return false;
 	}	
 	
 	/**
 	 * @return array
 	 */
-	public function UpdateGroup()
+	public function UpdateGroup($Group)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oAccount = $this->getDefaultAccountFromParam();
-
-		$sGroupId = $this->getParamValue('GroupId', '');
-
-		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
-		{
-			$oGroup = $this->oApiContactsManager->getGroupById($oAccount->IdUser, $sGroupId);
+//		$oAccount = $this->getDefaultAccountFromParam();
+//
+//		$sGroupId = $this->getParamValue('GroupId', '');
+//
+//		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
+//		{
+			$oGroup = $this->oApiContactsManager->getGroup($Group['GroupId']);
 			if ($oGroup)
 			{
-				$this->populateGroupObject($oGroup);
-
-				if ($this->oApiContactsManager->updateGroup($oGroup))
-				{
-					return true;
-				}
-				else
-				{
-					switch ($this->oApiContactsManager->getLastErrorCode())
-					{
-						case \Errs::Sabre_PreconditionFailed:
-							throw new \System\Exceptions\AuroraApiException(
-								\System\Notifications::ContactDataHasBeenModifiedByAnotherApplication);
-					}
-				}
+				$oGroup->populate($Group);
+				return $this->oApiContactsManager->updateGroup($oGroup);
+//				if ($this->oApiContactsManager->updateGroup($oGroup))
+//				{
+//					return true;
+//				}
+//				else
+//				{
+//					switch ($this->oApiContactsManager->getLastErrorCode())
+//					{
+//						case \Errs::Sabre_PreconditionFailed:
+//							throw new \System\Exceptions\AuroraApiException(
+//								\System\Notifications::ContactDataHasBeenModifiedByAnotherApplication);
+//					}
+//				}
 			}
-		}
-		else
-		{
-			throw new \System\Exceptions\AuroraApiException(
-				\System\Notifications::ContactsNotAllowed);
-		}
+//		}
+//		else
+//		{
+//			throw new \System\Exceptions\AuroraApiException(
+//				\System\Notifications::ContactsNotAllowed);
+//		}
 
 		return false;
 	}	

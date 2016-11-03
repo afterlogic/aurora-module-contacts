@@ -158,6 +158,11 @@ class CApiContactsMainManager extends AApiManager
 		return $this->oApiContactsBaseManager->getGroupById($iUserId, $mGroupId);
 	}
 
+	public function getGroup($iGroupId)
+	{
+		return $this->oEavManager->getEntityById($iGroupId);
+	}
+	
 	/**
 	 * Returns group item identified by str_id value. 
 	 * 
@@ -283,49 +288,50 @@ class CApiContactsMainManager extends AApiManager
 	 */
 	public function updateGroup($oGroup)
 	{
-		$res1 = $res2 = false;
-
-		$oGroupDb = $this->oApiContactsBaseManager->getGroupById($oGroup->IdUser, $oGroup->IdGroup);
-
-		$res1 = $this->oApiContactsBaseManager->updateGroup($oGroup);
-		if ('sabredav' !== CApi::GetManager()->GetStorageByType('contacts') && $oGroupDb)
-		{
-			$oGroup->IdGroup = $oGroupDb->Name;
-
-			$oContactItems = $this->oApiContactsBaseManager->getContactItems($oGroup->IdUser, EContactSortField::Email,
-				ESortOrder::ASC, 0, 999, '', '', $oGroupDb->IdGroup);
-			
-			if (is_array($oContactItems))
-			{
-				foreach ($oContactItems as $oContactItem)
-				{
-					$oContact = $this->oApiContactsBaseManagerDAV->getContactById($oGroup->IdUser, $oContactItem->IdStr);
-					if ($oContact)
-					{
-						$aGroupsIds = array();
-						foreach($oContact->GroupsIds as $sGroupId)
-						{
-							$sGroupId = (string) $sGroupId;
-							if ($sGroupId === (string) $oGroup->IdGroup)
-							{
-								$sGroupId = $oGroup->Name;
-							}
-							
-							$aGroupsIds[] = $sGroupId;
-						}
-						$oContact->GroupsIds = $aGroupsIds;
-						$this->oApiContactsBaseManagerDAV->updateContact($oContact);
-					}
-				}
-			}
-			$res2 = true;
-		}
-		else
-		{
-			$res2 = true;
-		}
-
-		return ($res1 && $res2);
+		return $this->oEavManager->saveEntity($oGroup);
+//		$res1 = $res2 = false;
+//
+//		$oGroupDb = $this->oApiContactsBaseManager->getGroupById($oGroup->IdUser, $oGroup->IdGroup);
+//
+//		$res1 = $this->oApiContactsBaseManager->updateGroup($oGroup);
+//		if ('sabredav' !== CApi::GetManager()->GetStorageByType('contacts') && $oGroupDb)
+//		{
+//			$oGroup->IdGroup = $oGroupDb->Name;
+//
+//			$oContactItems = $this->oApiContactsBaseManager->getContactItems($oGroup->IdUser, EContactSortField::Email,
+//				ESortOrder::ASC, 0, 999, '', '', $oGroupDb->IdGroup);
+//			
+//			if (is_array($oContactItems))
+//			{
+//				foreach ($oContactItems as $oContactItem)
+//				{
+//					$oContact = $this->oApiContactsBaseManagerDAV->getContactById($oGroup->IdUser, $oContactItem->IdStr);
+//					if ($oContact)
+//					{
+//						$aGroupsIds = array();
+//						foreach($oContact->GroupsIds as $sGroupId)
+//						{
+//							$sGroupId = (string) $sGroupId;
+//							if ($sGroupId === (string) $oGroup->IdGroup)
+//							{
+//								$sGroupId = $oGroup->Name;
+//							}
+//							
+//							$aGroupsIds[] = $sGroupId;
+//						}
+//						$oContact->GroupsIds = $aGroupsIds;
+//						$this->oApiContactsBaseManagerDAV->updateContact($oContact);
+//					}
+//				}
+//			}
+//			$res2 = true;
+//		}
+//		else
+//		{
+//			$res2 = true;
+//		}
+//
+//		return ($res1 && $res2);
 	}
 
 	/**
@@ -433,12 +439,17 @@ class CApiContactsMainManager extends AApiManager
 	 * 
 	 * @return array|bool
 	 */
-	public function getGroupItems($iUserId,
-		$iSortField = EContactSortField::Name, $iSortOrder = ESortOrder::ASC,
-		$iOffset = 0, $iRequestLimit = 20, $sSearch = '', $sFirstCharacter = '', $iContactId = 0)
+	public function getGroupItems($iUserId)
 	{
-		return $this->oApiContactsBaseManager->getGroupItems($iUserId, $iSortField, $iSortOrder,
-			$iOffset, $iRequestLimit, $sSearch, $sFirstCharacter, $iContactId);
+		return $this->oEavManager->getEntities(
+			'CGroup', 
+			array(),
+			0,
+			0,
+			array('IdUser' => $iUserId),
+			EContactSortField::Name,
+			ESortOrder::ASC
+		);
 	}
 
 	/**
@@ -495,7 +506,8 @@ class CApiContactsMainManager extends AApiManager
 	{
 		$res1 = $res2 = false;
 
-		$res1 = $this->oApiContactsBaseManager->createGroup($oGroup);
+//		$res1 = $this->oApiContactsBaseManager->createGroup($oGroup);
+		$res1 = $this->oEavManager->saveEntity($oGroup);
 		if ('sabredav' !== CApi::GetManager()->GetStorageByType('contacts'))
 		{
 			$res2 = $this->oApiContactsBaseManagerDAV->createGroup($oGroup);

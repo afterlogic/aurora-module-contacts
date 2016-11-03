@@ -24,40 +24,44 @@
  * @package Contactsmain
  * @subpackage Classes
  */
-class CGroup extends api_AContainer
+class CGroup extends AEntity
 {
 	const STR_PREFIX = '5765624D61696C50726F';
 
 	public $Events = array();
 	
-	public function __construct()
+	public function __construct($sModule, $oParams)
 	{
-		parent::__construct(get_class($this), 'IdGroup');
+		parent::__construct(get_class($this), $sModule);
 
 		$this->__USE_TRIM_IN_STRINGS__ = true;
 
-		$this->SetDefaults(array(
-			'IdGroup'		=> '',
-			'IdGroupStr'	=> '',
-			'IdUser'		=> 0,
+		$this->setStaticMap(array(
+			'IdGroupStr'		=> array('string', ''),
+			'IdUser'			=> array('int', 0),
+			
+			'Name'				=> array('string', ''),
+			'IsOrganization'	=> array('bool', false),
 
-			'Name'			=> '',
-			'IsOrganization'	=> false,
-
-			'Email'		=> '',
-			'Company'	=> '',
-			'Street'	=> '',
-			'City'		=> '',
-			'State'		=> '',
-			'Zip'		=> '',
-			'Country'	=> '',
-			'Phone'		=> '',
-			'Fax'		=> '',
-			'Web'		=> '',
-			'Events'	=> array()
+			'Email'				=> array('string', ''),
+			'Company'			=> array('string', ''),
+			'Street'			=> array('string', ''),
+			'City'				=> array('string', ''),
+			'State'				=> array('string', ''),
+			'Zip'				=> array('string', ''),
+			'Country'			=> array('string', ''),
+			'Phone'				=> array('string', ''),
+			'Fax'				=> array('string', ''),
+			'Web'				=> array('string', ''),
+			'Events'			=> array('string', ''),
 		));
 	}
 
+	public static function createInstance($sModule = 'Contacts', $oParams = array())
+	{
+		return new CGroup($sModule, $oParams);
+	}
+	
 	/**
 	 * @return string
 	 */
@@ -71,7 +75,7 @@ class CGroup extends api_AContainer
 	 */
 	public function initBeforeChange()
 	{
-		parent::initBeforeChange();
+//		parent::initBeforeChange();
 
 		if (0 === strlen($this->IdGroupStr))
 		{
@@ -96,41 +100,22 @@ class CGroup extends api_AContainer
 		return true;
 	}
 
-	/**
-	 * @return array
-	 */
-	public function getMap()
+	public function populate($aGroup)
 	{
-		return self::getStaticMap();
+		$this->IsOrganization = $aGroup['IsOrganization'];
+		$this->Name = $aGroup['Name'];
+		$this->Email = $aGroup['Email'];
+		$this->Country = $aGroup['Country'];
+		$this->City = $aGroup['City'];
+		$this->Company = $aGroup['Company'];
+		$this->Fax = $aGroup['Fax'];
+		$this->Phone = $aGroup['Phone'];
+		$this->State = $aGroup['State'];
+		$this->Street = $aGroup['Street'];
+		$this->Web = $aGroup['Web'];
+		$this->Zip = $aGroup['Zip'];
 	}
 
-	/**
-	 * @return array
-	 */
-	public static function getStaticMap()
-	{
-		return array(
-			'IdGroup'		=> array('string', 'id_group', false, false),
-			'IdGroupStr'	=> array('string(100)', 'group_str_id', false),
-			'IdUser'		=> array('int', 'id_user'),
-
-			'Name'			=> array('string(255)', 'group_nm'),
-
-			'IsOrganization'	=> array('bool', 'organization'),
-
-			'Email'		=> array('string(255)', 'email'),
-			'Company'	=> array('string(200)', 'company'),
-			'Street'	=> array('string(255)', 'street'),
-			'City'		=> array('string(200)', 'city'),
-			'State'		=> array('string(200)', 'state'),
-			'Zip'		=> array('string(10)', 'zip'),
-			'Country'	=> array('string(200)', 'country'),
-			'Phone'		=> array('string(50)', 'phone'),
-			'Fax'		=> array('string(50)', 'fax'),
-			'Web'		=> array('string(255)', 'web')
-		);
-	}
-	
 	public function toResponseArray($aParameters = array())
 	{
 		$mResult = null; 
@@ -142,7 +127,7 @@ class CGroup extends api_AContainer
 
 			$mResult = array(
 				'IdUser' => $this->IdUser,
-				'IdGroup' => $this->IdGroup,
+				'Id' => $this->iId,
 				'IdGroupStr' => $this->IdGroupStr,
 				'Name' => $this->Name,
 
@@ -151,7 +136,7 @@ class CGroup extends api_AContainer
 				'Company'	=> $this->Company,
 				'Street'	=> $this->Street,
 				'City'		=> $this->City,
-				'State'		=> $this->City,
+				'State'		=> $this->State,
 				'Zip'		=> $this->Zip,
 				'Country'	=> $this->Country,
 				'Phone'		=> $this->Phone,
