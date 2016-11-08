@@ -8,6 +8,7 @@ class ContactsModule extends AApiModule
 	{
 		$this->incClass('contact-list-item');
 		$this->incClass('contact');
+		$this->incClass('group-contact');
 		$this->incClass('group');
 		$this->incClass('vcard-helper');
 
@@ -173,17 +174,17 @@ class ContactsModule extends AApiModule
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		$aEvents = array();
-		$oAccount = $this->getDefaultAccountFromParam();
-
-		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
-		{
-			$sGroupId = (string) $this->getParamValue('GroupId', '');
-			$aEvents = $this->oApiContactsManager->getGroupEvents($oAccount->IdUser, $sGroupId);
-		}
-		else
-		{
-			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
-		}
+//		$oAccount = $this->getDefaultAccountFromParam();
+//
+//		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
+//		{
+//			$sGroupId = (string) $this->getParamValue('GroupId', '');
+//			$aEvents = $this->oApiContactsManager->getGroupEvents($oAccount->IdUser, $sGroupId);
+//		}
+//		else
+//		{
+//			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
+//		}
 
 		return $aEvents;
 	}	
@@ -197,7 +198,7 @@ class ContactsModule extends AApiModule
 		
 		$oUser = \CApi::getAuthenticatedUser();
 		$iTenantId = $Storage === EContactsStorage::Shared ? $oUser->IdTenant : null;
-		$aContacts = $this->oApiContactsManager->getContactItems($oUser->iId, $SortField, $SortOrder, $Offset, $Limit, $Search, $GroupId, $iTenantId);
+		$aContacts = $this->oApiContactsManager->getContactItems($oUser->iId, $SortField, $SortOrder, $Offset, $Limit, $Search, (int) $GroupId, $iTenantId);
 		$aList = array();
 		if (is_array($aContacts))
 		{
@@ -868,24 +869,25 @@ class ContactsModule extends AApiModule
 	/**
 	 * @return array
 	 */
-	public function DeleteGroup()
+	public function DeleteGroup($GroupId)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oAccount = $this->getDefaultAccountFromParam();
-
-		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
-		{
-			$sGroupId = $this->getParamValue('GroupId', '');
-
-			return $this->oApiContactsManager->deleteGroup($oAccount->IdUser, $sGroupId);
-		}
-		else
-		{
-			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
-		}
-
-		return false;
+//		$oAccount = $this->getDefaultAccountFromParam();
+//
+//		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
+//		{
+//			$sGroupId = $this->getParamValue('GroupId', '');
+//
+//			return $this->oApiContactsManager->deleteGroup($oAccount->IdUser, $sGroupId);
+			return $this->oApiContactsManager->deleteGroup($GroupId);
+//		}
+//		else
+//		{
+//			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
+//		}
+//
+//		return false;
 	}
 	
 	/**

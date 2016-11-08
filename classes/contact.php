@@ -7,7 +7,6 @@
  * @property int $IdUser
  * @property int $IdDomain
  * @property int $IdTenant
- * @property array $GroupsIds
  * @property int $Type
  * @property string $IdTypeLink
  * @property string $FullName
@@ -74,6 +73,8 @@ class CContact extends AEntity
 	 */
 	public $__SKIP_VALIDATE__;
 
+	public $GroupsContacts = array();
+	
 	public function __construct($sModule, $oParams)
 	{
 		parent::__construct(get_class($this), $sModule);
@@ -85,8 +86,6 @@ class CContact extends AEntity
 			'IdUser'		=> array('int', 0), // 'id_user'),
 			'IdDomain'		=> array('int', 0), // 'id_domain'),
 			'IdTenant'		=> array('int', 0), // 'id_tenant', true),
-
-			'GroupsIds'			=> array('string', ''), //), array
 
 			'Type'			=> array('int', EContactType::Personal), // 'type'),
 			'IdTypeLink'	=> array('string', ''), // 'type_id'),
@@ -320,7 +319,6 @@ class CContact extends AEntity
 			$this->UseFriendlyName = true;
 			$this->IdContactStr = $sUid . '.vcf';
 
-			$aResultGroupsIds = $this->GroupsIds;
 			if (isset($oVCardObject->CATEGORIES))
 			{
 				$aGroupsIds = $oVCardObject->CATEGORIES->getParts();
@@ -328,12 +326,14 @@ class CContact extends AEntity
 				{
 					if (!empty($sGroupsId))
 					{
-						$aResultGroupsIds[] = (string) $sGroupsId;
+						$GroupContact = \CGroupContact::createInstance();
+						$GroupContact->IdContact = $this->iId;
+						$GroupContact->IdGroup = (int)$sGroupsId;
+						$this->GroupsContacts[] = $GroupContact;
 					}
 				}
 			}
-			$this->GroupsIds = $aResultGroupsIds;
-
+			
 			$this->FullName = (isset($oVCardObject->FN)) ? (string)$oVCardObject->FN : '';
 
 			if (isset($oVCardObject->N))
@@ -523,6 +523,11 @@ class CContact extends AEntity
 	
 	public function toResponseArray($aParameters = array())
 	{
+		$aGroupsIds = array();
+		foreach ($this->GroupsContacts as $oGroupContact)
+		{
+			$aGroupsIds[] = $oGroupContact->IdGroup;
+		}
 		return array(
 			'IdUser' => $this->IdUser,
 			'IdContact' => $this->iId,
@@ -533,8 +538,6 @@ class CContact extends AEntity
 
 			'PrimaryEmail' => $this->PrimaryEmail,
 			'UseFriendlyName' => $this->UseFriendlyName,
-
-			'GroupsIds' => $this->GroupsIds,
 
 			'FullName' => $this->FullName,
 			'Title' => $this->Title,
@@ -577,7 +580,9 @@ class CContact extends AEntity
 			'BirthdayYear' => $this->BirthdayYear,
 			'ReadOnly' => $this->ReadOnly,
 			'ETag' => $this->ETag,
-			'SharedToAll' => $this->SharedToAll
+			'SharedToAll' => $this->SharedToAll,
+			
+			'GroupsIds' => implode(',', $aGroupsIds)
 		);
 	}
 }

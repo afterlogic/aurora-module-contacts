@@ -88,9 +88,14 @@ class CApiContactsMainManager extends AApiManager
 		return $this->oApiContactsBaseManager->getContactById($iUserId, $mContactId, $bIgnoreHideInGab, $iSharedTenantId, $bIgnoreAutoCreate);
 	}
 
-	public function getContact($iContactId)
+	public function getContact($iIdContact)
 	{
-		return $this->oEavManager->getEntityById($iContactId);
+		$oContact = $this->oEavManager->getEntityById($iIdContact);
+		if ($oContact)
+		{
+			$oContact->GroupsContacts = $this->getGroupContactItems(null, $iIdContact);
+		}
+		return $oContact;
 	}
 	
 	/**
@@ -393,16 +398,41 @@ class CApiContactsMainManager extends AApiManager
 	 * @return array|bool
 	 */
 	public function getContactItems($mUserId, $iSortField = EContactSortField::Name, $iSortOrder = ESortOrder::ASC,
-		$iOffset = 0, $iRequestLimit = 20, $sSearch = '', $mGroupId = '', $iTenantId = null)
+		$iOffset = 0, $iRequestLimit = 20, $sSearch = '', $iIdGroup = 0, $iTenantId = null)
 	{
+		$aFilters = array();
+		if (!empty($sSearch))
+		{
+			$aFilters['FullName'] = $sSearch;
+			$aFilters['PersonalEmail'] = $sSearch;
+			$aFilters['BusinessEmail'] = $sSearch;
+			$aFilters['OtherEmail'] = $sSearch;
+		}
+		
+		$aIdContact = array();
+		if (is_numeric($iIdGroup) && $iIdGroup > 0)
+		{
+			$aGroupContact = $this->getGroupContactItems($iIdGroup);
+			foreach ($aGroupContact as $oGroupContact)
+			{
+				$aIdContact[] = $oGroupContact->IdContact;
+			}
+			
+			if (empty($aIdContact))
+			{
+				return array();
+			}
+		}
+		
 		return $this->oEavManager->getEntities(
 			'CContact', 
 			array(),
 			$iOffset,
 			$iRequestLimit,
-			array(),
+			$aFilters,
 			$iSortField,
-			$iSortOrder
+			$iSortOrder,
+			$aIdContact
 		);
 	}
 
@@ -508,6 +538,14 @@ class CApiContactsMainManager extends AApiManager
 
 //		$res1 = $this->oApiContactsBaseManager->createGroup($oGroup);
 		$res1 = $this->oEavManager->saveEntity($oGroup);
+		if ($res1)
+		{
+			foreach ($oGroup->GroupContacts as $oGroupContact)
+			{
+				$oGroupContact->IdGroup = $oGroup->iId;
+				$res1 = $this->oEavManager->saveEntity($oGroupContact);
+			}
+		}
 		if ('sabredav' !== CApi::GetManager()->GetStorageByType('contacts'))
 		{
 			$res2 = $this->oApiContactsBaseManagerDAV->createGroup($oGroup);
@@ -536,6 +574,11 @@ class CApiContactsMainManager extends AApiManager
 			if (!$this->oEavManager->deleteEntity($iContact))
 			{
 				return false;
+			}
+			$aGroupContact = $this->getGroupContactItems(null, $iContact);
+			foreach ($aGroupContact as $oGroupContact)
+			{
+				$this->oEavManager->deleteEntity($oGroupContact->iId);
 			}
 		}
 		
@@ -639,6 +682,26 @@ class CApiContactsMainManager extends AApiManager
 		return ($res1 && $res2);
 	}
 
+	public function getGroupContactItems($iIdGroup = null, $iIdContact = null)
+	{
+		$aFilters = array();
+		if (is_numeric($iIdGroup) && $iIdGroup > 0)
+		{
+			$aFilters = array('IdGroup' => $iIdGroup);
+		}
+		if (is_numeric($iIdContact) && $iIdContact > 0)
+		{
+			$aFilters = array('IdContact' => $iIdContact);
+		}
+		return $this->oEavManager->getEntities(
+			'CGroupContact', 
+			array('IdGroup', 'IdContact'),
+			0,
+			0,
+			$aFilters
+		);
+	}
+	
 	/**
 	 * Deletes specific group from user's address book.
 	 * 
@@ -647,9 +710,18 @@ class CApiContactsMainManager extends AApiManager
 	 * 
 	 * @return bool
 	 */
-	public function deleteGroup($iUserId, $mGroupId)
+//	public function deleteGroup($iUserId, $mGroupId)
+//	{
+//		return $this->oApiContactsBaseManager->deleteGroup($iUserId, $mGroupId);
+//	}
+	public function deleteGroup($iIdGroup)
 	{
-		return $this->oApiContactsBaseManager->deleteGroup($iUserId, $mGroupId);
+		$aGroupContact = $this->getGroupContactItems($iIdGroup);
+		foreach ($aGroupContact as $oGroupContact)
+		{
+			$this->oEavManager->deleteEntity($oGroupContact->iId);
+		}
+		return $this->oEavManager->deleteEntity($iIdGroup);
 	}
 
 	/**

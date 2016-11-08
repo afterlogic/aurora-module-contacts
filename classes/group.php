@@ -30,12 +30,14 @@ class CGroup extends AEntity
 
 	public $Events = array();
 	
+	public $GroupContacts = array();
+	
 	public function __construct($sModule, $oParams)
 	{
 		parent::__construct(get_class($this), $sModule);
 
 		$this->__USE_TRIM_IN_STRINGS__ = true;
-
+		
 		$this->setStaticMap(array(
 			'IdGroupStr'		=> array('string', ''),
 			'IdUser'			=> array('int', 0),
@@ -114,6 +116,18 @@ class CGroup extends AEntity
 		$this->Street = $aGroup['Street'];
 		$this->Web = $aGroup['Web'];
 		$this->Zip = $aGroup['Zip'];
+		
+		$this->GroupContacts = array();
+		if (!empty($aGroup['Contacts']))
+		{
+			$aContactsIds = explode(',', $aGroup['Contacts']);
+			foreach ($aContactsIds as $sContactId)
+			{
+				$oGroupContact = \CGroupContact::createInstance();
+				$oGroupContact->IdContact = (int) $sContactId;
+				$this->GroupContacts[] = $oGroupContact;
+			}
+		}
 	}
 
 	public function toResponseArray($aParameters = array())
