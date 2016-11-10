@@ -41,62 +41,6 @@ class ContactsModule extends AApiModule
 		);
 	}
 	
-	/**
-	 * @param \CContact $oContact
-	 * @param array $aContact
-	 */
-	private function populateContactObject(&$oContact, $aContact)
-	{
-		$bItsMe = $oContact->ItsMe;
-		$oContact->PrimaryEmail = $aContact['PrimaryEmail'];
-
-		$oContact->FullName = $aContact['FullName'];
-		$oContact->FirstName = $aContact['FirstName'];
-		$oContact->LastName = $aContact['LastName'];
-		$oContact->NickName = $aContact['NickName'];
-		$oContact->Skype = $aContact['Skype'];
-		$oContact->Facebook = $aContact['Facebook'];
-		
-		$oContact->PersonalEmail = $aContact['PersonalEmail'];
-		$oContact->PersonalAddress = $aContact['PersonalAddress'];
-		$oContact->PersonalCity = $aContact['PersonalCity'];
-		$oContact->PersonalState = $aContact['PersonalState'];
-		$oContact->PersonalZip = $aContact['PersonalZip'];
-		$oContact->PersonalCountry = $aContact['PersonalCountry'];
-		$oContact->PersonalWeb = $aContact['PersonalWeb'];
-		$oContact->PersonalFax = $aContact['PersonalFax'];
-		$oContact->PersonalPhone = $aContact['PersonalPhone'];
-		$oContact->PersonalMobile = $aContact['PersonalMobile'];
-		
-		$oContact->BusinessCompany = $aContact['BusinessCompany'];
-		$oContact->BusinessJobTitle = $aContact['BusinessJobTitle'];
-		$oContact->BusinessDepartment = $aContact['BusinessDepartment'];
-		$oContact->BusinessOffice = $aContact['BusinessOffice'];
-		$oContact->BusinessAddress = $aContact['BusinessAddress'];
-		$oContact->BusinessCity = $aContact['BusinessCity'];
-		$oContact->BusinessState = $aContact['BusinessState'];
-		$oContact->BusinessZip = $aContact['BusinessZip'];
-		$oContact->BusinessCountry = $aContact['BusinessCountry'];
-		$oContact->BusinessFax = $aContact['BusinessFax'];
-		$oContact->BusinessPhone = $aContact['BusinessPhone'];
-		$oContact->BusinessWeb = $aContact['BusinessWeb'];
-		
-		$oContact->OtherEmail = $aContact['OtherEmail'];
-		$oContact->Notes = $aContact['Notes'];
-		if (!$bItsMe)
-		{
-			$oContact->BusinessEmail = $aContact['BusinessEmail'];
-		}
-		$oContact->BirthdayDay = $aContact['BirthdayDay'];
-		$oContact->BirthdayMonth = $aContact['BirthdayMonth'];
-		$oContact->BirthdayYear = $aContact['BirthdayYear'];
-
-
-		$aGroupsIds = $aContact['GroupsIds'];
-		$aGroupsIds = is_array($aGroupsIds) ? array_map('trim', $aGroupsIds) : array();
-		$oContact->GroupsIds = implode(',', array_unique($aGroupsIds));
-	}	
-	
 	private function downloadContacts($sSyncType)
 	{
 		$oAccount = $this->getDefaultAccountFromParam();
@@ -590,7 +534,7 @@ class ContactsModule extends AApiModule
 			$oContact->IdTenant = $oUser->IdTenant;
 			$oContact->SharedToAll = $Contact['SharedToAll'];
 
-			$this->populateContactObject($oContact, $Contact);
+			$oContact->populate($Contact);
 
 			$this->oApiContactsManager->createContact($oContact);
 			return $oContact ? array(
@@ -613,7 +557,7 @@ class ContactsModule extends AApiModule
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		$oContact = $this->oApiContactsManager->getContact($Contact['ContactId']);
-		$this->populateContactObject($oContact, $Contact);
+		$oContact->populate($Contact);
 		if (!$this->oApiContactsManager->updateContact($oContact, false))
 		{
 			return false;
@@ -756,44 +700,45 @@ class ContactsModule extends AApiModule
 	}	
 	
 	/**
+	 * @todo: waiting for mail module
 	 * @return array
 	 */
-	public function AddContactsFromFile()
-	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		
-		$oAccount = $this->getDefaultAccountFromParam();
-
-		$mResult = false;
-
-		if (!$this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
-		{
-			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
-		}
-
-		$sTempFile = (string) $this->getParamValue('File', '');
-		if (empty($sTempFile))
-		{
-			throw new \System\Exceptions\AuroraApiException(\System\Notifications::InvalidInputParameter);
-		}
-
-		$oApiFileCache = /* @var $oApiFileCache \CApiFilecacheManager */ \CApi::GetSystemManager('filecache');
-		$sData = $oApiFileCache->get($oAccount, $sTempFile);
-		if (!empty($sData))
-		{
-			$oContact = \CContact::createInstance();
-			$oContact->InitFromVCardStr($oAccount->IdUser, $sData);
-
-			if ($this->oApiContactsManager->createContact($oContact))
-			{
-				$mResult = array(
-					'Uid' => $oContact->IdContact
-				);
-			}
-		}
-
-		return $mResult;
-	}	
+//	public function AddContactsFromFile()
+//	{
+//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		
+//		$oAccount = $this->getDefaultAccountFromParam();
+//
+//		$mResult = false;
+//
+//		if (!$this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
+//		{
+//			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
+//		}
+//
+//		$sTempFile = (string) $this->getParamValue('File', '');
+//		if (empty($sTempFile))
+//		{
+//			throw new \System\Exceptions\AuroraApiException(\System\Notifications::InvalidInputParameter);
+//		}
+//
+//		$oApiFileCache = /* @var $oApiFileCache \CApiFilecacheManager */ \CApi::GetSystemManager('filecache');
+//		$sData = $oApiFileCache->get($oAccount, $sTempFile);
+//		if (!empty($sData))
+//		{
+//			$oContact = \CContact::createInstance();
+//			$oContact->InitFromVCardStr($oAccount->IdUser, $sData);
+//
+//			if ($this->oApiContactsManager->createContact($oContact))
+//			{
+//				$mResult = array(
+//					'Uid' => $oContact->IdContact
+//				);
+//			}
+//		}
+//
+//		return $mResult;
+//	}	
 	
 	/**
 	 * @return array
@@ -893,103 +838,117 @@ class ContactsModule extends AApiModule
 	/**
 	 * @return array
 	 */
-	public function AddContactsToGroup()
+	public function AddContactsToGroup($GroupId, $ContactsId)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oAccount = $this->getDefaultAccountFromParam();
-
-		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
+		if (is_array($ContactsId) && !empty($ContactsId))
 		{
-			$sGroupId = (string) $this->getParamValue('GroupId', '');
-
-			$aContactsId = $this->getParamValue('ContactsId', null);
-			if (!is_array($aContactsId))
-			{
-				return false;
-			}
-
-			$oGroup = $this->oApiContactsManager->getGroupById($oAccount->IdUser, $sGroupId);
-			if ($oGroup)
-			{
-				$aLocalContacts = array();
-				$aGlobalContacts = array();
-				
-				foreach ($aContactsId as $aItem)
-				{
-					if (is_array($aItem) && 2 === count($aItem))
-					{
-						if ('1' === $aItem[1])
-						{
-							$aGlobalContacts[] = $aItem[0];
-						}
-						else
-						{
-							$aLocalContacts[] = $aItem[0];
-						}
-					}
-				}
-
-				$bRes1 = true;
-				if (0 < count($aGlobalContacts))
-				{
-					$bRes1 = false;
-					if (!$this->oApiCapabilityManager->isGlobalContactsSupported($oAccount, true))
-					{
-						throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
-					}
-
-					$bRes1 = $this->oApiContactsManager->addGlobalContactsToGroup($oAccount, $oGroup, $aGlobalContacts);
-				}
-
-				$bRes2 = true;
-				if (0 < count($aLocalContacts))
-				{
-					$bRes2 = $this->oApiContactsManager->addContactsToGroup($oGroup, $aLocalContacts);
-				}
-
-				return $bRes1 && $bRes2;
-			}
+			return $this->oApiContactsManager->addContactsToGroup((int) $GroupId, $ContactsId);
 		}
-		else
-		{
-			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
-		}
-
-		return false;
+		
+		return true;
+		
+//		$oAccount = $this->getDefaultAccountFromParam();
+//
+//		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
+//		{
+//			$sGroupId = (string) $this->getParamValue('GroupId', '');
+//
+//			$aContactsId = $this->getParamValue('ContactsId', null);
+//			if (!is_array($aContactsId))
+//			{
+//				return false;
+//			}
+//
+//			$oGroup = $this->oApiContactsManager->getGroupById($oAccount->IdUser, $sGroupId);
+//			if ($oGroup)
+//			{
+//				$aLocalContacts = array();
+//				$aGlobalContacts = array();
+//				
+//				foreach ($aContactsId as $aItem)
+//				{
+//					if (is_array($aItem) && 2 === count($aItem))
+//					{
+//						if ('1' === $aItem[1])
+//						{
+//							$aGlobalContacts[] = $aItem[0];
+//						}
+//						else
+//						{
+//							$aLocalContacts[] = $aItem[0];
+//						}
+//					}
+//				}
+//
+//				$bRes1 = true;
+//				if (0 < count($aGlobalContacts))
+//				{
+//					$bRes1 = false;
+//					if (!$this->oApiCapabilityManager->isGlobalContactsSupported($oAccount, true))
+//					{
+//						throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
+//					}
+//
+//					$bRes1 = $this->oApiContactsManager->addGlobalContactsToGroup($oAccount, $oGroup, $aGlobalContacts);
+//				}
+//
+//				$bRes2 = true;
+//				if (0 < count($aLocalContacts))
+//				{
+//					$bRes2 = $this->oApiContactsManager->addContactsToGroup($oGroup, $aLocalContacts);
+//				}
+//
+//				return $bRes1 && $bRes2;
+//			}
+//		}
+//		else
+//		{
+//			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
+//		}
+//
+//		return false;
 	}
 	
 	/**
 	 * @return array
 	 */
-	public function RemoveContactsFromGroup()
+	public function RemoveContactsFromGroup($GroupId, $ContactsId)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oAccount = $this->getDefaultAccountFromParam();
-
-		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount) ||
-			$this->oApiCapabilityManager->isGlobalContactsSupported($oAccount, true))
+		if (is_array($ContactsId) && !empty($ContactsId))
 		{
-			$sGroupId = (string) $this->getParamValue('GroupId', '');
-
-			$aContactsId = explode(',', $this->getParamValue('ContactsId', ''));
-			$aContactsId = array_map('trim', $aContactsId);
-
-			$oGroup = $this->oApiContactsManager->getGroupById($oAccount->IdUser, $sGroupId);
-			if ($oGroup)
-			{
-				return $this->oApiContactsManager->removeContactsFromGroup($oGroup, $aContactsId);
-			}
-
-			return false;
+			return $this->oApiContactsManager->removeContactsFromGroup((int) $GroupId, $ContactsId);
 		}
-		else
-		{
-			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
-		}
-
-		return false;
+		
+		return true;
+		
+//		$oAccount = $this->getDefaultAccountFromParam();
+//
+//		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount) ||
+//			$this->oApiCapabilityManager->isGlobalContactsSupported($oAccount, true))
+//		{
+//			$sGroupId = (string) $this->getParamValue('GroupId', '');
+//
+//			$aContactsId = explode(',', $this->getParamValue('ContactsId', ''));
+//			$aContactsId = array_map('trim', $aContactsId);
+//
+//			$oGroup = $this->oApiContactsManager->getGroupById($oAccount->IdUser, $sGroupId);
+//			if ($oGroup)
+//			{
+//				return $this->oApiContactsManager->removeContactsFromGroup($oGroup, $aContactsId);
+//			}
+//
+//			return false;
+//		}
+//		else
+//		{
+//			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
+//		}
+//
+//		return false;
 	}	
 	
 	public function SynchronizeExternalContacts()

@@ -118,9 +118,9 @@ class CGroup extends AEntity
 		$this->Zip = $aGroup['Zip'];
 		
 		$this->GroupContacts = array();
-		if (!empty($aGroup['Contacts']))
+		if (!empty($aGroup['Contacts']) && is_array($aGroup['Contacts']))
 		{
-			$aContactsIds = explode(',', $aGroup['Contacts']);
+			$aContactsIds = $aGroup['Contacts'];
 			foreach ($aContactsIds as $sContactId)
 			{
 				$oGroupContact = \CGroupContact::createInstance();

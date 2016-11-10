@@ -204,7 +204,39 @@ class CApiContactsMainManager extends AApiManager
 	 */
 	public function updateContact($oContact, $bUpdateFromGlobal = true)
 	{
-		return $this->oEavManager->saveEntity($oContact);
+		$res = $this->oEavManager->saveEntity($oContact);
+		if ($res)
+		{
+			$aGroupContact = $this->getGroupContactItems(null, $oContact->iId);
+			
+			function compare_func($oGroupContact1, $oGroupContact2)
+			{
+				if ($oGroupContact1->IdGroup === $oGroupContact2->IdGroup)
+				{
+					return 0;
+				}
+				if ($oGroupContact1->IdGroup > $oGroupContact2->IdGroup)
+				{
+					return -1;
+				}
+				return 1;
+			}
+
+			$aGroupContactToDelete = array_udiff($aGroupContact, $oContact->GroupsContacts, 'compare_func');
+			$aGroupContactIdsToDelete = array_map(
+				function($oGroupContact) { 
+					return $oGroupContact->iId; 
+				}, 
+				$aGroupContactToDelete
+			);
+			$this->oEavManager->deleteEntities($aGroupContactIdsToDelete);
+			
+			$aGroupContactToAdd = array_udiff($oContact->GroupsContacts, $aGroupContact, 'compare_func');
+			foreach ($aGroupContactToAdd as $oGroupContact)
+			{
+				$this->oEavManager->saveEntity($oGroupContact);
+			}
+		}
 		
 //		$res1 = $res2 = false;
 //
@@ -512,15 +544,20 @@ class CApiContactsMainManager extends AApiManager
 
 //		$res1 = $this->oApiContactsBaseManager->createContact($oContact);
 		$res1 = $this->oEavManager->saveEntity($oContact);
-		if ('sabredav' !== CApi::GetManager()->GetStorageByType('contacts'))
+		foreach ($oContact->GroupsContacts as $oGroupContact)
 		{
-			$this->updateContactGroupsIdsWithNames($oContact);
-			$res2 = $this->oApiContactsBaseManagerDAV->createContact($oContact);
+			$oGroupContact->IdContact = $oContact->iId;
+			$this->oEavManager->saveEntity($oGroupContact);
 		}
-		else
-		{
+//		if ('sabredav' !== CApi::GetManager()->GetStorageByType('contacts'))
+//		{
+//			$this->updateContactGroupsIdsWithNames($oContact);
+//			$res2 = $this->oApiContactsBaseManagerDAV->createContact($oContact);
+//		}
+//		else
+//		{
 			$res2 = true;
-		}
+//		}
 
 		return ($res1 && $res2);
 	}
@@ -569,20 +606,17 @@ class CApiContactsMainManager extends AApiManager
 	 */
 	public function deleteContacts($aContactsIds)
 	{
+		$aEntitiesIds = array();
 		foreach ($aContactsIds as $iContact)
 		{
-			if (!$this->oEavManager->deleteEntity($iContact))
-			{
-				return false;
-			}
+			$aEntitiesIds[] = $iContact;
 			$aGroupContact = $this->getGroupContactItems(null, $iContact);
 			foreach ($aGroupContact as $oGroupContact)
 			{
-				$this->oEavManager->deleteEntity($oGroupContact->iId);
+				$aEntitiesIds[] = $oGroupContact->iId;
 			}
 		}
-		
-		return true;
+		return $this->oEavManager->deleteEntities($aEntitiesIds);
 		
 //		$aContactsStrIds = array();
 //		foreach ($aContactsIds as $iContactsId)
@@ -716,12 +750,13 @@ class CApiContactsMainManager extends AApiManager
 //	}
 	public function deleteGroup($iIdGroup)
 	{
+		$aEntitiesIds = array($iIdGroup);
 		$aGroupContact = $this->getGroupContactItems($iIdGroup);
 		foreach ($aGroupContact as $oGroupContact)
 		{
-			$this->oEavManager->deleteEntity($oGroupContact->iId);
+			$aEntitiesIds[] = $oGroupContact->iId;
 		}
-		return $this->oEavManager->deleteEntity($iIdGroup);
+		$this->oEavManager->deleteEntities($aEntitiesIds);
 	}
 
 	/**
@@ -954,31 +989,55 @@ class CApiContactsMainManager extends AApiManager
 	 * 
 	 * @return bool
 	 */
-	public function addContactsToGroup($oGroup, $aContactIds)
+//	public function addContactsToGroup($oGroup, $aContactIds)
+//	{
+//		$res1 = $res2 = false;
+//
+//		$aContactsStrIds = array();
+//		foreach ($aContactIds as $iContactId)
+//		{
+//			$oContact = $this->oApiContactsBaseManager->getContactById($oGroup->IdUser, $iContactId);
+//			if ($oContact)
+//			{
+//				$aContactsStrIds[] = $oContact->IdContactStr;
+//			}
+//		}
+//		
+//		$res1 = $this->oApiContactsBaseManager->addContactsToGroup($oGroup, $aContactIds);
+//		if ('sabredav' !== CApi::GetManager()->GetStorageByType('contacts'))
+//		{
+//			$res2 = $this->oApiContactsBaseManagerDAV->addContactsToGroup($oGroup, $aContactsStrIds);
+//		}
+//		else
+//		{
+//			$res2 = true;
+//		}
+//		
+//		return ($res1 && $res2);
+//	}
+	
+	public function addContactsToGroup($iIdGroup, $aIdContacts)
 	{
-		$res1 = $res2 = false;
-
-		$aContactsStrIds = array();
-		foreach ($aContactIds as $iContactId)
+		$aCurrGroupContact = $this->getGroupContactItems($iIdGroup);
+		$aCurrIdContacts = array_map(
+			function($oGroupContact) { 
+				return $oGroupContact->IdContact; 
+			}, 
+			$aCurrGroupContact
+		);
+		
+		foreach ($aIdContacts as $iIdContact)
 		{
-			$oContact = $this->oApiContactsBaseManager->getContactById($oGroup->IdUser, $iContactId);
-			if ($oContact)
+			if (!in_array($iIdContact, $aCurrIdContacts))
 			{
-				$aContactsStrIds[] = $oContact->IdContactStr;
+				$oGroupContact = \CGroupContact::createInstance();
+				$oGroupContact->IdGroup = $iIdGroup;
+				$oGroupContact->IdContact = (int) $iIdContact;
+				$this->oEavManager->saveEntity($oGroupContact);
 			}
 		}
 		
-		$res1 = $this->oApiContactsBaseManager->addContactsToGroup($oGroup, $aContactIds);
-		if ('sabredav' !== CApi::GetManager()->GetStorageByType('contacts'))
-		{
-			$res2 = $this->oApiContactsBaseManagerDAV->addContactsToGroup($oGroup, $aContactsStrIds);
-		}
-		else
-		{
-			$res2 = true;
-		}
-		
-		return ($res1 && $res2);
+		return true;
 	}
 	
 	/**
@@ -1042,32 +1101,50 @@ class CApiContactsMainManager extends AApiManager
 	 * 
 	 * @return bool
 	 */
-	public function removeContactsFromGroup($oGroup, $aContactIds)
-	{
-		$res1 = $res2 = false;
+//	public function removeContactsFromGroup($oGroup, $aContactIds)
+//	{
+//		$res1 = $res2 = false;
+//
+//		$aContactsStrIds = array();
+//		foreach ($aContactIds as $iContactId)
+//		{
+//			$oContact = $this->oApiContactsBaseManager->getContactById($oGroup->IdUser, $iContactId);
+//			if ($oContact)
+//			{
+//				$aContactsStrIds[] = $oContact->IdContactStr;
+//			}
+//		}
+//
+//		$res1 = $this->oApiContactsBaseManager->removeContactsFromGroup($oGroup, $aContactIds);
+//		if ('sabredav' !== CApi::GetManager()->GetStorageByType('contacts'))
+//		{
+//			$res2 = $this->oApiContactsBaseManagerDAV->removeContactsFromGroup($oGroup, $aContactsStrIds);
+//		}
+//		else
+//		{
+//			$res2 = true;
+//		}
+//		return ($res1 && $res2);
+//	}
 
-		$aContactsStrIds = array();
-		foreach ($aContactIds as $iContactId)
+	public function removeContactsFromGroup($iIdGroup, $aIdContacts)
+	{
+		$aCurrGroupContact = $this->getGroupContactItems($iIdGroup);
+		$aIdEntitiesToDelete = array();
+		
+		foreach ($aCurrGroupContact as $oGroupContact)
 		{
-			$oContact = $this->oApiContactsBaseManager->getContactById($oGroup->IdUser, $iContactId);
-			if ($oContact)
+			if (in_array($oGroupContact->IdContact, $aIdContacts))
 			{
-				$aContactsStrIds[] = $oContact->IdContactStr;
+				$aIdEntitiesToDelete[] = $oGroupContact->iId;
 			}
 		}
-
-		$res1 = $this->oApiContactsBaseManager->removeContactsFromGroup($oGroup, $aContactIds);
-		if ('sabredav' !== CApi::GetManager()->GetStorageByType('contacts'))
-		{
-			$res2 = $this->oApiContactsBaseManagerDAV->removeContactsFromGroup($oGroup, $aContactsStrIds);
-		}
-		else
-		{
-			$res2 = true;
-		}
-		return ($res1 && $res2);
+		
+		$this->oEavManager->deleteEntities($aIdEntitiesToDelete);
+		
+		return true;
 	}
-
+	
 	/**
 	 * The method create contact in global address book for each system account
 	 *

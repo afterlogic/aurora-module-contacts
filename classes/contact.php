@@ -521,6 +521,65 @@ class CContact extends AEntity
 		}
 	}
 	
+	public function populate($aContact)
+	{
+		$bItsMe = $this->ItsMe;
+		$this->PrimaryEmail = $aContact['PrimaryEmail'];
+
+		$this->FullName = $aContact['FullName'];
+		$this->FirstName = $aContact['FirstName'];
+		$this->LastName = $aContact['LastName'];
+		$this->NickName = $aContact['NickName'];
+		$this->Skype = $aContact['Skype'];
+		$this->Facebook = $aContact['Facebook'];
+		
+		$this->PersonalEmail = $aContact['PersonalEmail'];
+		$this->PersonalAddress = $aContact['PersonalAddress'];
+		$this->PersonalCity = $aContact['PersonalCity'];
+		$this->PersonalState = $aContact['PersonalState'];
+		$this->PersonalZip = $aContact['PersonalZip'];
+		$this->PersonalCountry = $aContact['PersonalCountry'];
+		$this->PersonalWeb = $aContact['PersonalWeb'];
+		$this->PersonalFax = $aContact['PersonalFax'];
+		$this->PersonalPhone = $aContact['PersonalPhone'];
+		$this->PersonalMobile = $aContact['PersonalMobile'];
+		
+		$this->BusinessCompany = $aContact['BusinessCompany'];
+		$this->BusinessJobTitle = $aContact['BusinessJobTitle'];
+		$this->BusinessDepartment = $aContact['BusinessDepartment'];
+		$this->BusinessOffice = $aContact['BusinessOffice'];
+		$this->BusinessAddress = $aContact['BusinessAddress'];
+		$this->BusinessCity = $aContact['BusinessCity'];
+		$this->BusinessState = $aContact['BusinessState'];
+		$this->BusinessZip = $aContact['BusinessZip'];
+		$this->BusinessCountry = $aContact['BusinessCountry'];
+		$this->BusinessFax = $aContact['BusinessFax'];
+		$this->BusinessPhone = $aContact['BusinessPhone'];
+		$this->BusinessWeb = $aContact['BusinessWeb'];
+		
+		$this->OtherEmail = $aContact['OtherEmail'];
+		$this->Notes = $aContact['Notes'];
+		if (!$bItsMe)
+		{
+			$this->BusinessEmail = $aContact['BusinessEmail'];
+		}
+		$this->BirthdayDay = $aContact['BirthdayDay'];
+		$this->BirthdayMonth = $aContact['BirthdayMonth'];
+		$this->BirthdayYear = $aContact['BirthdayYear'];
+
+		$this->GroupsContacts = array();
+		if (!empty($aContact['GroupsIds']) && is_array($aContact['GroupsIds']))
+		{
+			foreach ($aContact['GroupsIds'] as $sId)
+			{
+				$oGroupContact = \CGroupContact::createInstance();
+				$oGroupContact->IdContact = $this->iId;
+				$oGroupContact->IdGroup = (int) $sId;
+				$this->GroupsContacts[] = $oGroupContact;
+			}
+		}
+	}
+	
 	public function toResponseArray($aParameters = array())
 	{
 		$aGroupsIds = array();
@@ -582,7 +641,7 @@ class CContact extends AEntity
 			'ETag' => $this->ETag,
 			'SharedToAll' => $this->SharedToAll,
 			
-			'GroupsIds' => implode(',', $aGroupsIds)
+			'GroupsIds' => $aGroupsIds
 		);
 	}
 }
