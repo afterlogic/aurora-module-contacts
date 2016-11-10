@@ -435,10 +435,7 @@ class CApiContactsMainManager extends AApiManager
 		$aFilters = array();
 		if (!empty($sSearch))
 		{
-			$aFilters['FullName'] = $sSearch;
-			$aFilters['PersonalEmail'] = $sSearch;
-			$aFilters['BusinessEmail'] = $sSearch;
-			$aFilters['OtherEmail'] = $sSearch;
+			$aFilters['ViewEmail'] = '%'.$sSearch.'%';
 		}
 		
 		$aIdContact = array();
@@ -462,7 +459,7 @@ class CApiContactsMainManager extends AApiManager
 			$iOffset,
 			$iRequestLimit,
 			$aFilters,
-			$iSortField,
+			$iSortField === EContactSortField::Name ? 'FullName' : 'ViewEmail',
 			$iSortOrder,
 			$aIdContact
 		);
@@ -509,7 +506,7 @@ class CApiContactsMainManager extends AApiManager
 			0,
 			0,
 			array('IdUser' => $iUserId),
-			EContactSortField::Name,
+			'Name',
 			ESortOrder::ASC
 		);
 	}

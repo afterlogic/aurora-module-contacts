@@ -421,98 +421,101 @@ class ContactsModule extends AApiModule
 	/**
 	 * @return array
 	 */
-	public function GetContactByEmail()
-	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		
-		$oContact = false;
-		$oAccount = $this->getDefaultAccountFromParam();
-		
-		$sEmail = (string) $this->getParamValue('Email', '');
-
-		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount)) {
-			
-			$oContact = $this->oApiContactsManager->getContactByEmail($oAccount->IdUser, $sEmail);
-		}
-
-		if (!$oContact && $this->oApiCapabilityManager->isGlobalContactsSupported($oAccount, true)) {
-			
-			$oApiGContacts = $this->GetManager('global');
-			if ($oApiGContacts) {
-				
-				$oContact = $oApiGContacts->getContactByEmail($oAccount, $sEmail);
-			}
-		}
-
-		return $oContact;
-	}	
+//	public function GetContactByEmail()
+//	{
+//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		
+//		$oContact = false;
+//		$oAccount = $this->getDefaultAccountFromParam();
+//		
+//		$sEmail = (string) $this->getParamValue('Email', '');
+//
+//		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount)) {
+//			
+//			$oContact = $this->oApiContactsManager->getContactByEmail($oAccount->IdUser, $sEmail);
+//		}
+//
+//		if (!$oContact && $this->oApiCapabilityManager->isGlobalContactsSupported($oAccount, true)) {
+//			
+//			$oApiGContacts = $this->GetManager('global');
+//			if ($oApiGContacts) {
+//				
+//				$oContact = $oApiGContacts->getContactByEmail($oAccount, $sEmail);
+//			}
+//		}
+//
+//		return $oContact;
+//	}	
 	
 	/**
 	 * @return array
 	 */
-	public function GetSuggestions()
+	public function GetSuggestions($Search)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oAccount = $this->getDefaultAccountFromParam();
-
-		$sSearch = (string) $this->getParamValue('Search', '');
-		$bGlobalOnly = '1' === (string) $this->getParamValue('GlobalOnly', '0');
-		$bPhoneOnly = '1' === (string) $this->getParamValue('PhoneOnly', '0');
-
-		$aList = array();
+		return $this->GetContacts(0, 20, 'PersonalEmail', ESortOrder::ASC, $Search);
 		
-		$iSharedTenantId = null;
-		if ($this->oApiCapabilityManager->isSharedContactsSupported($oAccount) && !$bPhoneOnly)
-		{
-			$iSharedTenantId = $oAccount->IdTenant;
-		}
-
-		if ($this->oApiCapabilityManager->isContactsSupported($oAccount))
-		{
-			$aContacts = 	$this->oApiContactsManager->getSuggestItems($oAccount, $sSearch,
-					\CApi::GetConf('webmail.suggest-contacts-limit', 20), $bGlobalOnly, $bPhoneOnly, $iSharedTenantId);
-
-			if (is_array($aContacts))
-			{
-				$aList = $aContacts;
-			}
-		}
-
-		return array(
-			'Search' => $sSearch,
-			'List' => $aList
-		);
+//		$oAccount = $this->getDefaultAccountFromParam();
+//
+//		$sSearch = (string) $this->getParamValue('Search', '');
+//		$bGlobalOnly = '1' === (string) $this->getParamValue('GlobalOnly', '0');
+//		$bPhoneOnly = '1' === (string) $this->getParamValue('PhoneOnly', '0');
+//
+//		$aList = array();
+//		
+//		$iSharedTenantId = null;
+//		if ($this->oApiCapabilityManager->isSharedContactsSupported($oAccount) && !$bPhoneOnly)
+//		{
+//			$iSharedTenantId = $oAccount->IdTenant;
+//		}
+//
+//		if ($this->oApiCapabilityManager->isContactsSupported($oAccount))
+//		{
+//			$aContacts = 	$this->oApiContactsManager->getSuggestItems($oAccount, $sSearch,
+//					\CApi::GetConf('webmail.suggest-contacts-limit', 20), $bGlobalOnly, $bPhoneOnly, $iSharedTenantId);
+//
+//			if (is_array($aContacts))
+//			{
+//				$aList = $aContacts;
+//			}
+//		}
+//
+//		return array(
+//			'Search' => $sSearch,
+//			'List' => $aList
+//		);
 	}	
 	
 	public function DeleteSuggestion()
 	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		
-		$mResult = false;
-		$oAccount = $this->getDefaultAccountFromParam();
-
-		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
-		{
-			$sContactId = (string) $this->getParamValue('ContactId', '');
-			$this->oApiContactsManager->resetContactFrequency($oAccount->IdUser, $sContactId);
-		}
-		else
-		{
-			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
-		}
-
-		return $mResult;
+		return true;
+//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		
+//		$mResult = false;
+//		$oAccount = $this->getDefaultAccountFromParam();
+//
+//		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
+//		{
+//			$sContactId = (string) $this->getParamValue('ContactId', '');
+//			$this->oApiContactsManager->resetContactFrequency($oAccount->IdUser, $sContactId);
+//		}
+//		else
+//		{
+//			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
+//		}
+//
+//		return $mResult;
 	}	
-	
-	public function UpdateSuggestTable()
-	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		
-		$oAccount = $this->getDefaultAccountFromParam();
-		$aEmails = $this->getParamValue('Emails', array());
-		$this->oApiContactsManager->updateSuggestTable($oAccount->IdUser, $aEmails);
-	}
+//	
+//	public function UpdateSuggestTable()
+//	{
+//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		
+//		$oAccount = $this->getDefaultAccountFromParam();
+//		$aEmails = $this->getParamValue('Emails', array());
+//		$this->oApiContactsManager->updateSuggestTable($oAccount->IdUser, $aEmails);
+//	}
 	
 	/**
 	 * 

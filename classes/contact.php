@@ -93,6 +93,7 @@ class CContact extends AEntity
 			'PrimaryEmail'		=> array('int', EContactsPrimaryEmail::Personal),
 			'PrimaryPhone'		=> array('int', EContactsPrimaryPhone::Personal),
 			'PrimaryAddress'	=> array('int', EContactsPrimaryAddress::Personal),
+			'ViewEmail'			=> array('string', ''),
 
 			'DateCreated'		=> array('datetime', ''), // 'date_created', true, false),
 			'DateModified'		=> array('datetime', ''), // 'date_modified'),
@@ -578,6 +579,8 @@ class CContact extends AEntity
 				$this->GroupsContacts[] = $oGroupContact;
 			}
 		}
+		
+		$this->ViewEmail = $this->GetViewEmail();
 	}
 	
 	public function toResponseArray($aParameters = array())
