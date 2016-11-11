@@ -106,22 +106,22 @@ class CApiContactsBaseDbStorage extends CApiContactsBaseStorage
 	 * @param CContact $oContact
 	 * @return array|bool
 	 */
-	public function getContactGroupsIds($oContact)
+	public function getContactGroupIds($oContact)
 	{
-		$mGroupsIds = false;
+		$mGroupIds = false;
 		if ($this->oConnection->Execute(
-			$this->oCommandCreator->getContactGroupsIds($oContact->IdUser, (int) $oContact->IdContact)))
+			$this->oCommandCreator->getContactGroupIds($oContact->IdUser, (int) $oContact->IdContact)))
 		{
 			$oRow = null;
-			$mGroupsIds = array();
+			$mGroupIds = array();
 
 			while (false !== ($oRow = $this->oConnection->GetNextRecord()))
 			{
-				$mGroupsIds[] = (string) $oRow->id_group;
+				$mGroupIds[] = (string) $oRow->id_group;
 			}
 		}
 
-		return $mGroupsIds;
+		return $mGroupIds;
 	}
 
 	/**
@@ -260,10 +260,10 @@ class CApiContactsBaseDbStorage extends CApiContactsBaseStorage
 	{
 		if ($oContact)
 		{
-			$mGroupIds = $this->getContactGroupsIds($oContact);
+			$mGroupIds = $this->getContactGroupIds($oContact);
 			if (is_array($mGroupIds))
 			{
-				$oContact->GroupsIds = $mGroupIds;
+				$oContact->GroupIds = $mGroupIds;
 				return true;
 			}
 		}
@@ -564,8 +564,8 @@ class CApiContactsBaseDbStorage extends CApiContactsBaseStorage
 	{
 		if ($this->oConnection->Execute($this->oCommandCreator->updateContact($oContact)))
 		{
-			$this->oConnection->Execute($this->oCommandCreator->ClearGroupsIdsByContactsIds(array($oContact->IdContact)));
-			if (0 < count($oContact->GroupsIds))
+			$this->oConnection->Execute($this->oCommandCreator->ClearGroupIdsByContactIds(array($oContact->IdContact)));
+			if (0 < count($oContact->GroupIds))
 			{
 				$this->oConnection->Execute($this->oCommandCreator->UpdateGroupIdsInContact($oContact));
 			}
@@ -634,17 +634,17 @@ class CApiContactsBaseDbStorage extends CApiContactsBaseStorage
 
 	/**
 	 * @param int $iUserId
-	 * @param array $aContactsIds
+	 * @param array $aContactIds
 	 * @param int $iSharedTenantId = null
 	 * @return bool
 	 */
-	public function deleteContacts($iUserId, $aContactsIds, $iSharedTenantId = null)
+	public function deleteContacts($iUserId, $aContactIds, $iSharedTenantId = null)
 	{
 		$bResult = false;
-		if ($this->oConnection->Execute($this->oCommandCreator->deleteContacts($iUserId, $aContactsIds, $iSharedTenantId)))
+		if ($this->oConnection->Execute($this->oCommandCreator->deleteContacts($iUserId, $aContactIds, $iSharedTenantId)))
 		{
 			$bResult = true;
-			$this->oConnection->Execute($this->oCommandCreator->ClearGroupsIdsByContactsIds($aContactsIds));
+			$this->oConnection->Execute($this->oCommandCreator->ClearGroupIdsByContactIds($aContactIds));
 		}
 
 		return $bResult;
@@ -663,26 +663,26 @@ class CApiContactsBaseDbStorage extends CApiContactsBaseStorage
 	
 	/**
 	 * @param int $iUserId
-	 * @param array $aContactsIds
+	 * @param array $aContactIds
 	 * @return bool
 	 */
-	public function deleteSuggestContacts($iUserId, $aContactsIds)
+	public function deleteSuggestContacts($iUserId, $aContactIds)
 	{
-		return $this->deleteContacts($iUserId, $aContactsIds);
+		return $this->deleteContacts($iUserId, $aContactIds);
 	}	
 
 	/**
 	 * @param int $iUserId
-	 * @param array $aGroupsIds
+	 * @param array $aGroupIds
 	 * @return bool
 	 */
-	public function deleteGroups($iUserId, $aGroupsIds)
+	public function deleteGroups($iUserId, $aGroupIds)
 	{
 		$bResult = false;
-		if ($this->oConnection->Execute($this->oCommandCreator->deleteGroups($iUserId, $aGroupsIds)))
+		if ($this->oConnection->Execute($this->oCommandCreator->deleteGroups($iUserId, $aGroupIds)))
 		{
 			$bResult = true;
-			$this->oConnection->Execute($this->oCommandCreator->ClearContactsIdsByGroupsIds($aGroupsIds));
+			$this->oConnection->Execute($this->oCommandCreator->ClearContactIdsByGroupIds($aGroupIds));
 		}
 
 		return $bResult;
@@ -690,16 +690,16 @@ class CApiContactsBaseDbStorage extends CApiContactsBaseStorage
 
 	/**
 	 * @param int $iUserId
-	 * @param mixed $mGroupsId
+	 * @param mixed $mGroupId
 	 * @return bool
 	 */
-	public function deleteGroup($iUserId, $mGroupsId)
+	public function deleteGroup($iUserId, $mGroupId)
 	{
 		$bResult = false;
-		if ($this->oConnection->Execute($this->oCommandCreator->deleteGroups($iUserId, array($mGroupsId))))
+		if ($this->oConnection->Execute($this->oCommandCreator->deleteGroups($iUserId, array($mGroupId))))
 		{
 			$bResult = true;
-			$this->oConnection->Execute($this->oCommandCreator->ClearContactsIdsByGroupsIds(array($mGroupsId)));
+			$this->oConnection->Execute($this->oCommandCreator->ClearContactIdsByGroupIds(array($mGroupId)));
 		}
 
 		return $bResult;
@@ -757,7 +757,7 @@ class CApiContactsBaseDbStorage extends CApiContactsBaseStorage
 //		if ($this->oConnection->Execute($this->oCommandCreator->DeleteContactsExceptIds($iUserId, $aContactIds)))
 //		{
 //			$bResult = true;
-//			$this->oConnection->Execute($this->oCommandCreator->ClearGroupsIdsByExceptContactsIds($iUserId, $aContactIds));
+//			$this->oConnection->Execute($this->oCommandCreator->ClearGroupIdsByExceptContactIds($iUserId, $aContactIds));
 //		}
 //
 //		return $bResult;
@@ -774,7 +774,7 @@ class CApiContactsBaseDbStorage extends CApiContactsBaseStorage
 //		if ($this->oConnection->Execute($this->oCommandCreator->DeleteGroupsExceptIds($iUserId, $aGroupIds)))
 //		{
 //			$bResult = true;
-//			$this->oConnection->Execute($this->oCommandCreator->ClearContactsIdsByExceptGroupsIds($iUserId, $aGroupIds));
+//			$this->oConnection->Execute($this->oCommandCreator->ClearContactIdsByExceptGroupIds($iUserId, $aGroupIds));
 //		}
 //
 //		return $bResult;

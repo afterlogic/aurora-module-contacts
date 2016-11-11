@@ -43,9 +43,9 @@
  * @property string $BusinessWeb
  * @property string $OtherEmail
  * @property string $Notes
- * @property int $BirthdayDay
- * @property int $BirthdayMonth
- * @property int $BirthdayYear
+ * @property int $BirthDay
+ * @property int $BirthMonth
+ * @property int $BirthYear
  * @property bool $ReadOnly
  * @property bool $Global
  * @property bool $ItsMe
@@ -82,73 +82,73 @@ class CContact extends AEntity
 		$this->__USE_TRIM_IN_STRINGS__ = true;
 
 		$this->setStaticMap(array(
-			'IdContactStr'	=> array('string', ''), // 'str_id', false),
-			'IdUser'		=> array('int', 0), // 'id_user'),
-			'IdDomain'		=> array('int', 0), // 'id_domain'),
-			'IdTenant'		=> array('int', 0), // 'id_tenant', true),
+			'IdContactStr'	=> array('string', ''),
+			'IdUser'		=> array('int', 0),
+			'IdDomain'		=> array('int', 0),
+			'IdTenant'		=> array('int', 0),
 
-			'Type'			=> array('int', EContactType::Personal), // 'type'),
-			'IdTypeLink'	=> array('string', ''), // 'type_id'),
+			'Type'			=> array('int', EContactType::Personal),
+			'IdTypeLink'	=> array('string', ''),
 
 			'PrimaryEmail'		=> array('int', EContactsPrimaryEmail::Personal),
 			'PrimaryPhone'		=> array('int', EContactsPrimaryPhone::Personal),
 			'PrimaryAddress'	=> array('int', EContactsPrimaryAddress::Personal),
 			'ViewEmail'			=> array('string', ''),
 
-			'DateCreated'		=> array('datetime', ''), // 'date_created', true, false),
-			'DateModified'		=> array('datetime', ''), // 'date_modified'),
+			'DateCreated'		=> array('datetime', ''),
+			'DateModified'		=> array('datetime', ''),
 
-			'UseFriendlyName'	=> array('bool', true), // 'use_friendly_nm'),
+			'UseFriendlyName'	=> array('bool', true),
 
 			'Title'			=> array('string', ''),
-			'FullName'		=> array('string', ''), // 'fullname'),
-			'FirstName'		=> array('string', ''), // 'firstname'),
-			'LastName'		=> array('string', ''), // 'surname'),
-			'NickName'		=> array('string', ''), // 'nickname'),
-			'Skype'			=> array('string', ''), // 'skype'),
-			'Facebook'		=> array('string', ''), // 'facebook'),
+			'FullName'		=> array('string', ''),
+			'FirstName'		=> array('string', ''),
+			'LastName'		=> array('string', ''),
+			'NickName'		=> array('string', ''),
+			'Skype'			=> array('string', ''),
+			'Facebook'		=> array('string', ''),
 
-			'PersonalEmail'		=> array('string', ''), // 'h_email'),
-			'PersonalAddress'	=> array('string', ''), // 'h_street'),
-			'PersonalCity'		=> array('string', ''), // 'h_city'),
-			'PersonalState'		=> array('string', ''), // 'h_state'),
-			'PersonalZip'		=> array('string', ''), // 'h_zip'),
-			'PersonalCountry'	=> array('string', ''), // 'h_country'),
-			'PersonalWeb'		=> array('string', ''), // 'h_web'),
-			'PersonalFax'		=> array('string', ''), // 'h_fax'),
-			'PersonalPhone'		=> array('string', ''), // 'h_phone'),
-			'PersonalMobile'	=> array('string', ''), // 'h_mobile'),
+			'PersonalEmail'		=> array('string', ''),
+			'PersonalAddress'	=> array('string', ''),
+			'PersonalCity'		=> array('string', ''),
+			'PersonalState'		=> array('string', ''),
+			'PersonalZip'		=> array('string', ''),
+			'PersonalCountry'	=> array('string', ''),
+			'PersonalWeb'		=> array('string', ''),
+			'PersonalFax'		=> array('string', ''),
+			'PersonalPhone'		=> array('string', ''),
+			'PersonalMobile'	=> array('string', ''),
 
-			'BusinessEmail'		=> array('string', ''), // 'b_email'),
-			'BusinessCompany'	=> array('string', ''), // 'b_company'),
-			'BusinessAddress'	=> array('string', ''), // 'b_street'),
-			'BusinessCity'		=> array('string', ''), // 'b_city'),
-			'BusinessState'		=> array('string', ''), // 'b_state'),
-			'BusinessZip'		=> array('string', ''), // 'b_zip'),
-			'BusinessCountry'	=> array('string', ''), // 'b_country'),
-			'BusinessJobTitle'	=> array('string', ''), // 'b_job_title'),
-			'BusinessDepartment'=> array('string', ''), // 'b_department'),
-			'BusinessOffice'	=> array('string', ''), // 'b_office'),
-			'BusinessPhone'		=> array('string', ''), // 'b_phone'),
-			'BusinessFax'		=> array('string', ''), // 'b_fax'),
-			'BusinessWeb'		=> array('string', ''), // 'b_web'),
+			'BusinessEmail'		=> array('string', ''),
+			'BusinessCompany'	=> array('string', ''),
+			'BusinessAddress'	=> array('string', ''),
+			'BusinessCity'		=> array('string', ''),
+			'BusinessState'		=> array('string', ''),
+			'BusinessZip'		=> array('string', ''),
+			'BusinessCountry'	=> array('string', ''),
+			'BusinessJobTitle'	=> array('string', ''),
+			'BusinessDepartment'=> array('string', ''),
+			'BusinessOffice'	=> array('string', ''),
+			'BusinessPhone'		=> array('string', ''),
+			'BusinessFax'		=> array('string', ''),
+			'BusinessWeb'		=> array('string', ''),
 
-			'OtherEmail'		=> array('string', ''), // 'other_email'),
-			'Notes'				=> array('string', ''), // 'notes'),
+			'OtherEmail'		=> array('string', ''),
+			'Notes'				=> array('string', ''),
 
-			'BirthdayDay'		=> array('int', 0), // 'birthday_day'),
-			'BirthdayMonth'		=> array('int', 0), // 'birthday_month'),
-			'BirthdayYear'		=> array('int', 0), // 'birthday_year'),
+			'BirthDay'		=> array('int', 0),
+			'BirthMonth'		=> array('int', 0),
+			'BirthYear'		=> array('int', 0),
 
-			'ReadOnly'			=> array('bool', false), //),
-			'Global'			=> array('bool', false), //),
-			'ItsMe'				=> array('bool', false), //),
+			'ReadOnly'			=> array('bool', false),
+			'Global'			=> array('bool', false),
+			'ItsMe'				=> array('bool', false),
 
-			'ETag'				=> array('string', ''), // 'etag'),
+			'ETag'				=> array('string', ''),
 			
-			'Auto'				=> array('bool', false), // 'auto_create'),
-			'SharedToAll'		=> array('bool', false), // 'shared_to_all'),
-			'HideInGAB'			=> array('bool', false), // 'hide_in_gab')
+			'Auto'				=> array('bool', false),
+			'SharedToAll'		=> array('bool', false),
+			'HideInGAB'			=> array('bool', false),
 		));
 
 		$this->__LOCK_DATE_MODIFIED__ = false;
@@ -286,7 +286,7 @@ class CContact extends AEntity
 			'PersonalPhone', 'PersonalFax', 'PersonalMobile', 'PersonalWeb',
 			'BusinessEmail', 'BusinessCompany', 'BusinessAddress', 'BusinessCity', 'BusinessState', 'BusinessZip', 'BusinessCountry',
 			'BusinessJobTitle', 'BusinessDepartment', 'BusinessOffice', 'BusinessPhone', 'BusinessFax', 'BusinessWeb',
-			'OtherEmail', 'Notes', 'Skype', 'Facebook', 'BirthdayDay', 'BirthdayMonth', 'BirthdayYear', 'HideInGAB'
+			'OtherEmail', 'Notes', 'Skype', 'Facebook', 'BirthDay', 'BirthMonth', 'BirthYear', 'HideInGAB'
 		) as $Prop)
 		{
 			$iChanged &= $this->compareProperty($oContact, $Prop);
@@ -322,14 +322,14 @@ class CContact extends AEntity
 
 			if (isset($oVCardObject->CATEGORIES))
 			{
-				$aGroupsIds = $oVCardObject->CATEGORIES->getParts();
-				foreach($aGroupsIds as $sGroupsId)
+				$aGroupIds = $oVCardObject->CATEGORIES->getParts();
+				foreach($aGroupIds as $sGroupId)
 				{
-					if (!empty($sGroupsId))
+					if (!empty($sGroupId))
 					{
 						$GroupContact = \CGroupContact::createInstance();
 						$GroupContact->IdContact = $this->iId;
-						$GroupContact->IdGroup = (int)$sGroupsId;
+						$GroupContact->IdGroup = (int)$sGroupId;
 						$this->GroupsContacts[] = $GroupContact;
 					}
 				}
@@ -355,9 +355,9 @@ class CContact extends AEntity
 				if (isset($aDateTime[0]))
 				{
 					$aDate = explode('-', $aDateTime[0]);
-					$this->BirthdayYear = $aDate[0];
-					$this->BirthdayMonth = $aDate[1];
-					$this->BirthdayDay = $aDate[2];
+					$this->BirthYear = $aDate[0];
+					$this->BirthMonth = $aDate[1];
+					$this->BirthDay = $aDate[2];
 				}
 			}
 
@@ -564,18 +564,18 @@ class CContact extends AEntity
 		{
 			$this->BusinessEmail = $aContact['BusinessEmail'];
 		}
-		$this->BirthdayDay = $aContact['BirthdayDay'];
-		$this->BirthdayMonth = $aContact['BirthdayMonth'];
-		$this->BirthdayYear = $aContact['BirthdayYear'];
+		$this->BirthDay = $aContact['BirthDay'];
+		$this->BirthMonth = $aContact['BirthMonth'];
+		$this->BirthYear = $aContact['BirthYear'];
 
 		$this->GroupsContacts = array();
-		if (!empty($aContact['GroupsIds']) && is_array($aContact['GroupsIds']))
+		if (!empty($aContact['GroupIds']) && is_array($aContact['GroupIds']))
 		{
-			foreach ($aContact['GroupsIds'] as $sId)
+			foreach ($aContact['GroupIds'] as $iId)
 			{
 				$oGroupContact = \CGroupContact::createInstance();
 				$oGroupContact->IdContact = $this->iId;
-				$oGroupContact->IdGroup = (int) $sId;
+				$oGroupContact->IdGroup = $iId;
 				$this->GroupsContacts[] = $oGroupContact;
 			}
 		}
@@ -585,10 +585,10 @@ class CContact extends AEntity
 	
 	public function toResponseArray($aParameters = array())
 	{
-		$aGroupsIds = array();
+		$aGroupIds = array();
 		foreach ($this->GroupsContacts as $oGroupContact)
 		{
-			$aGroupsIds[] = $oGroupContact->IdGroup;
+			$aGroupIds[] = $oGroupContact->IdGroup;
 		}
 		return array(
 			'IdUser' => $this->IdUser,
@@ -637,14 +637,14 @@ class CContact extends AEntity
 			'OtherEmail' => $this->OtherEmail,
 			'Notes' => $this->Notes,
 
-			'BirthdayDay' => $this->BirthdayDay,
-			'BirthdayMonth' => $this->BirthdayMonth,
-			'BirthdayYear' => $this->BirthdayYear,
+			'BirthDay' => $this->BirthDay,
+			'BirthMonth' => $this->BirthMonth,
+			'BirthYear' => $this->BirthYear,
 			'ReadOnly' => $this->ReadOnly,
 			'ETag' => $this->ETag,
 			'SharedToAll' => $this->SharedToAll,
 			
-			'GroupsIds' => $aGroupsIds
+			'GroupIds' => $aGroupIds
 		);
 	}
 }

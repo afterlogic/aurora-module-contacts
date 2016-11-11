@@ -72,10 +72,10 @@ class CApiContactsBaseManager extends AApiManagerWithStorage
 			$oContact = $this->oStorage->getContactById($iUserId, $mContactId, $bIgnoreHideInGab, $iSharedTenantId, $bIgnoreAutoCreate);
 			if ($oContact)
 			{
-				$mGroupsIds = $this->getContactGroupsIds($oContact);
-				if (is_array($mGroupsIds))
+				$mGroupIds = $this->getContactGroupIds($oContact);
+				if (is_array($mGroupIds))
 				{
-					$oContact->GroupsIds = $mGroupsIds;
+					$oContact->GroupIds = $mGroupIds;
 				}
 			}
 		}
@@ -104,10 +104,10 @@ class CApiContactsBaseManager extends AApiManagerWithStorage
 			$oContact = $this->oStorage->GetContactByTypeId($mTypeId, $iContactType);
 			if ($oContact)
 			{
-				$mGroupsIds = $this->getContactGroupsIds($oContact);
-				if (is_array($mGroupsIds))
+				$mGroupIds = $this->getContactGroupIds($oContact);
+				if (is_array($mGroupIds))
 				{
-					$oContact->GroupsIds = $mGroupsIds;
+					$oContact->GroupIds = $mGroupIds;
 				}
 			}
 		}
@@ -136,10 +136,10 @@ class CApiContactsBaseManager extends AApiManagerWithStorage
 			$oContact = $this->oStorage->getContactByEmail($iUserId, $sEmail);
 			if ($oContact)
 			{
-				$mGroupsIds = $this->getContactGroupsIds($oContact);
-				if (is_array($mGroupsIds))
+				$mGroupIds = $this->getContactGroupIds($oContact);
+				if (is_array($mGroupIds))
 				{
-					$oContact->GroupsIds = $mGroupsIds;
+					$oContact->GroupIds = $mGroupIds;
 				}
 			}
 		}
@@ -169,10 +169,10 @@ class CApiContactsBaseManager extends AApiManagerWithStorage
 			$oContact = $this->oStorage->getContactByStrId($iUserId, $sContactStrId, $iSharedTenantId);
 			if ($oContact)
 			{
-				$mGroupsIds = $this->getContactGroupsIds($oContact);
-				if (is_array($mGroupsIds))
+				$mGroupIds = $this->getContactGroupIds($oContact);
+				if (is_array($mGroupIds))
 				{
-					$oContact->GroupsIds = $mGroupsIds;
+					$oContact->GroupIds = $mGroupIds;
 				}
 			}
 		}
@@ -214,20 +214,20 @@ class CApiContactsBaseManager extends AApiManagerWithStorage
 	 *
 	 * @return array|bool
 	 */
-	public function getContactGroupsIds($oContact)
+	public function getContactGroupIds($oContact)
 	{
-		$aGroupsIds = false;
+		$aGroupIds = false;
 		try
 		{
-			$aGroupsIds = $this->oStorage->getContactGroupsIds($oContact);
+			$aGroupIds = $this->oStorage->getContactGroupIds($oContact);
 		}
 		catch (CApiBaseException $oException)
 		{
-			$aGroupsIds = false;
+			$aGroupIds = false;
 			$this->setLastException($oException);
 		}
 
-		return $aGroupsIds;
+		return $aGroupIds;
 	}
 
 	/**
@@ -796,17 +796,17 @@ class CApiContactsBaseManager extends AApiManagerWithStorage
 
 	/**
 	 * @param int $iUserId
-	 * @param array $aContactsIds
+	 * @param array $aContactIds
 	 * @param int $iTenantId Default value is **null**
 	 *
 	 * @return bool
 	 */
-	public function deleteContacts($iUserId, $aContactsIds, $iTenantId = null)
+	public function deleteContacts($iUserId, $aContactIds, $iTenantId = null)
 	{
 		$bResult = false;
 		try
 		{
-			$bResult = $this->oStorage->deleteContacts($iUserId, $aContactsIds, $iTenantId);
+			$bResult = $this->oStorage->deleteContacts($iUserId, $aContactIds, $iTenantId);
 		}
 		catch (CApiBaseException $oException)
 		{
@@ -828,16 +828,16 @@ class CApiContactsBaseManager extends AApiManagerWithStorage
 
 	/**
 	 * @param int $iUserId
-	 * @param array $aContactsIds
+	 * @param array $aContactIds
 	 *
 	 * @return bool
 	 */
-	public function deleteSuggestContacts($iUserId, $aContactsIds)
+	public function deleteSuggestContacts($iUserId, $aContactIds)
 	{
 		$bResult = false;
 		try
 		{
-			$bResult = $this->oStorage->deleteSuggestContacts($iUserId, $aContactsIds);
+			$bResult = $this->oStorage->deleteSuggestContacts($iUserId, $aContactIds);
 		}
 		catch (CApiBaseException $oException)
 		{
@@ -872,16 +872,16 @@ class CApiContactsBaseManager extends AApiManagerWithStorage
 
 	/**
 	 * @param int $iUserId
-	 * @param array $aGroupsIds
+	 * @param array $aGroupIds
 	 *
 	 * @return bool
 	 */
-	public function deleteGroups($iUserId, $aGroupsIds)
+	public function deleteGroups($iUserId, $aGroupIds)
 	{
 		$bResult = false;
 		try
 		{
-			$bResult = $this->oStorage->deleteGroups($iUserId, $aGroupsIds);
+			$bResult = $this->oStorage->deleteGroups($iUserId, $aGroupIds);
 		}
 		catch (CApiBaseException $oException)
 		{
@@ -1097,10 +1097,10 @@ class CApiContactsBaseManager extends AApiManagerWithStorage
 			$oContact = $this->oStorage->GetGlobalContactById($iUserId, $mContactId);
 			if ($oContact)
 			{
-				$mGroupsIds = $this->getContactGroupsIds($oContact);
-				if (is_array($mGroupsIds))
+				$mGroupIds = $this->getContactGroupIds($oContact);
+				if (is_array($mGroupIds))
 				{
-					$oContact->GroupsIds = $mGroupsIds;
+					$oContact->GroupIds = $mGroupIds;
 				}
 			}
 		}

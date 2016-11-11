@@ -120,8 +120,8 @@ class CGroup extends AEntity
 		$this->GroupContacts = array();
 		if (!empty($aGroup['Contacts']) && is_array($aGroup['Contacts']))
 		{
-			$aContactsIds = $aGroup['Contacts'];
-			foreach ($aContactsIds as $sContactId)
+			$aContactIds = $aGroup['Contacts'];
+			foreach ($aContactIds as $sContactId)
 			{
 				$oGroupContact = \CGroupContact::createInstance();
 				$oGroupContact->IdContact = (int) $sContactId;
@@ -142,6 +142,7 @@ class CGroup extends AEntity
 			$mResult = array(
 				'IdUser' => $this->IdUser,
 				'Id' => $this->iId,
+				'IdGroup' => $this->iId,
 				'IdGroupStr' => $this->IdGroupStr,
 				'Name' => $this->Name,
 

@@ -183,9 +183,9 @@ class CApiContactsCsvParser
 
 			if (checkdate($iMonth, $iDay, $iYear))
 			{
-				$aReturn['BirthdayDay'] = $iDay;
-				$aReturn['BirthdayMonth'] = $iMonth;
-				$aReturn['BirthdayYear'] = $iYear;
+				$aReturn['BirthDay'] = $iDay;
+				$aReturn['BirthMonth'] = $iMonth;
+				$aReturn['BirthYear'] = $iYear;
 			}
 		}
 

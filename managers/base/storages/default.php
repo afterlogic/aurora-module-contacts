@@ -80,7 +80,7 @@ class CApiContactsBaseStorage extends AApiManagerStorage
 	 * @param CContact $oContact
 	 * @return array|bool
 	 */
-	public function getContactGroupsIds($oContact)
+	public function getContactGroupIds($oContact)
 	{
 		return array();
 	}
@@ -265,30 +265,30 @@ class CApiContactsBaseStorage extends AApiManagerStorage
 
 	/**
 	 * @param int $iUserId
-	 * @param array $aContactsIds
+	 * @param array $aContactIds
 	 * @return bool
 	 */
-	public function deleteContacts($iUserId, $aContactsIds)
+	public function deleteContacts($iUserId, $aContactIds)
 	{
 		return true;
 	}
 	
 	/**
 	 * @param int $iUserId
-	 * @param array $aContactsIds
+	 * @param array $aContactIds
 	 * @return bool
 	 */
-	public function deleteSuggestContacts($iUserId, $aContactsIds)
+	public function deleteSuggestContacts($iUserId, $aContactIds)
 	{
 		return true;
 	}	
 
 	/**
 	 * @param int $iUserId
-	 * @param array $aGroupsIds
+	 * @param array $aGroupIds
 	 * @return bool
 	 */
-	public function deleteGroups($iUserId, $aGroupsIds)
+	public function deleteGroups($iUserId, $aGroupIds)
 	{
 		return true;
 	}

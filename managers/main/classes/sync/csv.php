@@ -137,10 +137,10 @@ class CApiContactsSyncCsv
 						$oContact->PrimaryEmail = \EContactsPrimaryEmail::Other;
 					}
 					
-					if (strlen($oContact->BirthdayYear) === 2)
+					if (strlen($oContact->BirthYear) === 2)
 					{
-						$oDt = DateTime::createFromFormat('y', $oContact->BirthdayYear);
-						$oContact->BirthdayYear = $oDt->format('Y');
+						$oDt = DateTime::createFromFormat('y', $oContact->BirthYear);
+						$oContact->BirthYear = $oDt->format('Y');
 					}					
 
 					$iParsedCount++;
@@ -152,7 +152,7 @@ class CApiContactsSyncCsv
 						$oContact->IdTenant = $oAccount->IdTenant;
 					}
 					$oContact->SharedToAll = $bIsShared;
-					$oContact->GroupsIds = array($iGroupId);
+					$oContact->GroupIds = array($iGroupId);
 
 					if ($this->oApiContactsManager->createContact($oContact))
 					{

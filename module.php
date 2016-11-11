@@ -88,32 +88,36 @@ class ContactsModule extends AApiModule
 	}
 	
 	/**
-	 * @return array
+	 * 
+	 * @param int $IdGroup
+	 * @return \CGroup
 	 */
-	public function GetGroup()
+	public function GetGroup($IdGroup)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		
-		$oGroup = false;
-		$oAccount = $this->getDefaultAccountFromParam();
-
-		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
-		{
-			$sGroupId = (string) $this->getParamValue('GroupId', '');
-			$oGroup = $this->oApiContactsManager->getGroupById($oAccount->IdUser, $sGroupId);
-		}
-		else
-		{
-			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
-		}
-
-		return $oGroup;
+		return $this->oApiContactsManager->getGroup($IdGroup);
+//		$oGroup = false;
+//		$oAccount = $this->getDefaultAccountFromParam();
+//
+//		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
+//		{
+//			$sGroupId = (string) $this->getParamValue('IdGroup', '');
+//			$oGroup = $this->oApiContactsManager->getGroupById($oAccount->IdUser, $sGroupId);
+//		}
+//		else
+//		{
+//			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
+//		}
+//
+//		return $oGroup;
 	}
 	
 	/**
+	 * 
+	 * @param int $IdGroup
 	 * @return array
 	 */
-	public function GetGroupEvents()
+	public function GetGroupEvents($IdGroup)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
@@ -122,7 +126,7 @@ class ContactsModule extends AApiModule
 //
 //		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
 //		{
-//			$sGroupId = (string) $this->getParamValue('GroupId', '');
+//			$sGroupId = (string) $this->getParamValue('IdGroup', '');
 //			$aEvents = $this->oApiContactsManager->getGroupEvents($oAccount->IdUser, $sGroupId);
 //		}
 //		else
@@ -134,15 +138,23 @@ class ContactsModule extends AApiModule
 	}	
 	
 	/**
+	 * 
+	 * @param int $Offset
+	 * @param int $Limit
+	 * @param int $SortField
+	 * @param int $SortOrder
+	 * @param string $Search
+	 * @param int $IdGroup
+	 * @param int $Storage
 	 * @return array
 	 */
-	public function GetContacts($Offset = 0, $Limit = 20, $SortField = EContactSortField::Name, $SortOrder = ESortOrder::ASC, $Search = '', $GroupId = '', $Storage = EContactsStorage::All)
+	public function GetContacts($Offset = 0, $Limit = 20, $SortField = EContactSortField::Name, $SortOrder = ESortOrder::ASC, $Search = '', $IdGroup = 0, $Storage = EContactsStorage::All)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		$oUser = \CApi::getAuthenticatedUser();
 		$iTenantId = $Storage === EContactsStorage::Shared ? $oUser->IdTenant : null;
-		$aContacts = $this->oApiContactsManager->getContactItems($oUser->iId, $SortField, $SortOrder, $Offset, $Limit, $Search, (int) $GroupId, $iTenantId);
+		$aContacts = $this->oApiContactsManager->getContactItems($oUser->iId, $SortField, $SortOrder, $Offset, $Limit, $Search, $IdGroup, $iTenantId);
 		$aList = array();
 		if (is_array($aContacts))
 		{
@@ -164,7 +176,7 @@ class ContactsModule extends AApiModule
 
 		return array(
 			'ContactCount' => count($aList),
-			'GroupId' => $GroupId,
+			'IdGroup' => $IdGroup,
 			'Search' => $Search,
 			'Storage' => $Storage,
 			'List' => \CApiResponseManager::GetResponseObject($aList)
@@ -172,20 +184,23 @@ class ContactsModule extends AApiModule
 	}	
 	
 	/**
-	 * @return array
+	 * 
+	 * @param int $IdContact
+	 * @param int $Storage
+	 * @return \CContact
 	 */
-	public function GetContact($ContactId, $Storage)
+	public function GetContact($IdContact, $Storage)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		return $this->oApiContactsManager->getContact($ContactId);
+		return $this->oApiContactsManager->getContact($IdContact);
 	}	
 
-	public function GetAllContacts($Offset = 0, $Limit = 20, $SortField = 'Name', $SortOrder = 1, $Search = '', $GroupId = '')
+	public function GetAllContacts($Offset = 0, $Limit = 20, $SortField = 'Name', $SortOrder = 1, $Search = '', $IdGroup = '')
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		return $this->GetPersonalContacts($Offset, $Limit, $SortField, $SortOrder, $Search, $GroupId, true);
+		return $this->GetPersonalContacts($Offset, $Limit, $SortField, $SortOrder, $Search, $IdGroup, true);
 	}
 
 	public function GetSharedContacts()
@@ -196,7 +211,7 @@ class ContactsModule extends AApiModule
 		return $this->GetPersonalContacts();
 	}
 
-	public function GetPersonalContacts($Offset = 0, $Limit = 20, $SortField = \EContactSortField::Name, $SortOrder = 1, $Search = '', $GroupId = '', $All = false, $SharedToAll = false)
+	public function GetPersonalContacts($Offset = 0, $Limit = 20, $SortField = \EContactSortField::Name, $SortOrder = 1, $Search = '', $IdGroup = '', $All = false, $SharedToAll = false)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
@@ -218,19 +233,19 @@ class ContactsModule extends AApiModule
 		
 		if ($bAllowPersonalContacts)
 		{
-			if ($bAllowContactsSharing && 0 < $GroupId)
+			if ($bAllowContactsSharing && 0 < $IdGroup)
 			{
 				$iTenantId = $oUser->IdTenant;
 			}
 			
 //			$iCount = $this->oApiContactsManager->getContactItemsCount(
-//				$iUserId, $Search, '', $GroupId, $iTenantId, $All);
+//				$iUserId, $Search, '', $IdGroup, $iTenantId, $All);
 //
 //			if (0 < $iCount)
 //			{
 				$aContacts = $this->oApiContactsManager->getContactItems(
 					$iUserId, $SortField, $SortOrder, $Offset,
-					$Limit, $Search, '', $GroupId, $iTenantId, $All);
+					$Limit, $Search, '', $IdGroup, $iTenantId, $All);
 
 				if (is_array($aContacts))
 				{
@@ -245,7 +260,7 @@ class ContactsModule extends AApiModule
 
 		return array(
 			'ContactCount' => $iCount,
-			'GroupId' => $GroupId,
+			'IdGroup' => $IdGroup,
 			'Search' => $Search,
 			'FirstCharacter' => '',
 			'All' => $All,
@@ -254,47 +269,50 @@ class ContactsModule extends AApiModule
 	}
 	
 	/**
+	 * 
+	 * @param array $Emails Array of strings
+	 * @param string $HandlerId
 	 * @return array
 	 */
-	public function GetContactsByEmails()
+	public function GetContactsByEmails($Emails, $HandlerId)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		$aResult = array();
-		$oAccount = $this->getDefaultAccountFromParam();
-
-		$sEmails = (string) $this->getParamValue('Emails', '');
-		$aEmails = explode(',', $sEmails);
-
-		if (0 < count($aEmails))
-		{
-			$oApiContacts = $this->oApiContactsManager;
-			$oApiGlobalContacts = $this->GetManager('global');
-			
-			$bPab = $oApiContacts && $this->oApiCapabilityManager->isPersonalContactsSupported($oAccount);
-			$bGab = $oApiGlobalContacts && $this->oApiCapabilityManager->isGlobalContactsSupported($oAccount, true);
-
-			foreach ($aEmails as $sEmail)
-			{
-				$oContact = false;
-				$sEmail = trim($sEmail);
-				
-				if ($bPab)
-				{
-					$oContact = $oApiContacts->getContactByEmail($oAccount->IdUser, $sEmail);
-				}
-
-				if (!$oContact && $bGab)
-				{
-					$oContact = $oApiGlobalContacts->getContactByEmail($oAccount, $sEmail);
-				}
-
-				if ($oContact)
-				{
-					$aResult[$sEmail] = $oContact;
-				}
-			}
-		}
+//		$oAccount = $this->getDefaultAccountFromParam();
+//
+//		$sEmails = (string) $this->getParamValue('Emails', '');
+//		$aEmails = explode(',', $sEmails);
+//
+//		if (0 < count($aEmails))
+//		{
+//			$oApiContacts = $this->oApiContactsManager;
+//			$oApiGlobalContacts = $this->GetManager('global');
+//			
+//			$bPab = $oApiContacts && $this->oApiCapabilityManager->isPersonalContactsSupported($oAccount);
+//			$bGab = $oApiGlobalContacts && $this->oApiCapabilityManager->isGlobalContactsSupported($oAccount, true);
+//
+//			foreach ($aEmails as $sEmail)
+//			{
+//				$oContact = false;
+//				$sEmail = trim($sEmail);
+//				
+//				if ($bPab)
+//				{
+//					$oContact = $oApiContacts->getContactByEmail($oAccount->IdUser, $sEmail);
+//				}
+//
+//				if (!$oContact && $bGab)
+//				{
+//					$oContact = $oApiGlobalContacts->getContactByEmail($oAccount, $sEmail);
+//				}
+//
+//				if ($oContact)
+//				{
+//					$aResult[$sEmail] = $oContact;
+//				}
+//			}
+//		}
 
 		return $aResult;
 	}	
@@ -358,7 +376,7 @@ class ContactsModule extends AApiModule
 		
 		$oContact = false;
 		$oAccount = $this->getDefaultAccountFromParam();
-		$sContactId = (string) $this->getParamValue('ContactId', '');
+		$sContactId = (string) $this->getParamValue('IdContact', '');
 		
 		if ($this->oApiCapabilityManager->isGlobalContactsSupported($oAccount)) {
 
@@ -379,7 +397,7 @@ class ContactsModule extends AApiModule
 		
 		$oContact = false;
 		$oAccount = $this->getDefaultAccountFromParam();
-		$sContactId = (string) $this->getParamValue('ContactId', '');
+		$sContactId = (string) $this->getParamValue('IdContact', '');
 
 		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount)) {
 
@@ -448,9 +466,13 @@ class ContactsModule extends AApiModule
 //	}	
 	
 	/**
+	 * 
+	 * @param string $Search
+	 * @param bool $GlobalOnly
+	 * @param bool $PhoneOnly
 	 * @return array
 	 */
-	public function GetSuggestions($Search)
+	public function GetSuggestions($Search, $GlobalOnly = false, $PhoneOnly = false)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
@@ -487,7 +509,13 @@ class ContactsModule extends AApiModule
 //		);
 	}	
 	
-	public function DeleteSuggestion()
+	/**
+	 * 
+	 * @param int $IdContact
+	 * @param bool $SharedToAll
+	 * @return bool
+	 */
+	public function DeleteSuggestion($IdContact, $SharedToAll)
 	{
 		return true;
 //		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
@@ -497,7 +525,7 @@ class ContactsModule extends AApiModule
 //
 //		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
 //		{
-//			$sContactId = (string) $this->getParamValue('ContactId', '');
+//			$sContactId = (string) $this->getParamValue('IdContact', '');
 //			$this->oApiContactsManager->resetContactFrequency($oAccount->IdUser, $sContactId);
 //		}
 //		else
@@ -559,7 +587,7 @@ class ContactsModule extends AApiModule
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oContact = $this->oApiContactsManager->getContact($Contact['ContactId']);
+		$oContact = $this->oApiContactsManager->getContact($Contact['IdContact']);
 		$oContact->populate($Contact);
 		if (!$this->oApiContactsManager->updateContact($oContact, false))
 		{
@@ -570,7 +598,7 @@ class ContactsModule extends AApiModule
 //		$oAccount = $this->getDefaultAccountFromParam();
 //
 //		$bGlobal = '1' === $this->getParamValue('Global', '0');
-//		$sContactId = $this->getParamValue('ContactId', '');
+//		$sContactId = $this->getParamValue('IdContact', '');
 //
 //		$bSharedToAll = '1' === $this->getParamValue('SharedToAll', '0');
 //		$iTenantId = $bSharedToAll ? $oAccount->IdTenant : null;
@@ -613,27 +641,28 @@ class ContactsModule extends AApiModule
 	}
 	
 	/**
-	 * @return array
+	 * 
+	 * @param array $ContactIds Array of string
+	 * @param bool $SharedToAll
+	 * @return bool
 	 */
-	public function DeleteContacts($ContactsId, $SharedToAll)
+	public function DeleteContacts($ContactIds, $SharedToAll)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$aContacts = explode(',', $ContactsId);
-		
-		return $this->oApiContactsManager->deleteContacts($aContacts);
+		return $this->oApiContactsManager->deleteContacts($ContactIds);
 		
 //		$oAccount = $this->getDefaultAccountFromParam();
 //
 //		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
 //		{
-//			$aContactsId = explode(',', $this->getParamValue('ContactsId', ''));
-//			$aContactsId = array_map('trim', $aContactsId);
+//			$aContactIds = explode(',', $this->getParamValue('ContactIds', ''));
+//			$aContactIds = array_map('trim', $aContactIds);
 //			
 //			$bSharedToAll = '1' === (string) $this->getParamValue('SharedToAll', '0');
 //			$iTenantId = $bSharedToAll ? $oAccount->IdTenant : null;
 //
-//			return $this->oApiContactsManager->deleteContacts($oAccount->IdUser, $aContactsId, $iTenantId);
+//			return $this->oApiContactsManager->deleteContacts($oAccount->IdUser, $aContactIds, $iTenantId);
 //		}
 //		else
 //		{
@@ -644,69 +673,74 @@ class ContactsModule extends AApiModule
 	}	
 	
 	/**
-	 * @return array
+	 * 
+	 * @param int $ContactIds
+	 * @param bool $SharedToAll
+	 * @return bool
+	 * @throws \System\Exceptions\AuroraApiException
 	 */
-	public function UpdateShared()
+	public function UpdateShared($ContactIds, $SharedToAll)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		
-		$oAccount = $this->getDefaultAccountFromParam();
-		
-		$aContactsId = explode(',', $this->getParamValue('ContactsId', ''));
-		$aContactsId = array_map('trim', $aContactsId);
-		
-		$bSharedToAll = '1' === $this->getParamValue('SharedToAll', '0');
-		$iTenantId = $bSharedToAll ? $oAccount->IdTenant : null;
-
-		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
-		{
-			$oApiContacts = $this->oApiContactsManager;
-		}
-
-		if ($oApiContacts && $this->oApiCapabilityManager->isSharedContactsSupported($oAccount))
-		{
-			foreach ($aContactsId as $sContactId)
-			{
-				$oContact = $oApiContacts->getContactById($oAccount->IdUser, $sContactId, false, $iTenantId);
-				if ($oContact)
-				{
-					if ($oContact->SharedToAll)
-					{
-						$oApiContacts->updateContactUserId($oContact, $oAccount->IdUser);
-					}
-
-					$oContact->SharedToAll = !$oContact->SharedToAll;
-					$oContact->IdUser = $oAccount->IdUser;
-					$oContact->IdDomain = $oAccount->IdDomain;
-					$oContact->IdTenant = $oAccount->IdTenant;
-
-					if (!$oApiContacts->updateContact($oContact))
-					{
-						switch ($oApiContacts->getLastErrorCode())
-						{
-							case \Errs::Sabre_PreconditionFailed:
-								throw new \System\Exceptions\AuroraApiException(
-									\System\Notifications::ContactDataHasBeenModifiedByAnotherApplication);
-						}
-					}
-				}
-			}
-			
-			return true;
-		}
-		else
-		{
-			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
-		}
-
-		return false;
+		return true;
+//		$oAccount = $this->getDefaultAccountFromParam();
+//		
+//		$aContactIds = explode(',', $this->getParamValue('ContactIds', ''));
+//		$aContactIds = array_map('trim', $aContactIds);
+//		
+//		$bSharedToAll = '1' === $this->getParamValue('SharedToAll', '0');
+//		$iTenantId = $bSharedToAll ? $oAccount->IdTenant : null;
+//
+//		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
+//		{
+//			$oApiContacts = $this->oApiContactsManager;
+//		}
+//
+//		if ($oApiContacts && $this->oApiCapabilityManager->isSharedContactsSupported($oAccount))
+//		{
+//			foreach ($aContactIds as $sContactId)
+//			{
+//				$oContact = $oApiContacts->getContactById($oAccount->IdUser, $sContactId, false, $iTenantId);
+//				if ($oContact)
+//				{
+//					if ($oContact->SharedToAll)
+//					{
+//						$oApiContacts->updateContactUserId($oContact, $oAccount->IdUser);
+//					}
+//
+//					$oContact->SharedToAll = !$oContact->SharedToAll;
+//					$oContact->IdUser = $oAccount->IdUser;
+//					$oContact->IdDomain = $oAccount->IdDomain;
+//					$oContact->IdTenant = $oAccount->IdTenant;
+//
+//					if (!$oApiContacts->updateContact($oContact))
+//					{
+//						switch ($oApiContacts->getLastErrorCode())
+//						{
+//							case \Errs::Sabre_PreconditionFailed:
+//								throw new \System\Exceptions\AuroraApiException(
+//									\System\Notifications::ContactDataHasBeenModifiedByAnotherApplication);
+//						}
+//					}
+//				}
+//			}
+//			
+//			return true;
+//		}
+//		else
+//		{
+//			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
+//		}
+//
+//		return false;
 	}	
 	
 	/**
 	 * @todo: waiting for mail module
+	 * @param string $File
 	 * @return array
 	 */
-//	public function AddContactsFromFile()
+//	public function AddContactsFromFile($File)
 //	{
 //		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 //		
@@ -781,11 +815,11 @@ class ContactsModule extends AApiModule
 		
 //		$oAccount = $this->getDefaultAccountFromParam();
 //
-//		$sGroupId = $this->getParamValue('GroupId', '');
+//		$sGroupId = $this->getParamValue('IdGroup', '');
 //
 //		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
 //		{
-			$oGroup = $this->oApiContactsManager->getGroup($Group['GroupId']);
+			$oGroup = $this->oApiContactsManager->getGroup($Group['IdGroup']);
 			if ($oGroup)
 			{
 				$oGroup->populate($Group);
@@ -815,9 +849,11 @@ class ContactsModule extends AApiModule
 	}	
 	
 	/**
-	 * @return array
+	 * 
+	 * @param int $IdGroup
+	 * @return bool
 	 */
-	public function DeleteGroup($GroupId)
+	public function DeleteGroup($IdGroup)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
@@ -825,10 +861,10 @@ class ContactsModule extends AApiModule
 //
 //		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
 //		{
-//			$sGroupId = $this->getParamValue('GroupId', '');
+//			$sGroupId = $this->getParamValue('IdGroup', '');
 //
 //			return $this->oApiContactsManager->deleteGroup($oAccount->IdUser, $sGroupId);
-			return $this->oApiContactsManager->deleteGroup($GroupId);
+			return $this->oApiContactsManager->deleteGroup($IdGroup);
 //		}
 //		else
 //		{
@@ -839,15 +875,18 @@ class ContactsModule extends AApiModule
 	}
 	
 	/**
-	 * @return array
+	 * 
+	 * @param int $IdGroup
+	 * @param array $ContactIds Array of integers
+	 * @return boolean
 	 */
-	public function AddContactsToGroup($GroupId, $ContactsId)
+	public function AddContactsToGroup($IdGroup, $ContactIds)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		if (is_array($ContactsId) && !empty($ContactsId))
+		if (is_array($ContactIds) && !empty($ContactIds))
 		{
-			return $this->oApiContactsManager->addContactsToGroup((int) $GroupId, $ContactsId);
+			return $this->oApiContactsManager->addContactsToGroup((int) $IdGroup, $ContactIds);
 		}
 		
 		return true;
@@ -856,10 +895,10 @@ class ContactsModule extends AApiModule
 //
 //		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
 //		{
-//			$sGroupId = (string) $this->getParamValue('GroupId', '');
+//			$sGroupId = (string) $this->getParamValue('IdGroup', '');
 //
-//			$aContactsId = $this->getParamValue('ContactsId', null);
-//			if (!is_array($aContactsId))
+//			$aContactIds = $this->getParamValue('ContactIds', null);
+//			if (!is_array($aContactIds))
 //			{
 //				return false;
 //			}
@@ -870,7 +909,7 @@ class ContactsModule extends AApiModule
 //				$aLocalContacts = array();
 //				$aGlobalContacts = array();
 //				
-//				foreach ($aContactsId as $aItem)
+//				foreach ($aContactIds as $aItem)
 //				{
 //					if (is_array($aItem) && 2 === count($aItem))
 //					{
@@ -915,15 +954,18 @@ class ContactsModule extends AApiModule
 	}
 	
 	/**
-	 * @return array
+	 * 
+	 * @param int $IdGroup
+	 * @param array $ContactIds array of integers
+	 * @return boolean
 	 */
-	public function RemoveContactsFromGroup($GroupId, $ContactsId)
+	public function RemoveContactsFromGroup($IdGroup, $ContactIds)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		if (is_array($ContactsId) && !empty($ContactsId))
+		if (is_array($ContactIds) && !empty($ContactIds))
 		{
-			return $this->oApiContactsManager->removeContactsFromGroup((int) $GroupId, $ContactsId);
+			return $this->oApiContactsManager->removeContactsFromGroup($IdGroup, $ContactIds);
 		}
 		
 		return true;
@@ -933,15 +975,15 @@ class ContactsModule extends AApiModule
 //		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount) ||
 //			$this->oApiCapabilityManager->isGlobalContactsSupported($oAccount, true))
 //		{
-//			$sGroupId = (string) $this->getParamValue('GroupId', '');
+//			$sGroupId = (string) $this->getParamValue('IdGroup', '');
 //
-//			$aContactsId = explode(',', $this->getParamValue('ContactsId', ''));
-//			$aContactsId = array_map('trim', $aContactsId);
+//			$aContactIds = explode(',', $this->getParamValue('ContactIds', ''));
+//			$aContactIds = array_map('trim', $aContactIds);
 //
 //			$oGroup = $this->oApiContactsManager->getGroupById($oAccount->IdUser, $sGroupId);
 //			if ($oGroup)
 //			{
-//				return $this->oApiContactsManager->removeContactsFromGroup($oGroup, $aContactsId);
+//				return $this->oApiContactsManager->removeContactsFromGroup($oGroup, $aContactIds);
 //			}
 //
 //			return false;

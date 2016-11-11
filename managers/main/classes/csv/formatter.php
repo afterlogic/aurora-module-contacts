@@ -80,7 +80,7 @@ class CApiContactsCsvFormatter
 			),
 
 			'tokensWithSpecialTreatment' => array(
-				'Birthday' => array('bdayForm', 'BirthdayDay', 'BirthdayMonth', 'BirthdayYear'),
+				'Birthday' => array('bdayForm', 'BirthDay', 'BirthMonth', 'BirthYear'),
 			)
 		);
 	}

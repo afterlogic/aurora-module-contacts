@@ -479,7 +479,7 @@ class CApiContactsVCardHelper
 			$oContact->BusinessCompany,
 			$oContact->BusinessDepartment
 		);
-		$oVCard->CATEGORIES = $oContact->GroupsIds;
+		$oVCard->CATEGORIES = $oContact->GroupIds;
 
 		self::UpdateVCardAddressesFromContact($oContact, $oVCard);
 		self::UpdateVCardEmailsFromContact($oContact, $oVCard);
@@ -487,9 +487,9 @@ class CApiContactsVCardHelper
 		self::UpdateVCardPhonesFromContact($oContact, $oVCard);
 
 		unset($oVCard->BDAY);
-		if ($oContact->BirthdayYear !== 0 && $oContact->BirthdayMonth !== 0 && $oContact->BirthdayDay !== 0)
+		if ($oContact->BirthYear !== 0 && $oContact->BirthMonth !== 0 && $oContact->BirthDay !== 0)
 		{
-			$sBDayDT = $oContact->BirthdayYear.'-'.$oContact->BirthdayMonth.'-'.$oContact->BirthdayDay;
+			$sBDayDT = $oContact->BirthYear.'-'.$oContact->BirthMonth.'-'.$oContact->BirthDay;
 			$oVCard->add('BDAY', $sBDayDT);
 		}
 	}

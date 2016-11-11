@@ -304,9 +304,9 @@ class CApiContactsBaseLdapStorage extends CApiContactsBaseStorage
 				$aDateOfBirth = explode('/', $sDateOfBirth, 3);
 				if (3 === count($aDateOfBirth) && isset($aDateOfBirth[0], $aDateOfBirth[1], $aDateOfBirth[2]))
 				{
-					$oContact->BirthdayDay = is_numeric($aDateOfBirth[0]) ? (int) $aDateOfBirth[0] : 0;
-					$oContact->BirthdayMonth = is_numeric($aDateOfBirth[1]) ? (int) $aDateOfBirth[1] : 0;
-					$oContact->BirthdayYear = is_numeric($aDateOfBirth[2]) ? (int) $aDateOfBirth[2] : 0;
+					$oContact->BirthDay = is_numeric($aDateOfBirth[0]) ? (int) $aDateOfBirth[0] : 0;
+					$oContact->BirthMonth = is_numeric($aDateOfBirth[1]) ? (int) $aDateOfBirth[1] : 0;
+					$oContact->BirthYear = is_numeric($aDateOfBirth[2]) ? (int) $aDateOfBirth[2] : 0;
 				}
 			}
 
@@ -316,17 +316,17 @@ class CApiContactsBaseLdapStorage extends CApiContactsBaseStorage
 
 				if (is_array($aLdapDataLower['memberofpabgroup']))
 				{
-					$aGroupsIds = array();
+					$aGroupIds = array();
 					$aMemberOfPabGroup = array_values($aLdapDataLower['memberofpabgroup']);
 					foreach ($aMemberOfPabGroup as $sGroupId)
 					{
 						if (!empty($sGroupId))
 						{
-							$aGroupsIds[] = (string) $sGroupId;
+							$aGroupIds[] = (string) $sGroupId;
 						}
 					}
 
-					$oContact->GroupsIds = $aGroupsIds;
+					$oContact->GroupIds = $aGroupIds;
 				}
 			}
 		}
@@ -405,10 +405,10 @@ class CApiContactsBaseLdapStorage extends CApiContactsBaseStorage
 		}
 
 		$aE['memberofpabgroup'] = array();
-		$aGroupsIds = $oContact->GroupsIds;
-		if (is_array($aGroupsIds) && 0 < count($aGroupsIds))
+		$aGroupIds = $oContact->GroupIds;
+		if (is_array($aGroupIds) && 0 < count($aGroupIds))
 		{
-			foreach($aGroupsIds as $mGroupId)
+			foreach($aGroupIds as $mGroupId)
 			{
 				$aE['memberofpabgroup'][] = (string) $mGroupId;
 			}
@@ -533,9 +533,9 @@ class CApiContactsBaseLdapStorage extends CApiContactsBaseStorage
 	 * @param CContact $oContact
 	 * @return array|bool
 	 */
-	public function getContactGroupsIds($oContact)
+	public function getContactGroupIds($oContact)
 	{
-		return $oContact->GroupsIds;
+		return $oContact->GroupIds;
 	}
 
 	/**
@@ -720,7 +720,7 @@ class CApiContactsBaseLdapStorage extends CApiContactsBaseStorage
 			$oContact = $this->getContactById($iUserId, $mContactId);
 			if ($oContact)
 			{
-				$aGroupIds = $oContact->GroupsIds;
+				$aGroupIds = $oContact->GroupIds;
 				if (is_array($aGroupIds) && 0 < count($aGroupIds))
 				{
 					if (1 === count($aGroupIds))
@@ -903,18 +903,18 @@ class CApiContactsBaseLdapStorage extends CApiContactsBaseStorage
 
 	/**
 	 * @param int $iUserId
-	 * @param array $aContactsIds
+	 * @param array $aContactIds
 	 * @return bool
 	 */
-	public function deleteContacts($iUserId, $aContactsIds)
+	public function deleteContacts($iUserId, $aContactIds)
 	{
 		$oAccount = $this->getAccountFromUserId($iUserId);
 		$oLdap = $this->Ldap($oAccount);
 		
 		$bReturn = false;
-		if ($oLdap && is_array($aContactsIds) && 0 < count($aContactsIds))
+		if ($oLdap && is_array($aContactIds) && 0 < count($aContactIds))
 		{
-			foreach ($aContactsIds as $sContactId)
+			foreach ($aContactIds as $sContactId)
 			{
 				$bReturn = $oLdap->Delete($this->sContactUidFieldName.'='.$sContactId);
 				if (!$bReturn)
@@ -929,28 +929,28 @@ class CApiContactsBaseLdapStorage extends CApiContactsBaseStorage
 	
 	/**
 	 * @param int $iUserId
-	 * @param array $aContactsIds
+	 * @param array $aContactIds
 	 * @return bool
 	 */
-	public function deleteSuggestContacts($iUserId, $aContactsIds)
+	public function deleteSuggestContacts($iUserId, $aContactIds)
 	{
 		return true;
 	}	
 
 	/**
 	 * @param int $iUserId
-	 * @param array $aGroupsIds
+	 * @param array $aGroupIds
 	 * @return bool
 	 */
-	public function deleteGroups($iUserId, $aGroupsIds)
+	public function deleteGroups($iUserId, $aGroupIds)
 	{
 		$oAccount = $this->getAccountFromUserId($iUserId);
 		$oLdap = $this->Ldap($oAccount);
 		
 		$bReturn = false;
-		if ($oLdap && is_array($aGroupsIds) && 0 < count($aGroupsIds))
+		if ($oLdap && is_array($aGroupIds) && 0 < count($aGroupIds))
 		{
-			foreach ($aGroupsIds as $sGroupId)
+			foreach ($aGroupIds as $sGroupId)
 			{
 				$bReturn = $oLdap->Delete($this->sGroupUidFieldName.'='.$sGroupId);
 				if (!$bReturn)
@@ -965,12 +965,12 @@ class CApiContactsBaseLdapStorage extends CApiContactsBaseStorage
 
 	/**
 	 * @param int $iUserId
-	 * @param mixed $mGroupsId
+	 * @param mixed $mGroupIds
 	 * @return bool
 	 */
-	public function deleteGroup($iUserId, $mGroupsId)
+	public function deleteGroup($iUserId, $mGroupIds)
 	{
-		return $this->deleteGroups($iUserId, array($mGroupsId));
+		return $this->deleteGroups($iUserId, array($mGroupIds));
 	}
 
 	/**
@@ -995,7 +995,7 @@ class CApiContactsBaseLdapStorage extends CApiContactsBaseStorage
 //		if ($this->oConnection->Execute($this->oCommandCreator->DeleteContactsExceptIds($iUserId, $aContactIds)))
 //		{
 //			$bResult = true;
-//			$this->oConnection->Execute($this->oCommandCreator->ClearGroupsIdsByExceptContactsIds($iUserId, $aContactIds));
+//			$this->oConnection->Execute($this->oCommandCreator->ClearGroupIdsByExceptContactIds($iUserId, $aContactIds));
 //		}
 //
 //		return $bResult;
@@ -1012,7 +1012,7 @@ class CApiContactsBaseLdapStorage extends CApiContactsBaseStorage
 //		if ($this->oConnection->Execute($this->oCommandCreator->DeleteGroupsExceptIds($iUserId, $aGroupIds)))
 //		{
 //			$bResult = true;
-//			$this->oConnection->Execute($this->oCommandCreator->ClearContactsIdsByExceptGroupsIds($iUserId, $aGroupIds));
+//			$this->oConnection->Execute($this->oCommandCreator->ClearContactIdsByExceptGroupIds($iUserId, $aGroupIds));
 //		}
 //
 //		return $bResult;
@@ -1051,14 +1051,14 @@ class CApiContactsBaseLdapStorage extends CApiContactsBaseStorage
 			$oContact = $this->getContactById($oGroup->IdUser, $mContactId);
 			if ($oContact)
 			{
-				$aIds = $oContact->GroupsIds;
+				$aIds = $oContact->GroupIds;
 				$aIds = is_array($aIds) ? $aIds : array();
 				$aIds[] = $oGroup->IdGroup;
 				$aIds = array_unique($aIds);
 
-				if (implode(',', $aIds) !== implode(',', $oContact->GroupsIds))
+				if (implode(',', $aIds) !== implode(',', $oContact->GroupIds))
 				{
-					$oContact->GroupsIds = $aIds;
+					$oContact->GroupIds = $aIds;
 					$iResult &= $this->updateContact($oContact);
 				}
 			}
@@ -1082,7 +1082,7 @@ class CApiContactsBaseLdapStorage extends CApiContactsBaseStorage
 			$oContact = $this->getContactById($oGroup->IdUser, $mContactId);
 			if ($oContact)
 			{
-				$aIds = $oContact->GroupsIds;
+				$aIds = $oContact->GroupIds;
 				$bNew = array();
 				foreach ($aIds as $mId)
 				{
@@ -1093,9 +1093,9 @@ class CApiContactsBaseLdapStorage extends CApiContactsBaseStorage
 				}
 				$bNew = array_unique($bNew);
 
-				if (implode(',', $bNew) !== implode(',', $oContact->GroupsIds))
+				if (implode(',', $bNew) !== implode(',', $oContact->GroupIds))
 				{
-					$oContact->GroupsIds = $bNew;
+					$oContact->GroupIds = $bNew;
 					$iResult &= $this->updateContact($oContact);
 				}
 			}

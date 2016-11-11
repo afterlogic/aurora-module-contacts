@@ -203,7 +203,7 @@ class CApiContactsBaseCommandCreator extends api_CommandCreator
 	 * @param int $iContactId
 	 * @return string
 	 */
-	public function GetContactGroupsIds($iUserId, $iContactId)
+	public function GetContactGroupIds($iUserId, $iContactId)
 	{
 		$sSql = 'SELECT id_group FROM %sawm_addr_groups_contacts WHERE id_addr = %d';
 		return sprintf($sSql, $this->prefix(), $iContactId);
@@ -336,12 +336,12 @@ class CApiContactsBaseCommandCreator extends api_CommandCreator
 	 */
 	public function UpdateGroupIdsInContact($oContact)
 	{
-		if (0 < count($oContact->GroupsIds))
+		if (0 < count($oContact->GroupIds))
 		{
 			$sSql = 'INSERT INTO %sawm_addr_groups_contacts (id_addr, id_group) VALUES %s';
 			$aValues = array();
 
-			foreach ($oContact->GroupsIds as $sGroupId)
+			foreach ($oContact->GroupIds as $sGroupId)
 			{
 				$aValues[] = '('.((int) $oContact->IdContact).', '.((int) $sGroupId).')';
 			}
@@ -353,15 +353,15 @@ class CApiContactsBaseCommandCreator extends api_CommandCreator
 
 	/**
 	 * @param int $iUserId
-	 * @param array $aContactsIds
+	 * @param array $aContactIds
 	 * @param int $iSharedTenantId = null
 	 * @return string
 	 */
-	public function DeleteContacts($iUserId, $aContactsIds, $iSharedTenantId = null)
+	public function DeleteContacts($iUserId, $aContactIds, $iSharedTenantId = null)
 	{
 		$sSql = 'DELETE FROM %sawm_addr_book WHERE %s = %d AND %s IN (%s)';
 
-		$aContactsIds = array_map('intval', $aContactsIds);
+		$aContactIds = array_map('intval', $aContactIds);
 
 		$sColumnName = $this->escapeColumn('id_user');
 		$sColumnValue = $iUserId;
@@ -372,36 +372,36 @@ class CApiContactsBaseCommandCreator extends api_CommandCreator
 		}
 
 		return sprintf($sSql, $this->prefix(), $sColumnName, $sColumnValue,
-			$this->escapeColumn('id_addr'), implode(', ', $aContactsIds));
+			$this->escapeColumn('id_addr'), implode(', ', $aContactIds));
 	}
 
 	/**
 	 * @param int $iUserId
-	 * @param array $aGroupsIds
+	 * @param array $aGroupIds
 	 * @return string
 	 */
-	public function DeleteGroups($iUserId, $aGroupsIds)
+	public function DeleteGroups($iUserId, $aGroupIds)
 	{
 		$sSql = 'DELETE FROM %sawm_addr_groups WHERE %s = %d AND %s IN (%s)';
 
-		$aGroupsIds = array_map('intval', $aGroupsIds);
+		$aGroupIds = array_map('intval', $aGroupIds);
 
 		return sprintf($sSql, $this->prefix(),
-			$this->escapeColumn('id_user'), $iUserId, $this->escapeColumn('id_group'), implode(', ', $aGroupsIds));
+			$this->escapeColumn('id_user'), $iUserId, $this->escapeColumn('id_group'), implode(', ', $aGroupIds));
 	}
 
 	/**
 	 * @param int $iUserId
-	 * @param array $aContactsIds
+	 * @param array $aContactIds
 	 * @return string
 	 */
-//	public function DeleteContactsExceptIds($iUserId, $aContactsIds)
+//	public function DeleteContactsExceptIds($iUserId, $aContactIds)
 //	{
 //		$sSqlAdd = '';
-//		if (is_array($aContactsIds) && 0 < count($aContactsIds))
+//		if (is_array($aContactIds) && 0 < count($aContactIds))
 //		{
 //			$sSqlAdd = sprintf(' AND %s NOT IN (%s)', $this->escapeColumn('id_addr'),
-//				implode(', ', $aContactsIds = array_map('intval', $aContactsIds)));
+//				implode(', ', $aContactIds = array_map('intval', $aContactIds)));
 //		}
 //
 //		$sSql = 'DELETE FROM %sawm_addr_book WHERE %s = %d%s';
@@ -411,16 +411,16 @@ class CApiContactsBaseCommandCreator extends api_CommandCreator
 
 	/**
 	 * @param int $iUserId
-	 * @param array $aGroupsIds
+	 * @param array $aGroupIds
 	 * @return string
 	 */
-//	public function DeleteGroupsExceptIds($iUserId, $aGroupsIds)
+//	public function DeleteGroupsExceptIds($iUserId, $aGroupIds)
 //	{
 //		$sSqlAdd = '';
-//		if (is_array($aGroupsIds) && 0 < count($aGroupsIds))
+//		if (is_array($aGroupIds) && 0 < count($aGroupIds))
 //		{
 //			$sSqlAdd = sprintf(' AND %s NOT IN (%s)',
-//				$this->escapeColumn('id_group'), implode(', ', array_map('intval', $aGroupsIds)));
+//				$this->escapeColumn('id_group'), implode(', ', array_map('intval', $aGroupIds)));
 //		}
 //
 //		$sSql = 'DELETE FROM %sawm_addr_groups WHERE id_user = %d%s';
@@ -494,7 +494,7 @@ AND %sawm_addr_groups.id_user = %d';
 	 * @param array $aIds
 	 * @return string
 	 */
-	protected function clearGroupContactsIds($sWhereField, $aIds)
+	protected function clearGroupContactIds($sWhereField, $aIds)
 	{
 		if (is_array($aIds) && 0 < count($aIds))
 		{
@@ -507,20 +507,20 @@ AND %sawm_addr_groups.id_user = %d';
 	}
 
 	/**
-	 * @param array $aContactsIds
+	 * @param array $aContactIds
 	 * @return string
 	 */
-	public function ClearGroupsIdsByContactsIds($aContactsIds)
+	public function ClearGroupIdsByContactIds($aContactIds)
 	{
-		return $this->clearGroupContactsIds('id_addr', $aContactsIds);
+		return $this->clearGroupContactIds('id_addr', $aContactIds);
 	}
 	/**
-	 * @param int $aGroupsIds
+	 * @param int $aGroupIds
 	 * @return string
 	 */
-	public function ClearContactsIdsByGroupsIds($aGroupsIds)
+	public function ClearContactIdsByGroupIds($aGroupIds)
 	{
-		return $this->clearGroupContactsIds('id_group', $aGroupsIds);
+		return $this->clearGroupContactIds('id_group', $aGroupIds);
 	}
 
 	/**
@@ -632,21 +632,21 @@ WHERE deleted = 0 AND hide_in_gab = 0 AND id_user = %d AND view_email IN (%s)';
 	}
 
 	/**
-	 * @param array $aContactsIds
+	 * @param array $aContactIds
 	 * @return string
 	 */
-	public function ClearGroupsIdsByExceptContactsIds($iUserId, $aContactsIds)
+	public function ClearGroupIdsByExceptContactIds($iUserId, $aContactIds)
 	{
-		return $this->clearGroupContactsExceptIds($iUserId, 'id_addr', $aContactsIds);
+		return $this->clearGroupContactsExceptIds($iUserId, 'id_addr', $aContactIds);
 	}
 	
 	/**
-	 * @param int $aGroupsIds
+	 * @param int $aGroupIds
 	 * @return string
 	 */
-	public function ClearContactsIdsByExceptGroupsIds($iUserId, $aGroupsIds)
+	public function ClearContactIdsByExceptGroupIds($iUserId, $aGroupIds)
 	{
-		return $this->clearGroupContactsExceptIds($iUserId, 'id_group', $aGroupsIds);
+		return $this->clearGroupContactsExceptIds($iUserId, 'id_group', $aGroupIds);
 	}
 }
 
@@ -1045,16 +1045,16 @@ WHERE id_user = %d AND deleted = 0 AND auto_create = 0 AND type = %d';
 	}
 
 	/**
-	 * @param array $aContactsIds
+	 * @param array $aContactIds
 	 * @return string
 	 */
-	public function ContactIdsLinkedToGroups($aContactsIds)
+	public function ContactIdsLinkedToGroups($aContactIds)
 	{
 		$sSql = 'SELECT DISTINCT id_addr FROM %sawm_addr_groups_contacts WHERE id_addr IN (%s)';
 
-		$aContactsIds = array_map('intval', $aContactsIds);
+		$aContactIds = array_map('intval', $aContactIds);
 
-		return sprintf($sSql, $this->prefix(), implode(', ', $aContactsIds));
+		return sprintf($sSql, $this->prefix(), implode(', ', $aContactIds));
 	}
 
 	/**

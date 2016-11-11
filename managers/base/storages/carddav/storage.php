@@ -324,7 +324,7 @@ class CApiContactsBaseCarddavStorage extends CApiContactsBaseStorage
 			$oContact = $this->getContactById($iUserId, $sContactId);
 			if ($oContact)
 			{
-				foreach ($oContact->GroupsIds as $sGroupId)
+				foreach ($oContact->GroupIds as $sGroupId)
 				{
 					$oContactItem = new CContactListItem();
 					$oContactItem->Id = $sGroupId;
@@ -352,17 +352,17 @@ class CApiContactsBaseCarddavStorage extends CApiContactsBaseStorage
 				$aItems = $this->aGroupItemsCache[$sName];
 				foreach ($aItems as $sKey => $aIds)
 				{
-					$aContactsIds = array();
-					foreach($aIds as $sContactsId)
+					$aContactIds = array();
+					foreach($aIds as $sContactId)
 					{
-						$aContactsIds[] = $sContactsId;
+						$aContactIds[] = $sContactId;
 					}
 					$oContactItem = new CContactListItem();
 					$oContactItem->Id = $sKey;
 					$oContactItem->Name = $sKey;
 					$oContactItem->IsGroup = true;
 
-					if (empty($sContactId) || !empty($sContactId) && in_array($sContactId, $aContactsIds))
+					if (empty($sContactId) || !empty($sContactId) && in_array($sContactId, $aContactIds))
 					{
 						if ($sSearch == '' || stripos($oContactItem->Name, $sSearch) !== false)
 						{
@@ -379,15 +379,15 @@ class CApiContactsBaseCarddavStorage extends CApiContactsBaseStorage
 
 	/**
 	 * @param int $iUserId
-	 * @param array $aContactsIds
+	 * @param array $aContactIds
 	 * @param string $sAddressBook
 	 * @return bool
 	 */
-	protected function deleteContactsByAddressBook($iUserId, $aContactsIds, $sAddressBook)
+	protected function deleteContactsByAddressBook($iUserId, $aContactIds, $sAddressBook)
 	{
 		$this->init($iUserId);
 
-		foreach($aContactsIds as $sContactId)
+		foreach($aContactIds as $sContactId)
 		{
 			$aItem = $this->getItem($iUserId, $sAddressBook, $sContactId);
 
@@ -463,9 +463,9 @@ class CApiContactsBaseCarddavStorage extends CApiContactsBaseStorage
 	 * @param CContact $oContact
 	 * @return array|bool
 	 */
-	public function getContactGroupsIds($oContact)
+	public function getContactGroupIds($oContact)
 	{
-		return $oContact->GroupsIds;
+		return $oContact->GroupIds;
 	}
 
 	/**
@@ -473,7 +473,7 @@ class CApiContactsBaseCarddavStorage extends CApiContactsBaseStorage
 	 * @param mixed $mGroupId
 	 * @return array|bool
 	 */
-	public function GetGroupContactsIds($iUserId, $mGroupId)
+	public function GetGroupContactIds($iUserId, $mGroupId)
 	{
 		$oGroup = false;;
 		if (!empty($mGroupId))
@@ -481,7 +481,7 @@ class CApiContactsBaseCarddavStorage extends CApiContactsBaseStorage
 			$oGroup = $this->getGroupById($iUserId, $mGroupId);
 			if ($oGroup)
 			{
-				return $oGroup->ContactsIds;
+				return $oGroup->ContactIds;
 			}
 		}
 		return false;
@@ -515,12 +515,12 @@ class CApiContactsBaseCarddavStorage extends CApiContactsBaseStorage
 					$bResult->Name =  $mGroupId;
 
 					$aItems = $this->aGroupItemsCache[$sAddressBook][$mGroupId];
-					$aContactsIds = array();
-					foreach ($aItems as $sContactsId)
+					$aContactIds = array();
+					foreach ($aItems as $sContactId)
 					{
-						$aContactsIds[] = $sContactsId;
+						$aContactIds[] = $sContactId;
 					}
-					$bResult->ContactsIds = $aContactsIds;
+					$bResult->ContactIds = $aContactIds;
 				}
 			}
 		}
@@ -754,7 +754,7 @@ class CApiContactsBaseCarddavStorage extends CApiContactsBaseStorage
 		{
 			$sAddressBook = \Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME;
 
-			$aContactIds = $oGroup->ContactsIds;
+			$aContactIds = $oGroup->ContactIds;
 			foreach ($aContactIds as $sContactId)
 			{
 				$oContact = $this->getItem($oGroup->IdUser, $sAddressBook, $sContactId);
@@ -793,7 +793,7 @@ class CApiContactsBaseCarddavStorage extends CApiContactsBaseStorage
 				$this->Dav->UpdateItem($this->AddressBookHomeSet . \Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME . '/' . $oContact['href'], $vCard->serialize(), $oContact['etag']);
 			}
 
-			$aContactIds = $oGroup->DeletedContactsIds;
+			$aContactIds = $oGroup->DeletedContactIds;
 			foreach ($aContactIds as $sContactId)
 			{
 				$oContact = $this->getItem($oGroup->IdUser, $sAddressBook, $sContactId);
@@ -859,9 +859,9 @@ class CApiContactsBaseCarddavStorage extends CApiContactsBaseStorage
 			$oContact->initBeforeChange();
 			$sEmail = $oContact->GetViewEmail();
 			$oAddressBook = $this->getAddressBook($oContact->IdUser, 'Collected');
-			$aContactsIds = $this->searchContactItemsByEmail($oContact->IdUser, $sEmail, $oAddressBook);
+			$aContactIds = $this->searchContactItemsByEmail($oContact->IdUser, $sEmail, $oAddressBook);
 
-			$this->deleteContactsByAddressBook($oContact->IdUser, $aContactsIds, $oAddressBook);
+			$this->deleteContactsByAddressBook($oContact->IdUser, $aContactIds, $oAddressBook);
  */
 		}
 
@@ -879,32 +879,32 @@ class CApiContactsBaseCarddavStorage extends CApiContactsBaseStorage
 
 	/**
 	 * @param int $iUserId
-	 * @param array $aContactsIds
+	 * @param array $aContactIds
 	 * @return bool
 	 */
-	public function deleteContacts($iUserId, $aContactsIds)
+	public function deleteContacts($iUserId, $aContactIds)
 	{
 		$this->init($iUserId);
-		return $this->deleteContactsByAddressBook($iUserId, $aContactsIds, \Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME);
+		return $this->deleteContactsByAddressBook($iUserId, $aContactIds, \Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME);
 	}
 
 	/**
 	 * @param int $iUserId
-	 * @param array $aGroupsIds
+	 * @param array $aGroupIds
 	 * @return bool
 	 */
-	public function deleteGroups($iUserId, $aGroupsIds)
+	public function deleteGroups($iUserId, $aGroupIds)
 	{
 		$this->init($iUserId);
 
 		$sName = \Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME;
 		$this->getItems($iUserId, $sName);
 
-		foreach($aGroupsIds as $sGroupsId)
+		foreach($aGroupIds as $sGroupId)
 		{
-			if (isset($this->aGroupItemsCache[$sName][$sGroupsId]))
+			if (isset($this->aGroupItemsCache[$sName][$sGroupId]))
 			{
-				$aContactIds = $this->aGroupItemsCache[$sName][$sGroupsId];
+				$aContactIds = $this->aGroupItemsCache[$sName][$sGroupId];
 				foreach ($aContactIds as $sContactId)
 				{
 					$aContact = $this->getItem($iUserId, $sName, $sContactId);
@@ -914,14 +914,14 @@ class CApiContactsBaseCarddavStorage extends CApiContactsBaseStorage
 					if (isset($vCard->CATEGORIES))
 					{
 						$sCategories = $vCard->CATEGORIES->value;
-						if (strpos($sCategories, $sGroupsId) !== false)
+						if (strpos($sCategories, $sGroupId) !== false)
 						{
 							$aCategories = explode(',', $vCard->CATEGORIES->value);
 							$aResultCategories = array();
 							foreach($aCategories as $sCategory)
 							{
 								$sCategory = trim($sCategory);
-								if ($sCategory !== $sGroupsId)
+								if ($sCategory !== $sGroupId)
 								{
 									$aResultCategories[] = $sCategory;
 								}
@@ -941,7 +941,7 @@ class CApiContactsBaseCarddavStorage extends CApiContactsBaseStorage
 						}
 					}
 				}
-				unset($this->aGroupItemsCache[$sName][$sGroupsId]);
+				unset($this->aGroupItemsCache[$sName][$sGroupId]);
 			}
 		}
 		return true;
