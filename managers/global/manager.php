@@ -235,8 +235,7 @@ class CApiContactsGlobalManager extends AApiManagerWithStorage
 		$bResult = false;
 		try
 		{
-			if ($oContact->validate() && (EContactType::GlobalAccounts === $oContact->Type ||
-				EContactType::GlobalMailingList === $oContact->Type))
+			if ($oContact->validate() && 'global' === $oContact->Storage)
 			{
 				$bResult = $this->oStorage->updateContact($oContact);
 				if ($bResult)
@@ -252,9 +251,9 @@ class CApiContactsGlobalManager extends AApiManagerWithStorage
 					}
 
 					if ($oAccount && (
-						(EContactType::GlobalAccounts === $oContact->Type && (string) $oAccount->IdUser === (string) $oContact->IdTypeLink)
+						('global-accounts' === $oContact->Storage && (string) $oAccount->IdUser === (string) $oContact->IdTypeLink)
 						||
-						(EContactType::GlobalMailingList === $oContact->Type && (string) $oAccount->IdAccount === (string) $oContact->IdTypeLink)
+						('global-mailinglist' === $oContact->Storage && (string) $oAccount->IdAccount === (string) $oContact->IdTypeLink)
 					))
 					{
 						if ($oAccount->FriendlyName !== $oContact->FullName)

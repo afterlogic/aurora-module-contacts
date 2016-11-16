@@ -66,9 +66,9 @@ class CContactListItem
 	public $UseFriendlyName;
 
 	/**
-	 * @var bool
+	 * @var string
 	 */
-	public $Global;
+	public $Storage;
 
 	/**
 	 * @var bool
@@ -90,11 +90,6 @@ class CContactListItem
 	 */
 	public $ForSharedToAll;
 	
-	/**
-	 * @var bool
-	 */
-	public $SharedToAll;
-
 	/**
 	 * @var array
 	 */
@@ -124,12 +119,11 @@ class CContactListItem
 		$this->Phones = array();
 		$this->Frequency = 0;
 		$this->UseFriendlyName = false;
-		$this->Global = false;
+		$this->Storage = 'personal';
 		$this->ItsMe = false;
 		$this->ReadOnly = false;
 		$this->Auto = false;
 		$this->ForSharedToAll = false;
-		$this->SharedToAll = false;
 		$this->Events = array();
 		$this->AgeScore = 1;
 		$this->DateModified = 0;
@@ -291,7 +285,7 @@ class CContactListItem
 					$this->UseFriendlyName = (bool) $oRow->use_friendly_nm;
 
 					if (null !== $mItsMeTypeId &&
-						((int) $oRow->type === EContactType::Global_ || (int) $oRow->type === EContactType::GlobalAccounts) &&
+						((string) $oRow->type === 'global' || (string) $oRow->type === 'global-accounts') &&
 						(string) $oRow->type_id === (string) $mItsMeTypeId
 					)
 					{
@@ -299,21 +293,14 @@ class CContactListItem
 						$this->ReadOnly = false;
 					}
 					
-					if (
-						(int) $oRow->type === EContactType::GlobalAccounts
-						||
-						(int) $oRow->type === EContactType::GlobalMailingList
-					)
+					if ((string) $oRow->type === 'global' || (string) $oRow->type === 'global-accounts')
 					{
-						$this->Global = true;
+						$this->Storage = 'global';
 						if (!$this->ItsMe)
 						{
 							$this->ReadOnly = true;
 						}
 					}
-
-					$this->SharedToAll = (bool) $oRow->shared_to_all;
-
 					break;
 
 				case 'global':
@@ -322,7 +309,7 @@ class CContactListItem
 					$this->IdStr = (string) $oRow->str_id;
 					$this->IsGroup = false;
 					$this->ReadOnly = true;
-					$this->Global = true;
+					$this->Storage = 'global';
 					$this->Name = (string) $oRow->fullname;
 					$this->Email = (string) $oRow->view_email;
 
@@ -358,7 +345,7 @@ class CContactListItem
 					$this->DateModified = $dDateModified->getTimestamp();
 					
 					if (null !== $mItsMeTypeId &&
-						(int) $oRow->type === EContactType::GlobalAccounts &&
+						(string) $oRow->type === 'global-acounts' &&
 						(string) $oRow->type_id === (string) $mItsMeTypeId
 					)
 					{
@@ -413,9 +400,8 @@ class CContactListItem
 			'IsOrganization' => $this->IsOrganization,
 			'ReadOnly' => $this->ReadOnly,
 			'ItsMe' => $this->ItsMe,
-			'Global' => $this->Global,
+			'Storage' => $this->Storage,
 			'ForSharedToAll' => $this->ForSharedToAll,
-			'SharedToAll' => $this->SharedToAll,
 			'Frequency' => $this->Frequency,
 			'AgeScore' => $this->AgeScore		
 		);

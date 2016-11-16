@@ -806,7 +806,7 @@ class CApiContactsBaseSabredavStorage extends CApiContactsBaseStorage
 	{
 		$bResult = false;
 		
-		$sAddressBook = $oContact->SharedToAll ? \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME : \Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME;
+		$sAddressBook = $oContact->Storage === 'shared' ? \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME : \Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME;
 		$oAddressBookFrom = $this->getAddressBook($oContact->IdUser, $sAddressBook);
 		$oContactItem = $this->geItem($oContact->IdUser, $oAddressBookFrom, $oContact->IdContactStr);
 		if ($oContactItem)

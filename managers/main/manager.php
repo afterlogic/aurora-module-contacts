@@ -242,11 +242,11 @@ class CApiContactsMainManager extends AApiManager
 //
 //		if ($oContact)
 //		{
-//			if ($oContact->Type === EContactType::Personal)
+//			if ($oContact->Storage === 'personal')
 //			{
 //				$res1 = $this->oApiContactsBaseManager->updateContact($oContact);
 //			}
-//			else if ($oContact->Type === EContactType::Global_)
+//			else if ($oContact->Storage === 'global')
 //			{
 //				$res1 = $this->oApiContactsBaseManager->updateContact($oContact);
 //				
@@ -777,11 +777,10 @@ class CApiContactsMainManager extends AApiManager
 	 * @param string $sTempFileName Path to the file data are imported from.
 	 * @param int $iParsedCount
 	 * @param int $iGroupId
-	 * @param bool $bIsShared
 	 *
 	 * @return int|false If importing is successful, number of imported entries is returned. 
 	 */
-	public function import($iUserId, $sSyncType, $sTempFileName, &$iParsedCount, $iGroupId, $bIsShared)
+	public function import($iUserId, $sSyncType, $sTempFileName, &$iParsedCount, $iGroupId)
 	{
 		$oApiUsersManager = CApi::GetSystemManager('users');
 		$oAccount = $oApiUsersManager->getDefaultAccount($iUserId);
@@ -796,7 +795,7 @@ class CApiContactsMainManager extends AApiManager
 			if (class_exists($sSyncClass))
 			{
 				$oSync = new $sSyncClass($this);
-				return $oSync->Import($iUserId, $sTempFileName, $iParsedCount, $iGroupId, $bIsShared);
+				return $oSync->Import($iUserId, $sTempFileName, $iParsedCount, $iGroupId);
 			}
 		}
 		else if ($sSyncType === \EContactFileType::VCF)
@@ -812,10 +811,8 @@ class CApiContactsMainManager extends AApiManager
 
 				if ($oAccount)
 				{
-					$oContact->IdDomain = $oAccount->IdDomain;
 					$oContact->IdTenant = $oAccount->IdTenant;
 				}
-				$oContact->SharedToAll = $bIsShared;
 				$oContact->GroupIds = array($iGroupId);
 
 				if ($this->createContact($oContact))
@@ -1054,7 +1051,7 @@ class CApiContactsMainManager extends AApiManager
 
 			foreach ($aContactIds as $mId)
 			{
-				$mContactId = $this->oApiContactsBaseManager->ConvertedContactLocalId($oAccount, $mId, EContactType::Global_);
+				$mContactId = $this->oApiContactsBaseManager->ConvertedContactLocalId($oAccount, $mId, 'global');
 				if (!$mContactId)
 				{
 					$oGlobalContact = $this->oApiContactsGlobalManager->getContactById($oAccount, $mId);
@@ -1063,9 +1060,8 @@ class CApiContactsMainManager extends AApiManager
 					if ($oGlobalContact)
 					{
 						$oGlobalContact->IdUser = $oAccount->IdUser;
-						$oGlobalContact->IdDomain = $oAccount->IdDomain;
 						$oGlobalContact->IdTenant = $oAccount->IdTenant;
-						$oGlobalContact->Type = EContactType::Global_;
+						$oGlobalContact->Storage = 'global';
 						$oGlobalContact->IdTypeLink = $mId;
 
 						$bResult = $this->createContact($oGlobalContact);
@@ -1163,7 +1159,7 @@ class CApiContactsMainManager extends AApiManager
 				if ($oGlobalContact)
 				{
 					$mContactId = $this->oApiContactsBaseManager->ConvertedContactLocalId($oAccount,
-						$oGlobalContact->IdContact, EContactType::Global_);
+						$oGlobalContact->IdContact, 'global');
 
 					if ($mContactId)
 					{
@@ -1173,7 +1169,7 @@ class CApiContactsMainManager extends AApiManager
 			}
 			else
 			{
-				$aIds = $this->oApiContactsBaseManager->ConvertedContactLocalIdCollection($oAccount, EContactType::Global_);
+				$aIds = $this->oApiContactsBaseManager->ConvertedContactLocalIdCollection($oAccount, 'global');
 			}
 
 			if ($aIds && is_array($aIds) && 0 < count($aIds))
@@ -1192,7 +1188,7 @@ class CApiContactsMainManager extends AApiManager
 						if ($oGlobalContact)
 						{
 							$oLocalGlobalContact = $this->oApiContactsBaseManager->getContactById($oAccount->IdUser, $iLocalContactId, true);
-							if ($oLocalGlobalContact && EContactType::Global_ === $oLocalGlobalContact->Type)
+							if ($oLocalGlobalContact && 'global' === $oLocalGlobalContact->Storage)
 							{
 								if ($oLocalGlobalContact->CompareAndComputedByNewGlobalContact($oGlobalContact))
 								{

@@ -29,11 +29,13 @@ class ContactsModule extends AApiModule
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::Anonymous);
 		
+		$aStorages = array();
+		$this->broadcastEvent('GetStorage', $aStorages);
+		
 		return array(
 			'ContactsPerPage' => 20, // AppData.User.ContactsPerPage
 			'ImportContactsLink' => '', // AppData.Links.ImportingContacts
-			'Storages' => array('personal', 'global', 'shared'), // AppData.User.ShowPersonalContacts, AppData.User.ShowGlobalContacts, AppData.App.AllowContactsSharing
-			'EContactsStorage' => (new \EContactsStorage)->getMap(),
+			'Storages' => $aStorages,
 			'EContactsPrimaryEmail' => (new \EContactsPrimaryEmail)->getMap(),
 			'EContactsPrimaryPhone' => (new \EContactsPrimaryPhone)->getMap(),
 			'EContactsPrimaryAddress' => (new \EContactsPrimaryAddress)->getMap(),
@@ -148,13 +150,12 @@ class ContactsModule extends AApiModule
 	 * @param int $Storage
 	 * @return array
 	 */
-	public function GetContacts($Offset = 0, $Limit = 20, $SortField = EContactSortField::Name, $SortOrder = ESortOrder::ASC, $Search = '', $IdGroup = 0, $Storage = EContactsStorage::All)
+	public function GetContacts($Offset = 0, $Limit = 20, $SortField = EContactSortField::Name, $SortOrder = ESortOrder::ASC, $Search = '', $IdGroup = 0, $Storage = '')
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		$oUser = \CApi::getAuthenticatedUser();
-		$iTenantId = $Storage === EContactsStorage::Shared ? $oUser->IdTenant : null;
-		$aContacts = $this->oApiContactsManager->getContactItems($oUser->iId, $SortField, $SortOrder, $Offset, $Limit, $Search, $IdGroup, $iTenantId);
+		$aContacts = $this->oApiContactsManager->getContactItems($oUser->iId, $SortField, $SortOrder, $Offset, $Limit, $Search, $IdGroup);
 		$aList = array();
 		if (is_array($aContacts))
 		{
@@ -168,8 +169,7 @@ class ContactsModule extends AApiModule
 					'IsOrganization' => false,
 					'ReadOnly' => false,
 					'ItsMe' => false,
-					'Global' => false,
-					'SharedToAll' => false
+					'Storage' => $oContact->Storage,
 				);
 			}
 		}
@@ -207,25 +207,25 @@ class ContactsModule extends AApiModule
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$this->setParamValue('SharedToAll', '1');
 		return $this->GetPersonalContacts();
 	}
 
-	public function GetPersonalContacts($Offset = 0, $Limit = 20, $SortField = \EContactSortField::Name, $SortOrder = 1, $Search = '', $IdGroup = '', $All = false, $SharedToAll = false)
+	public function GetPersonalContacts($Offset = 0, $Limit = 20, $SortField = \EContactSortField::Name, $SortOrder = 1, $Search = '', $IdGroup = '', $Storage = '')
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		$iUserId = \CApi::getAuthenticatedUserId();
 		$oUser = \CApi::getAuthenticatedUser();
 		
-		$iTenantId = $SharedToAll ? $oUser->IdTenant : null;
+		$iTenantId = $Storage === 'shared' ? $oUser->IdTenant : null;
 		
 		$bAllowContactsSharing = true;
 		$bAllowGlobalContacts = true;
 		$bAllowPersonalContacts = true;
-		if ($All && !$bAllowContactsSharing && $bAllowGlobalContacts)
+		$bAll = $Storage === 'all';
+		if ($bAll && !$bAllowContactsSharing && $bAllowGlobalContacts)
 		{
-			$All = false;
+			$bAll = false;
 		}
 
 		$iCount = 0;
@@ -245,7 +245,7 @@ class ContactsModule extends AApiModule
 //			{
 				$aContacts = $this->oApiContactsManager->getContactItems(
 					$iUserId, $SortField, $SortOrder, $Offset,
-					$Limit, $Search, '', $IdGroup, $iTenantId, $All);
+					$Limit, $Search, '', $IdGroup, $iTenantId, $bAll);
 
 				if (is_array($aContacts))
 				{
@@ -263,7 +263,7 @@ class ContactsModule extends AApiModule
 			'IdGroup' => $IdGroup,
 			'Search' => $Search,
 			'FirstCharacter' => '',
-			'All' => $All,
+			'All' => $bAll,
 			'List' => \CApiResponseManager::GetResponseObject($aList)
 		);		
 	}
@@ -401,7 +401,7 @@ class ContactsModule extends AApiModule
 
 		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount)) {
 
-			$bSharedToAll = '1' === (string) $this->getParamValue('SharedToAll', '0');
+			$bSharedToAll = false;
 			$iTenantId = $bSharedToAll ? $oAccount->IdTenant : null;
 
 			$oContact = $this->oApiContactsManager->getContactById($oAccount->IdUser, $sContactId, false, $iTenantId);
@@ -417,7 +417,6 @@ class ContactsModule extends AApiModule
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$this->setParamValue('SharedToAll', '1');
 		return $this->GetPersonalContact();
 	}
 	
@@ -512,10 +511,10 @@ class ContactsModule extends AApiModule
 	/**
 	 * 
 	 * @param int $IdContact
-	 * @param bool $SharedToAll
+	 * @param string $Storage
 	 * @return bool
 	 */
-	public function DeleteSuggestion($IdContact, $SharedToAll)
+	public function DeleteSuggestion($IdContact, $Storage)
 	{
 		return true;
 //		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
@@ -551,11 +550,22 @@ class ContactsModule extends AApiModule
 	 * @return boolean
 	 * @throws \System\Exceptions\AuroraApiException
 	 */
-	public function CreateContact($Contact)
+	public function CreateContact($Contact, $iUserId = 0)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		$oUser = \CApi::getAuthenticatedUser();
+		
+		if ($iUserId > 0 && $iUserId !== $oUser->iId)
+		{
+			\CApi::checkUserRoleIsAtLeast(\EUserRole::SuperAdmin);
+			
+			$oCoreDecorator = \CApi::GetModuleDecorator('Core');
+			if ($oCoreDecorator)
+			{
+				$oUser = $oCoreDecorator->GetUser($iUserId);
+			}
+		}
 		
 		$bAllowPersonalContacts = true;
 		if ($bAllowPersonalContacts)
@@ -563,7 +573,6 @@ class ContactsModule extends AApiModule
 			$oContact = \CContact::createInstance();
 			$oContact->IdUser = $oUser->iId;
 			$oContact->IdTenant = $oUser->IdTenant;
-			$oContact->SharedToAll = $Contact['SharedToAll'];
 
 			$oContact->populate($Contact);
 
@@ -643,10 +652,10 @@ class ContactsModule extends AApiModule
 	/**
 	 * 
 	 * @param array $ContactIds Array of string
-	 * @param bool $SharedToAll
+	 * @param string $Storage
 	 * @return bool
 	 */
-	public function DeleteContacts($ContactIds, $SharedToAll)
+	public function DeleteContacts($ContactIds, $Storage)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
@@ -675,11 +684,11 @@ class ContactsModule extends AApiModule
 	/**
 	 * 
 	 * @param int $ContactIds
-	 * @param bool $SharedToAll
+	 * @param string $Storage
 	 * @return bool
 	 * @throws \System\Exceptions\AuroraApiException
 	 */
-	public function UpdateShared($ContactIds, $SharedToAll)
+	public function UpdateShared($ContactIds, $Storage)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		return true;
@@ -710,7 +719,6 @@ class ContactsModule extends AApiModule
 //
 //					$oContact->SharedToAll = !$oContact->SharedToAll;
 //					$oContact->IdUser = $oAccount->IdUser;
-//					$oContact->IdDomain = $oAccount->IdDomain;
 //					$oContact->IdTenant = $oAccount->IdTenant;
 //
 //					if (!$oApiContacts->updateContact($oContact))
@@ -1152,10 +1160,9 @@ class ContactsModule extends AApiModule
 			$oContact->BusinessEmail = $oAccount->Email;
 			$oContact->PrimaryEmail = EContactsPrimaryEmail::Business;
 			$oContact->FullName = $oAccount->FriendlyName;
-			$oContact->Type = EContactType::GlobalAccounts;
+			$oContact->Storage = 'global';
 
 			$oContact->IdTypeLink = $oAccount->IdUser;
-			$oContact->IdDomain = 0 < $oAccount->IdDomain ? $oAccount->IdDomain : 0;
 			$oContact->IdTenant = $oAccount->Domain ? $oAccount->Domain->IdTenant : 0;
 
 			$this->oApiContactsManager->createContact($oContact);

@@ -1026,16 +1026,16 @@ class CApiContactsBaseManager extends AApiManagerWithStorage
 	/**
 	 * @param CAccount $oAccount
 	 * @param mixed $mContactId
-	 * @param int $iContactType Default value is **EContactType::Global_ 1**
+	 * @param string $sStorage
 	 *
 	 * @return mixed
 	 */
-	public function ConvertedContactLocalId($oAccount, $mContactId, $iContactType = EContactType::Global_)
+	public function ConvertedContactLocalId($oAccount, $mContactId, $sStorage = 'global')
 	{
 		$mResult = null;
 		try
 		{
-			$mResult = $this->oStorage->ConvertedContactLocalId($oAccount, $mContactId, $iContactType);
+			$mResult = $this->oStorage->ConvertedContactLocalId($oAccount, $mContactId, $sStorage);
 		}
 		catch (CApiBaseException $oException)
 		{
@@ -1046,16 +1046,16 @@ class CApiContactsBaseManager extends AApiManagerWithStorage
 
 	/**
 	 * @param CAccount $oAccount
-	 * @param int $iContactType Default value is **EContactType::Global_ 1**
+	 * @param string $sStorage
 	 *
 	 * @return mixed
 	 */
-	public function ConvertedContactLocalIdCollection($oAccount, $iContactType = EContactType::Global_)
+	public function ConvertedContactLocalIdCollection($oAccount, $sStorage = 'global')
 	{
 		$aResult = array();
 		try
 		{
-			$aResult = $this->oStorage->ConvertedContactLocalIdCollection($oAccount, $iContactType);
+			$aResult = $this->oStorage->ConvertedContactLocalIdCollection($oAccount, $sStorage);
 		}
 		catch (CApiBaseException $oException)
 		{

@@ -82,11 +82,10 @@ class CApiContactsSyncCsv
 	 * @param string $sTempFileName
 	 * @param int $iParsedCount
 	 * @param int $iGroupId
-	 * @param bool $bIsShared
 	 *
 	 * @return int
 	 */
-	public function Import($iUserId, $sTempFileName, &$iParsedCount, $iGroupId, $bIsShared)
+	public function Import($iUserId, $sTempFileName, &$iParsedCount, $iGroupId)
 	{
 		$iCount = -1;
 		$iParsedCount = 0;
@@ -148,10 +147,8 @@ class CApiContactsSyncCsv
 
 					if ($oAccount)
 					{
-						$oContact->IdDomain = $oAccount->IdDomain;
 						$oContact->IdTenant = $oAccount->IdTenant;
 					}
-					$oContact->SharedToAll = $bIsShared;
 					$oContact->GroupIds = array($iGroupId);
 
 					if ($this->oApiContactsManager->createContact($oContact))

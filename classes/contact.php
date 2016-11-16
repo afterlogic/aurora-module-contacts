@@ -5,9 +5,8 @@
 /**
  * @property string $IdContactStr
  * @property int $IdUser
- * @property int $IdDomain
  * @property int $IdTenant
- * @property int $Type
+ * @property string $Storage
  * @property string $IdTypeLink
  * @property string $FullName
  * @property bool $UseFriendlyName
@@ -47,11 +46,9 @@
  * @property int $BirthMonth
  * @property int $BirthYear
  * @property bool $ReadOnly
- * @property bool $Global
  * @property bool $ItsMe
  * @property string $ETag
  * @property bool $Auto
- * @property bool $SharedToAll
  * @property bool $HideInGAB
  * @property int $DateModified
  *
@@ -84,10 +81,9 @@ class CContact extends AEntity
 		$this->setStaticMap(array(
 			'IdContactStr'	=> array('string', ''),
 			'IdUser'		=> array('int', 0),
-			'IdDomain'		=> array('int', 0),
 			'IdTenant'		=> array('int', 0),
 
-			'Type'			=> array('int', EContactType::Personal),
+			'Storage'		=> array('string', ''),
 			'IdTypeLink'	=> array('string', ''),
 
 			'PrimaryEmail'		=> array('int', EContactsPrimaryEmail::Personal),
@@ -141,13 +137,11 @@ class CContact extends AEntity
 			'BirthYear'		=> array('int', 0),
 
 			'ReadOnly'			=> array('bool', false),
-			'Global'			=> array('bool', false),
 			'ItsMe'				=> array('bool', false),
 
 			'ETag'				=> array('string', ''),
 			
 			'Auto'				=> array('bool', false),
-			'SharedToAll'		=> array('bool', false),
 			'HideInGAB'			=> array('bool', false),
 		));
 
@@ -204,15 +198,9 @@ class CContact extends AEntity
 	{
 		parent::InitByDbRow($oRow);
 
-		if (!$this->ReadOnly && (EContactType::Global_ === $this->Type || EContactType::GlobalAccounts === $this->Type ||
-			EContactType::GlobalMailingList === $this->Type))
+		if (!$this->ReadOnly && 'global' === $this->Storage)
 		{
 			$this->ReadOnly = true;
-		}
-		
-		if (EContactType::GlobalAccounts === $this->Type || EContactType::GlobalMailingList === $this->Type)
-		{
-			$this->Global = true;
 		}
 	}
 
@@ -525,51 +513,157 @@ class CContact extends AEntity
 	public function populate($aContact)
 	{
 		$bItsMe = $this->ItsMe;
-		$this->PrimaryEmail = $aContact['PrimaryEmail'];
+		if (isset($aContact['PrimaryEmail']))
+		{
+			$this->PrimaryEmail = $aContact['PrimaryEmail'];
+		}
+		if (isset($aContact['Storage']))
+		{
+			$this->Storage = $aContact['Storage'];
+		}
 
-		$this->FullName = $aContact['FullName'];
-		$this->FirstName = $aContact['FirstName'];
-		$this->LastName = $aContact['LastName'];
-		$this->NickName = $aContact['NickName'];
-		$this->Skype = $aContact['Skype'];
-		$this->Facebook = $aContact['Facebook'];
+		if (isset($aContact['FullName']))
+		{
+			$this->FullName = $aContact['FullName'];
+		}
+		if (isset($aContact['FirstName']))
+		{
+			$this->FirstName = $aContact['FirstName'];
+		}
+		if (isset($aContact['LastName']))
+		{
+			$this->LastName = $aContact['LastName'];
+		}
+		if (isset($aContact['NickName']))
+		{
+			$this->NickName = $aContact['NickName'];
+		}
+		if (isset($aContact['Skype']))
+		{
+			$this->Skype = $aContact['Skype'];
+		}
+		if (isset($aContact['Facebook']))
+		{
+			$this->Facebook = $aContact['Facebook'];
+		}
 		
-		$this->PersonalEmail = $aContact['PersonalEmail'];
-		$this->PersonalAddress = $aContact['PersonalAddress'];
-		$this->PersonalCity = $aContact['PersonalCity'];
-		$this->PersonalState = $aContact['PersonalState'];
-		$this->PersonalZip = $aContact['PersonalZip'];
-		$this->PersonalCountry = $aContact['PersonalCountry'];
-		$this->PersonalWeb = $aContact['PersonalWeb'];
-		$this->PersonalFax = $aContact['PersonalFax'];
-		$this->PersonalPhone = $aContact['PersonalPhone'];
-		$this->PersonalMobile = $aContact['PersonalMobile'];
+		if (isset($aContact['PersonalEmail']))
+		{
+			$this->PersonalEmail = $aContact['PersonalEmail'];
+		}
+		if (isset($aContact['PersonalAddress']))
+		{
+			$this->PersonalAddress = $aContact['PersonalAddress'];
+		}
+		if (isset($aContact['PersonalCity']))
+		{
+			$this->PersonalCity = $aContact['PersonalCity'];
+		}
+		if (isset($aContact['PersonalState']))
+		{
+			$this->PersonalState = $aContact['PersonalState'];
+		}
+		if (isset($aContact['PersonalZip']))
+		{
+			$this->PersonalZip = $aContact['PersonalZip'];
+		}
+		if (isset($aContact['PersonalCountry']))
+		{
+			$this->PersonalCountry = $aContact['PersonalCountry'];
+		}
+		if (isset($aContact['PersonalWeb']))
+		{
+			$this->PersonalWeb = $aContact['PersonalWeb'];
+		}
+		if (isset($aContact['PersonalFax']))
+		{
+			$this->PersonalFax = $aContact['PersonalFax'];
+		}
+		if (isset($aContact['PersonalPhone']))
+		{
+			$this->PersonalPhone = $aContact['PersonalPhone'];
+		}
+		if (isset($aContact['PersonalMobile']))
+		{
+			$this->PersonalMobile = $aContact['PersonalMobile'];
+		}
 		
-		$this->BusinessCompany = $aContact['BusinessCompany'];
-		$this->BusinessJobTitle = $aContact['BusinessJobTitle'];
-		$this->BusinessDepartment = $aContact['BusinessDepartment'];
-		$this->BusinessOffice = $aContact['BusinessOffice'];
-		$this->BusinessAddress = $aContact['BusinessAddress'];
-		$this->BusinessCity = $aContact['BusinessCity'];
-		$this->BusinessState = $aContact['BusinessState'];
-		$this->BusinessZip = $aContact['BusinessZip'];
-		$this->BusinessCountry = $aContact['BusinessCountry'];
-		$this->BusinessFax = $aContact['BusinessFax'];
-		$this->BusinessPhone = $aContact['BusinessPhone'];
-		$this->BusinessWeb = $aContact['BusinessWeb'];
+		if (isset($aContact['BusinessCompany']))
+		{
+			$this->BusinessCompany = $aContact['BusinessCompany'];
+		}
+		if (isset($aContact['BusinessJobTitle']))
+		{
+			$this->BusinessJobTitle = $aContact['BusinessJobTitle'];
+		}
+		if (isset($aContact['BusinessDepartment']))
+		{
+			$this->BusinessDepartment = $aContact['BusinessDepartment'];
+		}
+		if (isset($aContact['BusinessOffice']))
+		{
+			$this->BusinessOffice = $aContact['BusinessOffice'];
+		}
+		if (isset($aContact['BusinessAddress']))
+		{
+			$this->BusinessAddress = $aContact['BusinessAddress'];
+		}
+		if (isset($aContact['BusinessCity']))
+		{
+			$this->BusinessCity = $aContact['BusinessCity'];
+		}
+		if (isset($aContact['BusinessState']))
+		{
+			$this->BusinessState = $aContact['BusinessState'];
+		}
+		if (isset($aContact['BusinessZip']))
+		{
+			$this->BusinessZip = $aContact['BusinessZip'];
+		}
+		if (isset($aContact['BusinessCountry']))
+		{
+			$this->BusinessCountry = $aContact['BusinessCountry'];
+		}
+		if (isset($aContact['BusinessFax']))
+		{
+			$this->BusinessFax = $aContact['BusinessFax'];
+		}
+		if (isset($aContact['BusinessPhone']))
+		{
+			$this->BusinessPhone = $aContact['BusinessPhone'];
+		}
+		if (isset($aContact['BusinessWeb']))
+		{
+			$this->BusinessWeb = $aContact['BusinessWeb'];
+		}
 		
-		$this->OtherEmail = $aContact['OtherEmail'];
-		$this->Notes = $aContact['Notes'];
-		if (!$bItsMe)
+		if (isset($aContact['OtherEmail']))
+		{
+			$this->OtherEmail = $aContact['OtherEmail'];
+		}
+		if (isset($aContact['Notes']))
+		{
+			$this->Notes = $aContact['Notes'];
+		}
+		if (!$bItsMe && isset($aContact['BusinessEmail']))
 		{
 			$this->BusinessEmail = $aContact['BusinessEmail'];
 		}
-		$this->BirthDay = $aContact['BirthDay'];
-		$this->BirthMonth = $aContact['BirthMonth'];
-		$this->BirthYear = $aContact['BirthYear'];
+		if (isset($aContact['BirthDay']))
+		{
+			$this->BirthDay = $aContact['BirthDay'];
+		}
+		if (isset($aContact['BirthMonth']))
+		{
+			$this->BirthMonth = $aContact['BirthMonth'];
+		}
+		if (isset($aContact['BirthYear']))
+		{
+			$this->BirthYear = $aContact['BirthYear'];
+		}
 
 		$this->GroupsContacts = array();
-		if (!empty($aContact['GroupIds']) && is_array($aContact['GroupIds']))
+		if (isset($aContact['GroupIds']) && is_array($aContact['GroupIds']))
 		{
 			foreach ($aContact['GroupIds'] as $iId)
 			{
@@ -595,7 +689,7 @@ class CContact extends AEntity
 			'IdContact' => $this->iId,
 			'IdContactStr' => $this->IdContactStr,
 
-			'Global' => $this->Global,
+			'Storage' => $this->Storage,
 			'ItsMe' => $this->ItsMe,
 
 			'PrimaryEmail' => $this->PrimaryEmail,
@@ -642,7 +736,6 @@ class CContact extends AEntity
 			'BirthYear' => $this->BirthYear,
 			'ReadOnly' => $this->ReadOnly,
 			'ETag' => $this->ETag,
-			'SharedToAll' => $this->SharedToAll,
 			
 			'GroupIds' => $aGroupIds
 		);
