@@ -583,22 +583,23 @@ class CApiContactsBaseCarddavStorage extends CApiContactsBaseStorage
 	}
 
 	/**
-	 * @param int $iUserId
+	 * 
 	 * @param int $iSortField
 	 * @param int $iSortOrder
 	 * @param int $iOffset
 	 * @param int $iRequestLimit
-	 * @param string $sSearch
-	 * @param string $sFirstCharacter
-	 * @param int $iGroupId
-	 * @return bool|array
+	 * @param array $aFilters
+	 * @param int $iIdGroup
+	 * @return array
 	 */
-	public function getContactItems($iUserId, $iSortField, $iSortOrder, $iOffset, $iRequestLimit, $sSearch, $sFirstCharacter, $iGroupId, $iTenantId = null, $bAll = false)
+	public function getContactItems($iSortField, $iSortOrder, $iOffset, $iRequestLimit, $aFilters = array(), $iIdGroup = 0)
 	{
-		$aResult = $this->getItems($iUserId, \Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME, $sSearch, $sFirstCharacter, $iGroupId);
-		$this->sortItems($aResult, $iSortField, $iSortOrder);
-
-		return array_slice($aResult, $iOffset, $iRequestLimit);
+		return array();
+		
+//		$aResult = $this->getItems($iUserId, \Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME, $sSearch, $sFirstCharacter, $iGroupId);
+//		$this->sortItems($aResult, $iSortField, $iSortOrder);
+//
+//		return array_slice($aResult, $iOffset, $iRequestLimit);
 	}
 
 	/**
@@ -857,7 +858,7 @@ class CApiContactsBaseCarddavStorage extends CApiContactsBaseStorage
 			$bResult = true;
 /*
 			$oContact->initBeforeChange();
-			$sEmail = $oContact->GetViewEmail();
+			$sEmail = $oContact->ViewEmail;
 			$oAddressBook = $this->getAddressBook($oContact->IdUser, 'Collected');
 			$aContactIds = $this->searchContactItemsByEmail($oContact->IdUser, $sEmail, $oAddressBook);
 

@@ -127,18 +127,16 @@ class CApiContactsBaseStorage extends AApiManagerStorage
 	}
 
 	/**
-	 * @param int $iUserId
+	 * 
 	 * @param int $iSortField
 	 * @param int $iSortOrder
 	 * @param int $iOffset
 	 * @param int $iRequestLimit
-	 * @param string $sSearch
-	 * @param string $sFirstCharacter
-	 * @param int $iGroupId
-	 * @param int $iTenantId
-	 * @return bool|array
+	 * @param array $aFilters
+	 * @param int $iIdGroup
+	 * @return array
 	 */
-	public function getContactItems($iUserId, $iSortField, $iSortOrder, $iOffset, $iRequestLimit, $sSearch, $sFirstCharacter, $iGroupId, $iTenantId = null, $bAll = false)
+	public function getContactItems($iSortField, $iSortOrder, $iOffset, $iRequestLimit, $aFilters, $iIdGroup)
 	{
 		return array();
 	}

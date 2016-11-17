@@ -577,25 +577,24 @@ class CApiContactsBaseSabredavStorage extends CApiContactsBaseStorage
 	}
 
 	/**
-	 * @param int $iUserId
+	 * 
 	 * @param int $iSortField
 	 * @param int $iSortOrder
 	 * @param int $iOffset
 	 * @param int $iRequestLimit
-	 * @param string $sSearch
-	 * @param string $sFirstCharacter
-	 * @param int $iGroupId
-	 * @param int $iTenantId = null
-	 * @param bool $bAll = false
-	 * @return bool|array
+	 * @param array $aFilters
+	 * @param int $iIdGroup
+	 * @return array
 	 */
-	public function getContactItems($iUserId, $iSortField, $iSortOrder, $iOffset, $iRequestLimit, $sSearch, $sFirstCharacter, $iGroupId, $iTenantId = null, $bAll = false)
+	public function getContactItems($iSortField, $iSortOrder, $iOffset, $iRequestLimit, $aFilters, $iIdGroup)
 	{
-		$oAddressBook = $this->getAddressBook($iUserId, \Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME);
-		$aResult = $this->getItems($iUserId, $oAddressBook, $sSearch, $sFirstCharacter, $iGroupId);
-		$this->sortItems($aResult, $iSortField, $iSortOrder);
-
-		return array_slice($aResult, $iOffset, $iRequestLimit);
+		return array();
+		
+//		$oAddressBook = $this->getAddressBook($iUserId, \Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME);
+//		$aResult = $this->getItems($iUserId, $oAddressBook, $sSearch, $sFirstCharacter, $iGroupId);
+//		$this->sortItems($aResult, $iSortField, $iSortOrder);
+//
+//		return array_slice($aResult, $iOffset, $iRequestLimit);
 	}
 	
 	/**
@@ -994,7 +993,7 @@ class CApiContactsBaseSabredavStorage extends CApiContactsBaseStorage
 			}
 
 			$oAddressBook = $this->getAddressBook($oContact->IdUser, \Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_NAME);
-			$aContactIds = $this->searchContactItemsByEmail($oContact->IdUser, $oContact->GetViewEmail(), $oAddressBook);
+			$aContactIds = $this->searchContactItemsByEmail($oContact->IdUser, $oContact->ViewEmail, $oAddressBook);
 
 			$this->deleteContactsByAddressBook($oContact->IdUser, $aContactIds, $oAddressBook);
 		}

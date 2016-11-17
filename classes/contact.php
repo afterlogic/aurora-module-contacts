@@ -169,7 +169,7 @@ class CContact extends AEntity
 		parent::__set($sKey, $mValue);
 	}
 	
-	public function GetViewEmail()
+	protected function getViewEmail()
 	{
 		switch ((int) $this->PrimaryEmail)
 		{
@@ -674,7 +674,7 @@ class CContact extends AEntity
 			}
 		}
 		
-		$this->ViewEmail = $this->GetViewEmail();
+		$this->ViewEmail = $this->getViewEmail();
 	}
 	
 	public function toResponseArray($aParameters = array())

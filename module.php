@@ -150,12 +150,17 @@ class ContactsModule extends AApiModule
 	 * @param int $Storage
 	 * @return array
 	 */
-	public function GetContacts($Offset = 0, $Limit = 20, $SortField = EContactSortField::Name, $SortOrder = ESortOrder::ASC, $Search = '', $IdGroup = 0, $Storage = '')
+	public function GetContacts($Offset = 0, $Limit = 20, $SortField = EContactSortField::Name, $SortOrder = ESortOrder::ASC, $Search = '', $IdGroup = 0, $Storage = '', $Filters = array())
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oUser = \CApi::getAuthenticatedUser();
-		$aContacts = $this->oApiContactsManager->getContactItems($oUser->iId, $SortField, $SortOrder, $Offset, $Limit, $Search, $IdGroup);
+		if (!empty($Search))
+		{
+			$Filters['ViewEmail'] = '%'.$Search.'%';
+		}
+		
+		$aContacts = $this->oApiContactsManager->getContactItems($SortField, $SortOrder, $Offset, $Limit, $Filters, $IdGroup);
+		
 		$aList = array();
 		if (is_array($aContacts))
 		{
@@ -164,7 +169,7 @@ class ContactsModule extends AApiModule
 				$aList[] = array(
 					'Id' => $oContact->iId,
 					'Name' => $oContact->FullName,
-					'Email' => $oContact->GetViewEmail(),
+					'Email' => $oContact->ViewEmail,
 					'IsGroup' => false,
 					'IsOrganization' => false,
 					'ReadOnly' => false,
@@ -196,78 +201,6 @@ class ContactsModule extends AApiModule
 		return $this->oApiContactsManager->getContact($IdContact);
 	}	
 
-	public function GetAllContacts($Offset = 0, $Limit = 20, $SortField = 'Name', $SortOrder = 1, $Search = '', $IdGroup = '')
-	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		
-		return $this->GetPersonalContacts($Offset, $Limit, $SortField, $SortOrder, $Search, $IdGroup, true);
-	}
-
-	public function GetSharedContacts()
-	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		
-		return $this->GetPersonalContacts();
-	}
-
-	public function GetPersonalContacts($Offset = 0, $Limit = 20, $SortField = \EContactSortField::Name, $SortOrder = 1, $Search = '', $IdGroup = '', $Storage = '')
-	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		
-		$iUserId = \CApi::getAuthenticatedUserId();
-		$oUser = \CApi::getAuthenticatedUser();
-		
-		$iTenantId = $Storage === 'shared' ? $oUser->IdTenant : null;
-		
-		$bAllowContactsSharing = true;
-		$bAllowGlobalContacts = true;
-		$bAllowPersonalContacts = true;
-		$bAll = $Storage === 'all';
-		if ($bAll && !$bAllowContactsSharing && $bAllowGlobalContacts)
-		{
-			$bAll = false;
-		}
-
-		$iCount = 0;
-		$aList = array();
-		
-		if ($bAllowPersonalContacts)
-		{
-			if ($bAllowContactsSharing && 0 < $IdGroup)
-			{
-				$iTenantId = $oUser->IdTenant;
-			}
-			
-//			$iCount = $this->oApiContactsManager->getContactItemsCount(
-//				$iUserId, $Search, '', $IdGroup, $iTenantId, $All);
-//
-//			if (0 < $iCount)
-//			{
-				$aContacts = $this->oApiContactsManager->getContactItems(
-					$iUserId, $SortField, $SortOrder, $Offset,
-					$Limit, $Search, '', $IdGroup, $iTenantId, $bAll);
-
-				if (is_array($aContacts))
-				{
-					$aList = $aContacts;
-				}
-//			}
-		}
-		else
-		{
-			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
-		}
-
-		return array(
-			'ContactCount' => $iCount,
-			'IdGroup' => $IdGroup,
-			'Search' => $Search,
-			'FirstCharacter' => '',
-			'All' => $bAll,
-			'List' => \CApiResponseManager::GetResponseObject($aList)
-		);		
-	}
-	
 	/**
 	 * 
 	 * @param array $Emails Array of strings
@@ -316,56 +249,6 @@ class ContactsModule extends AApiModule
 
 		return $aResult;
 	}	
-	
-	/**
-	 * @return array
-	 */
-	public function GetGlobalContacts()
-	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		
-		$oAccount = $this->getDefaultAccountFromParam();
-		$oApiGlobalContacts = $this->GetManager('global');
-
-		$iOffset = (int) $this->getParamValue('Offset', 0);
-		$iLimit = (int) $this->getParamValue('Limit', 20);
-		$sSearch = (string) $this->getParamValue('Search', '');
-
-//		$iSortField = \EContactSortField::Email;
-//		$iSortOrder = \ESortOrder::ASC;
-//
-//		$this->populateSortParams($iSortField, $iSortOrder);
-
-		$iCount = 0;
-		$aList = array();
-
-		if ($this->oApiCapabilityManager->isGlobalContactsSupported($oAccount, true))
-		{
-			$iCount = $oApiGlobalContacts->getContactItemsCount($oAccount, $sSearch);
-
-			if (0 < $iCount)
-			{
-				$aContacts = $oApiGlobalContacts->getContactItems(
-					$oAccount, $iSortField, $iSortOrder, $iOffset,
-					$iLimit, $sSearch
-				);
-
-				$aList = (is_array($aContacts)) ? $aContacts : array();
-			}
-		}
-		else
-		{
-			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
-		}
-
-		return array(
-			'ContactCount' => $iCount,
-			'Search' => $sSearch,
-			'List' => $aList
-		);
-	}	
-	
-	
 	
 	/**
 	 * @return array
@@ -1121,9 +1004,9 @@ class ContactsModule extends AApiModule
 					$oContact->IdContact = 0;
 
 					$bContactExists = false;
-					if (0 < strlen($oContact->GetViewEmail()))
+					if (0 < strlen($oContact->ViewEmail))
 					{
-						$oLocalContact = $this->oApiContactsManager->getContactByEmail($oAccount->IdUser, $oContact->GetViewEmail());
+						$oLocalContact = $this->oApiContactsManager->getContactByEmail($oAccount->IdUser, $oContact->ViewEmail);
 						if ($oLocalContact)
 						{
 							$oContact->IdContact = $oLocalContact->IdContact;
@@ -1140,7 +1023,7 @@ class ContactsModule extends AApiModule
 						$oVcard->File = $sTemptFile;
 						$oVcard->Exists = !!$bContactExists;
 						$oVcard->Name = $oContact->FullName;
-						$oVcard->Email = $oContact->GetViewEmail();
+						$oVcard->Email = $oContact->ViewEmail;
 
 						$oMessage->addExtend('VCARD', $oVcard);
 					} else {

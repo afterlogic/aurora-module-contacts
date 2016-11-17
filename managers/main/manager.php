@@ -335,8 +335,8 @@ class CApiContactsMainManager extends AApiManager
 //		{
 //			$oGroup->IdGroup = $oGroupDb->Name;
 //
-//			$oContactItems = $this->oApiContactsBaseManager->getContactItems($oGroup->IdUser, EContactSortField::Email,
-//				ESortOrder::ASC, 0, 999, '', '', $oGroupDb->IdGroup);
+//			$oContactItems = $this->oApiContactsBaseManager->getContactItems(EContactSortField::Email,
+//				ESortOrder::ASC, 0, 999, array(), 0);
 //			
 //			if (is_array($oContactItems))
 //			{
@@ -429,15 +429,9 @@ class CApiContactsMainManager extends AApiManager
 	 * 
 	 * @return array|bool
 	 */
-	public function getContactItems($mUserId, $iSortField = EContactSortField::Name, $iSortOrder = ESortOrder::ASC,
-		$iOffset = 0, $iRequestLimit = 20, $sSearch = '', $iIdGroup = 0, $iTenantId = null)
+	public function getContactItems($iSortField = EContactSortField::Name, $iSortOrder = ESortOrder::ASC,
+		$iOffset = 0, $iRequestLimit = 20, $aFilters = array(), $iIdGroup = 0)
 	{
-		$aFilters = array();
-		if (!empty($sSearch))
-		{
-			$aFilters['ViewEmail'] = '%'.$sSearch.'%';
-		}
-		
 		$aIdContact = array();
 		if (is_numeric($iIdGroup) && $iIdGroup > 0)
 		{

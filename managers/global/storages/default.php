@@ -28,17 +28,16 @@ class CApiContactsGlobalStorage extends AApiManagerStorage
 	}
 
 	/**
-	 * @param CAccount $oAccount
+	 * 
 	 * @param int $iSortField
 	 * @param int $iSortOrder
 	 * @param int $iOffset
 	 * @param int $iRequestLimit
-	 * @param string $sSearch
-	 * 
+	 * @param array $aFilters
+	 * @param int $iIdGroup
 	 * @return bool|array
 	 */
-	public function getContactItems($oAccount,
-		$iSortField, $iSortOrder, $iOffset, $iRequestLimit, $sSearch)
+	public function getContactItems($iSortField, $iSortOrder, $iOffset, $iRequestLimit, $aFilters, $iIdGroup)
 	{
 		return false;
 	}

@@ -436,26 +436,22 @@ class CApiContactsBaseManager extends AApiManagerWithStorage
 	}
 
 	/**
-	 * @param string $mUserId
-	 * @param int $iSortField Default value is **EContactSortField::Email 2**,
-	 * @param int $iSortOrder Default value is **ESortOrder::ASC 0**,
-	 * @param int $iOffset Default value is **0**
-	 * @param int $iRequestLimit Default value is **20**
-	 * @param string $sSearch Default value is empty string
-	 * @param string $sFirstCharacter Default value is empty string
-	 * @param string $mGroupId Default value is empty string
-	 * @param int $iTenantId Default value is **null**
-	 * @param bool $bAll Default value is **false**
-	 *
-	 * @return bool|array
+	 * 
+	 * @param int $iSortField
+	 * @param int $iSortOrder
+	 * @param int $iOffset
+	 * @param int $iRequestLimit
+	 * @param array $aFilters
+	 * @param int $iIdGroup
+	 * @return boolean
 	 */
-	public function getContactItems($mUserId, $iSortField = EContactSortField::Email, $iSortOrder = ESortOrder::ASC, $iOffset = 0, $iRequestLimit = 20, $sSearch = '', $sFirstCharacter = '', $mGroupId = '', $iTenantId = null, $bAll = false)
+	public function getContactItems($iSortField = EContactSortField::Email, $iSortOrder = ESortOrder::ASC,
+		$iOffset = 0, $iRequestLimit = 20, $aFilters = array(), $iIdGroup = 0)
 	{
 		$mResult = false;
 		try
 		{
-			$mResult = $this->oStorage->getContactItems($mUserId, $iSortField, $iSortOrder,
-				$iOffset, $iRequestLimit, $sSearch, $sFirstCharacter, $mGroupId, $iTenantId, $bAll);
+			$mResult = $this->oStorage->getContactItems($iSortField, $iSortOrder, $iOffset, $iRequestLimit, $aFilters, $iIdGroup);
 		}
 		catch (CApiBaseException $oException)
 		{
@@ -687,8 +683,8 @@ class CApiContactsBaseManager extends AApiManagerWithStorage
 				$oApiGcontactManager = /* @var CApiGcontactsManager */ CApi::Manager('gcontacts');
 				if ($oApiGcontactManager)
 				{
-					$aAccountItems = $oApiGcontactManager->getContactItems($oAccount,
-						EContactSortField::Frequency, ESortOrder::DESC, 0, $iRequestLimit, $sSearch, $bPhoneOnly);
+					//$sSearch, $bPhoneOnly
+					$aAccountItems = $oApiGcontactManager->getContactItems(EContactSortField::Frequency, ESortOrder::DESC, 0, $iRequestLimit, array(), 0);
 
 					if (is_array($aAccountItems))
 					{

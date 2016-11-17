@@ -79,39 +79,38 @@ class CApiContactsGlobalManager extends AApiManagerWithStorage
 	}
 
 	/**
-	 * Obtains all global contacts by search-string for specified account.
 	 * 
-	 * @param CAccount $oAccount Account object.
-	 * @param int $iSortField = EContactSortField::Name. Sort field for sorting contact list.
-	 * @param int $iSortOrder = ESortOrder::ASC. Sort order for sorting contact list.
-	 * @param int $iOffset = 0. Offset value for obtaining a partial list.
-	 * @param int $iRequestLimit = 20. Limit value for obtaining a partial list.
-	 * @param string $sSearch = ''. Search string.
-	 * 
-	 * @return array|bool
+	 * @param int $iSortField
+	 * @param int $iSortOrder
+	 * @param int $iOffset
+	 * @param int $iRequestLimit
+	 * @param array $aFilters
+	 * @param int $iIdGroup
+	 * @return array
 	 */
-	public function getContactItems($oAccount,
-		$iSortField = EContactSortField::Name, $iSortOrder = ESortOrder::ASC,
-		$iOffset = 0, $iRequestLimit = 20, $sSearch = '')
+	public function getContactItems($iSortField = EContactSortField::Name, $iSortOrder = ESortOrder::ASC,
+		$iOffset = 0, $iRequestLimit = 20, $aFilters = array(), $iIdGroup = 0)
 	{
-		$mResult = false;
-		try
-		{
-			$mResult = array();
-			$oDefAccount = $this->_getDefaultAccount($oAccount);
-			if ($oDefAccount)
-			{
-				$mResult = $this->oStorage->getContactItems($oDefAccount,
-					$iSortField, $iSortOrder, $iOffset, $iRequestLimit, $sSearch);
-			}
-		}
-		catch (CApiBaseException $oException)
-		{
-			$mResult = false;
-			$this->setLastException($oException);
-		}
-
-		return $mResult;
+		return array();
+		
+//		$mResult = false;
+//		try
+//		{
+//			$mResult = array();
+//			$oDefAccount = $this->_getDefaultAccount($oAccount);
+//			if ($oDefAccount)
+//			{
+//				$mResult = $this->oStorage->getContactItems($oDefAccount,
+//					$iSortField, $iSortOrder, $iOffset, $iRequestLimit, $sSearch);
+//			}
+//		}
+//		catch (CApiBaseException $oException)
+//		{
+//			$mResult = false;
+//			$this->setLastException($oException);
+//		}
+//
+//		return $mResult;
 	}
 
 	/**

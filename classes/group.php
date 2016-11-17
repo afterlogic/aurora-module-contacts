@@ -136,8 +136,7 @@ class CGroup extends AEntity
 		$oContactsModule = \CApi::GetModule('Contacts');
 		 if ($oContactsModule)
 		 {
-			$aContacts = $oContactsModule->oApiContactsManager->getContactItems(
-				$this->IdUser, \EContactSortField::Name, \ESortOrder::ASC, 0, 299, '', '', $this->IdGroup);
+			$aContacts = $oContactsModule->oApiContactsManager->getContactItems(\EContactSortField::Name, \ESortOrder::ASC, 0, 299, array(), $this->IdGroup);
 
 			$mResult = array(
 				'IdUser' => $this->IdUser,
