@@ -153,40 +153,49 @@ class ContactsModule extends AApiModule
 	public function GetContacts($Offset = 0, $Limit = 20, $SortField = EContactSortField::Name, $SortOrder = ESortOrder::ASC, $Search = '', $IdGroup = 0, $Storage = '', $Filters = array())
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		
-		if (!empty($Search))
-		{
-			$Filters['ViewEmail'] = '%'.$Search.'%';
-		}
-		
-//		$Filters = [
+
+//it doesn't work
+//		$aFilters = is_array($Filters) ? (count($Filters) > 1 ? ['$OR' => $Filters] : $Filters) : [];
+//		
+//		if (!empty($Search))
+//		{
+//			$aFilters = ['$AND' => [$aFilters, ['ViewEmail' => ['%'.$Search.'%', 'LIKE']]]];
+//		}
+	
+//it works
+//		$aFilters = ['ViewEmail' => ['%'.$Search.'%', 'LIKE']];
+
+//it works
+//		$aFilters = [
 //			'$OR' => [
+//				'Storage' => ['global', '='],
 //				'$AND' => [
-//					'IdUser' => 3,
-//					'Storage' => 'personal'
-//				],
-//				'Storage' => 'global'
+//					'IdUser' => [233, '='],
+//					'Storage' => ['personal', '='],
+//				]
 //			]
 //		];
-$Filters = [
-   '$OR' => [
-    '$AND' => [
-     'UserId' => [
-      3,
-      '='
-     ],
-     'Storage' => [
-      'personal',
-      '='
-     ]
-    ],
-    'Storage' => [
-     'global',
-     '='
-    ]
-   ]
-  ];		
-		$aContacts = $this->oApiContactsManager->getContactItems($SortField, $SortOrder, $Offset, $Limit, $Filters, $IdGroup);
+
+//it doesn't work		
+//		$aFilters = [
+//			'$AND' => [
+//				[
+//					'$OR' => [
+//						'Storage' => ['global', '='],
+//						'$AND' => [
+//							'IdUser' => [3, '='],
+//							'Storage' => ['personal', '='],
+//						]
+//					]
+//				],
+//				[
+//					'ViewEmail' => ['%'.$Search.'%', 'LIKE']
+//				]
+//			]
+//		];
+		
+		$aFilters = [];
+		$aContacts = $this->oApiContactsManager->getContactItems($SortField, $SortOrder, $Offset, $Limit, $aFilters, $IdGroup);
 		
 		$aList = array();
 		if (is_array($aContacts))
