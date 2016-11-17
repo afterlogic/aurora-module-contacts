@@ -159,6 +159,33 @@ class ContactsModule extends AApiModule
 			$Filters['ViewEmail'] = '%'.$Search.'%';
 		}
 		
+//		$Filters = [
+//			'$OR' => [
+//				'$AND' => [
+//					'IdUser' => 3,
+//					'Storage' => 'personal'
+//				],
+//				'Storage' => 'global'
+//			]
+//		];
+$Filters = [
+   '$OR' => [
+    '$AND' => [
+     'UserId' => [
+      3,
+      '='
+     ],
+     'Storage' => [
+      'personal',
+      '='
+     ]
+    ],
+    'Storage' => [
+     'global',
+     '='
+    ]
+   ]
+  ];		
 		$aContacts = $this->oApiContactsManager->getContactItems($SortField, $SortOrder, $Offset, $Limit, $Filters, $IdGroup);
 		
 		$aList = array();
