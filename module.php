@@ -4,6 +4,11 @@ class ContactsModule extends AApiModule
 {
 	public $oApiContactsManager = null;
 	
+	protected $aSettingsMap = array(
+		'ContactsPerPage' => array(20, 'int'),
+		'ImportContactsLink' => array('', 'string'),
+	);
+	
 	public function init() 
 	{
 		$this->incClass('contact-list-item');
@@ -33,8 +38,8 @@ class ContactsModule extends AApiModule
 		$this->broadcastEvent('GetStorage', $aStorages);
 		
 		return array(
-			'ContactsPerPage' => 20, // AppData.User.ContactsPerPage
-			'ImportContactsLink' => '', // AppData.Links.ImportingContacts
+			'ContactsPerPage' => $this->getConfig('ContactsPerPage', 20),
+			'ImportContactsLink' => $this->getConfig('ImportContactsLink', ''),
 			'Storages' => $aStorages,
 			'EContactsPrimaryEmail' => (new \EContactsPrimaryEmail)->getMap(),
 			'EContactsPrimaryPhone' => (new \EContactsPrimaryPhone)->getMap(),
@@ -154,48 +159,41 @@ class ContactsModule extends AApiModule
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 
-//please check it
-//		$aFilters = is_array($Filters) ? (count($Filters) > 1 ? ['$OR' => $Filters] : $Filters) : [];
-//		
-//		if (!empty($Search))
-//		{
-//			$aFilters = [
-//				'$AND' => [
-//					$aFilters, 
-//					'ViewEmail' => ['%'.$Search.'%', 'LIKE']
-//				]
-//			];
-//		}
-	
-//it works
-//		$aFilters = ['ViewEmail' => ['%'.$Search.'%', 'LIKE']];
-
-//it works
-//		$aFilters = [
-//			'$OR' => [
-//				'Storage' => ['global', '='],
-//				'$AND' => [
-//					'IdUser' => [233, '='],
-//					'Storage' => ['personal', '='],
-//				]
-//			]
-//		];
-
-//it works
-//		$aFilters = [
-//			'$AND' => [
-//				'$OR' => [
-//					'Storage' => ['global', '='],
-//					'$AND' => [
-//						'IdUser' => [3, '='],
-//						'Storage' => ['personal', '='],
-//					]
-//				],
-//				'ViewEmail' => ['%'.$Search.'%', 'LIKE']
-//			]
-//		];
+		$aFilters = is_array($Filters) ? $Filters : [];
 		
-		$aFilters = [];
+		if (!empty($Search))
+		{
+			if (count($aFilters) > 1)
+			{
+				$aFilters = [
+					'$AND' => [
+						'$OR' => $aFilters, 
+						'$OR' => [
+							'FullName' => ['%'.$Search.'%', 'LIKE'],
+							'PersonalEmail' => ['%'.$Search.'%', 'LIKE'],
+							'BusinessEmail' => ['%'.$Search.'%', 'LIKE'],
+							'OtherEmail' => ['%'.$Search.'%', 'LIKE'],
+						]
+					]
+				];
+			}
+			else
+			{
+				$aFilters = [
+					'$OR' => [
+						'FullName' => ['%'.$Search.'%', 'LIKE'],
+						'PersonalEmail' => ['%'.$Search.'%', 'LIKE'],
+						'BusinessEmail' => ['%'.$Search.'%', 'LIKE'],
+						'OtherEmail' => ['%'.$Search.'%', 'LIKE'],
+					]
+				];
+			}
+		}
+		elseif (count($aFilters) > 1)
+		{
+			$aFilters = ['$OR' => $aFilters];
+		}
+
 		$aContacts = $this->oApiContactsManager->getContactItems($SortField, $SortOrder, $Offset, $Limit, $aFilters, $IdGroup);
 		
 		$aList = array();
@@ -286,60 +284,6 @@ class ContactsModule extends AApiModule
 
 		return $aResult;
 	}	
-	
-	/**
-	 * @return array
-	 */
-	public function GetGlobalContact()
-	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		
-		$oContact = false;
-		$oAccount = $this->getDefaultAccountFromParam();
-		$sContactId = (string) $this->getParamValue('IdContact', '');
-		
-		if ($this->oApiCapabilityManager->isGlobalContactsSupported($oAccount)) {
-
-			$oApiGlobalContacts = $this->GetManager('global');
-			$oContact = $oApiGlobalContacts->getContactById($oAccount, $sContactId);
-
-		} else {
-
-			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
-		}
-
-		return $oContact;
-	}	
-	
-	public function GetPersonalContact()
-	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		
-		$oContact = false;
-		$oAccount = $this->getDefaultAccountFromParam();
-		$sContactId = (string) $this->getParamValue('IdContact', '');
-
-		if ($this->oApiCapabilityManager->isPersonalContactsSupported($oAccount)) {
-
-			$bSharedToAll = false;
-			$iTenantId = $bSharedToAll ? $oAccount->IdTenant : null;
-
-			$oContact = $this->oApiContactsManager->getContactById($oAccount->IdUser, $sContactId, false, $iTenantId);
-		} else {
-
-			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
-		}
-		
-		return $oContact;
-	}
-	
-	public function GetSharedContact()
-	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		
-		return $this->GetPersonalContact();
-	}
-	
 	
 	public function DownloadContactsAsCSV()
 	{
