@@ -238,6 +238,8 @@ class CApiContactsMainManager extends AApiManager
 			}
 		}
 		
+		return $res;
+		
 //		$res1 = $res2 = false;
 //
 //		if ($oContact)
@@ -383,9 +385,28 @@ class CApiContactsMainManager extends AApiManager
 	 * 
 	 * @return int
 	 */
-	public function getContactItemsCount($iUserId, $sSearch = '', $sFirstCharacter = '', $iGroupId = 0, $iTenantId = null, $bAll = false)
+	public function getContactItemsCount($aFilters = array(), $iIdGroup = 0)
 	{
-		return $this->oApiContactsBaseManager->getContactItemsCount($iUserId, $sSearch, $sFirstCharacter, $iGroupId, $iTenantId, $bAll);
+		$aIdContact = array();
+		if (is_numeric($iIdGroup) && $iIdGroup > 0)
+		{
+			$aGroupContact = $this->getGroupContactItems($iIdGroup);
+			foreach ($aGroupContact as $oGroupContact)
+			{
+				$aIdContact[] = $oGroupContact->IdContact;
+			}
+			
+			if (empty($aIdContact))
+			{
+				return 0;
+			}
+		}
+		
+		return $this->oEavManager->getEntitiesCount(
+			'CContact', 
+			$aFilters,
+			$aIdContact
+		);
 	}
 
 	/**

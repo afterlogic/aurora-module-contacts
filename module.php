@@ -194,6 +194,7 @@ class ContactsModule extends AApiModule
 			$aFilters = ['$OR' => $aFilters];
 		}
 
+		$iCount = $this->oApiContactsManager->getContactItemsCount($aFilters, $IdGroup);
 		$aContacts = $this->oApiContactsManager->getContactItems($SortField, $SortOrder, $Offset, $Limit, $aFilters, $IdGroup);
 		
 		$aList = array();
@@ -215,10 +216,7 @@ class ContactsModule extends AApiModule
 		}
 
 		return array(
-			'ContactCount' => count($aList),
-			'IdGroup' => $IdGroup,
-			'Search' => $Search,
-			'Storage' => $Storage,
+			'ContactCount' => $iCount,
 			'List' => \CApiResponseManager::GetResponseObject($aList)
 		);		
 	}	
@@ -462,11 +460,7 @@ class ContactsModule extends AApiModule
 		
 		$oContact = $this->oApiContactsManager->getContact($Contact['IdContact']);
 		$oContact->populate($Contact);
-		if (!$this->oApiContactsManager->updateContact($oContact, false))
-		{
-			return false;
-		}
-		return true;
+		return $this->oApiContactsManager->updateContact($oContact, false);
 		
 //		$oAccount = $this->getDefaultAccountFromParam();
 //
