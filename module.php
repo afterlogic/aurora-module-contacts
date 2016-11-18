@@ -154,12 +154,17 @@ class ContactsModule extends AApiModule
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 
-//it doesn't work
+//please check it
 //		$aFilters = is_array($Filters) ? (count($Filters) > 1 ? ['$OR' => $Filters] : $Filters) : [];
 //		
 //		if (!empty($Search))
 //		{
-//			$aFilters = ['$AND' => [$aFilters, ['ViewEmail' => ['%'.$Search.'%', 'LIKE']]]];
+//			$aFilters = [
+//				'$AND' => [
+//					$aFilters, 
+//					'ViewEmail' => ['%'.$Search.'%', 'LIKE']
+//				]
+//			];
 //		}
 	
 //it works
@@ -176,21 +181,17 @@ class ContactsModule extends AApiModule
 //			]
 //		];
 
-//it doesn't work		
+//it works
 //		$aFilters = [
 //			'$AND' => [
-//				[
-//					'$OR' => [
-//						'Storage' => ['global', '='],
-//						'$AND' => [
-//							'IdUser' => [3, '='],
-//							'Storage' => ['personal', '='],
-//						]
+//				'$OR' => [
+//					'Storage' => ['global', '='],
+//					'$AND' => [
+//						'IdUser' => [3, '='],
+//						'Storage' => ['personal', '='],
 //					]
 //				],
-//				[
-//					'ViewEmail' => ['%'.$Search.'%', 'LIKE']
-//				]
+//				'ViewEmail' => ['%'.$Search.'%', 'LIKE']
 //			]
 //		];
 		
