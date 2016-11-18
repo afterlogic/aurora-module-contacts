@@ -183,7 +183,7 @@ class ContactsModule extends AApiModule
 
 //it works
 //		$aFilters = [
-			//'$AND' => [
+//			'$AND' => [
 //				'$OR' => [
 //					'Storage' => ['global', '='],
 //					'$AND' => [
