@@ -40,23 +40,24 @@ class CApiContactsSyncCsv
 	public function Export($iUserId)
 	{
 		$iOffset = 0;
-		$iRequestValue = 50;
+		$iRequestLimit = 50;
 
 		$sResult = '';
 
-		$iCount = $this->oApiContactsManager->getContactItemsCount($iUserId);
+		$iCount = $this->oApiContactsManager->getContactsCount($iUserId);
 		if (0 < $iCount)
 		{
 			while ($iOffset < $iCount)
 			{
-				$aList = $this->oApiContactsManager->getContactItemsWithoutOrder($iUserId, $iOffset, $iRequestValue);
+				$aList = $this->oApiContactsManager->getContacts(EContactSortField::Name, ESortOrder::ASC,
+					$iOffset, $iRequestLimit, ['IdUser' => [$iUserId, '=']], 0);
 
 				if (is_array($aList))
 				{
 					$oContactListItem = null;
 					foreach ($aList as $oContactListItem)
 					{
-						$oContact = $this->oApiContactsManager->getContactById($iUserId, $oContactListItem->Id);
+						$oContact = $this->oApiContactsManager->getContact($oContactListItem->Id);
 						if ($oContact)
 						{
 							$this->oFormatter->setContainer($oContact);
@@ -65,7 +66,7 @@ class CApiContactsSyncCsv
 						}
 					}
 
-					$iOffset += $iRequestValue;
+					$iOffset += $iRequestLimit;
 				}
 				else
 				{
