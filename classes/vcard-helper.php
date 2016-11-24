@@ -452,14 +452,7 @@ class CApiContactsVCardHelper
 		$oVCard->VERSION = '3.0';
 		$oVCard->PRODID = '-//Afterlogic//7.5.x//EN';
 
-		$sIdContact = $oContact->IdContactStr;
-		$aPathInfo = pathinfo($oContact->IdContactStr);
-		if (isset($aPathInfo['filename']))
-		{
-			$sIdContact = $aPathInfo['filename'];
-		}
-
-		$oVCard->UID = $sIdContact;
+		$oVCard->UID = $oContact->sUUID;
 
 		$oVCard->FN = $oContact->FullName;
 		$oVCard->N = array(

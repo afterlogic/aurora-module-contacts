@@ -193,12 +193,9 @@ class ContactsModule extends AApiModule
 			{
 				$aList[] = array(
 					'Id' => $oContact->iId,
+					'IdUser' => $oContact->IdUser,
 					'Name' => $oContact->FullName,
 					'Email' => $oContact->ViewEmail,
-					'IsGroup' => false,
-					'IsOrganization' => false,
-					'ReadOnly' => false,
-					'ItsMe' => false,
 					'Storage' => $oContact->Storage,
 				);
 			}
@@ -554,7 +551,6 @@ class ContactsModule extends AApiModule
 					
 					$oContact = \CContact::createInstance();
 					$oContact->InitFromVCardStr($oAccount->IdUser, $sData);
-					$oContact->initBeforeChange();
 
 					$oContact->IdContact = 0;
 

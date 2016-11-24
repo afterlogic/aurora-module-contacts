@@ -3,7 +3,6 @@
 /* -AFTERLOGIC LICENSE HEADER- */
 
 /**
- * @property string $IdContactStr
  * @property int $IdUser
  * @property int $IdTenant
  * @property string $Storage
@@ -45,8 +44,6 @@
  * @property int $BirthDay
  * @property int $BirthMonth
  * @property int $BirthYear
- * @property bool $ReadOnly
- * @property bool $ItsMe
  * @property string $ETag
  * @property bool $Auto
  * @property bool $HideInGAB
@@ -72,6 +69,8 @@ class CContact extends AEntity
 
 	public $GroupsContacts = array();
 	
+	public $ExtendedInformation = array();
+	
 	public function __construct($sModule, $oParams)
 	{
 		parent::__construct(get_class($this), $sModule);
@@ -79,7 +78,6 @@ class CContact extends AEntity
 		$this->__USE_TRIM_IN_STRINGS__ = true;
 
 		$this->setStaticMap(array(
-			'IdContactStr'	=> array('string', ''),
 			'IdUser'		=> array('int', 0),
 			'IdTenant'		=> array('int', 0),
 
@@ -136,9 +134,6 @@ class CContact extends AEntity
 			'BirthMonth'		=> array('int', 0),
 			'BirthYear'		=> array('int', 0),
 
-			'ReadOnly'			=> array('bool', false),
-			'ItsMe'				=> array('bool', false),
-
 			'ETag'				=> array('string', ''),
 			
 			'Auto'				=> array('bool', false),
@@ -183,50 +178,6 @@ class CContact extends AEntity
 		}
 	}
 	
-	/**
-	 * @return string
-	 */
-	public function GenerateStrId()
-	{
-		return \Sabre\DAV\UUIDUtil::getUUID().'.vcf';
-	}
-
-	/**
-	 * @param stdClass $oRow
-	 */
-	public function InitByDbRow($oRow)
-	{
-		parent::InitByDbRow($oRow);
-
-		if (!$this->ReadOnly && 'global' === $this->Storage)
-		{
-			$this->ReadOnly = true;
-		}
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function initBeforeChange()
-	{
-//		parent::initBeforeChange();
-
-		if (0 === strlen($this->IdContactStr) &&
-			((is_int($this->iId) && 0 < $this->iId) ||
-			(is_string($this->iId) && 0 < strlen($this->iId)))
-		)
-		{
-			$this->IdContactStr = $this->GenerateStrId();
-		}
-
-		if (!$this->__LOCK_DATE_MODIFIED__)
-		{
-			$this->DateModified = time();
-		}
-
-		return true;
-	}
-
 	/**
 	 * @return bool
 	 */
@@ -306,7 +257,7 @@ class CContact extends AEntity
 			
 			$this->IdUser = $iUserId;
 			$this->UseFriendlyName = true;
-			$this->IdContactStr = $sUid . '.vcf';
+			$this->sUUID = $sUid . '.vcf';
 
 			if (isset($oVCardObject->CATEGORIES))
 			{
@@ -512,7 +463,6 @@ class CContact extends AEntity
 	
 	public function populate($aContact)
 	{
-		$bItsMe = $this->ItsMe;
 		if (isset($aContact['PrimaryEmail']))
 		{
 			$this->PrimaryEmail = $aContact['PrimaryEmail'];
@@ -645,7 +595,7 @@ class CContact extends AEntity
 		{
 			$this->Notes = $aContact['Notes'];
 		}
-		if (!$bItsMe && isset($aContact['BusinessEmail']))
+		if (isset($aContact['BusinessEmail']))
 		{
 			$this->BusinessEmail = $aContact['BusinessEmail'];
 		}
@@ -677,20 +627,19 @@ class CContact extends AEntity
 		$this->ViewEmail = $this->getViewEmail();
 	}
 	
-	public function toResponseArray($aParameters = array())
+	public function toResponseArray()
 	{
 		$aGroupIds = array();
 		foreach ($this->GroupsContacts as $oGroupContact)
 		{
 			$aGroupIds[] = $oGroupContact->IdGroup;
 		}
-		return array(
+		
+		$aRes = array(
 			'IdUser' => $this->IdUser,
 			'IdContact' => $this->iId,
-			'IdContactStr' => $this->IdContactStr,
 
 			'Storage' => $this->Storage,
-			'ItsMe' => $this->ItsMe,
 
 			'PrimaryEmail' => $this->PrimaryEmail,
 			'UseFriendlyName' => $this->UseFriendlyName,
@@ -734,10 +683,16 @@ class CContact extends AEntity
 			'BirthDay' => $this->BirthDay,
 			'BirthMonth' => $this->BirthMonth,
 			'BirthYear' => $this->BirthYear,
-			'ReadOnly' => $this->ReadOnly,
 			'ETag' => $this->ETag,
 			
 			'GroupIds' => $aGroupIds
 		);
+		
+		foreach ($this->ExtendedInformation as $sKey => $mValue)
+		{
+			$aRes[$sKey] = $mValue;
+		}
+		
+		return $aRes;
 	}
 }

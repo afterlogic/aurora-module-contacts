@@ -3,8 +3,6 @@
 /* -AFTERLOGIC LICENSE HEADER- */
 
 /**
- * @property mixed $IdGroup
- * @property string $IdGroupStr
  * @property int $IdUser
  * @property string $Name
  * @property bool $IsOrganization
@@ -39,7 +37,6 @@ class CGroup extends AEntity
 		$this->__USE_TRIM_IN_STRINGS__ = true;
 		
 		$this->setStaticMap(array(
-			'IdGroupStr'		=> array('string', ''),
 			'IdUser'			=> array('int', 0),
 			
 			'Name'				=> array('string', ''),
@@ -64,29 +61,6 @@ class CGroup extends AEntity
 		return new CGroup($sModule, $oParams);
 	}
 	
-	/**
-	 * @return string
-	 */
-	public function GenerateStrId()
-	{
-		return self::STR_PREFIX.$this->IdGroup;
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function initBeforeChange()
-	{
-//		parent::initBeforeChange();
-
-		if (0 === strlen($this->IdGroupStr))
-		{
-			$this->IdGroupStr = $this->GenerateStrId();
-		}
-
-		return true;
-	}
-
 	/**
 	 * @return bool
 	 */
@@ -130,19 +104,18 @@ class CGroup extends AEntity
 		}
 	}
 
-	public function toResponseArray($aParameters = array())
+	public function toResponseArray()
 	{
 		$mResult = null; 
 		$oContactsModule = \CApi::GetModule('Contacts');
 		 if ($oContactsModule)
 		 {
-			$aContacts = $oContactsModule->oApiContactsManager->getContacts(\EContactSortField::Name, \ESortOrder::ASC, 0, 299, array(), $this->IdGroup);
+			$aContacts = $oContactsModule->oApiContactsManager->getContacts(\EContactSortField::Name, \ESortOrder::ASC, 0, 299, [], $this->iId);
 
 			$mResult = array(
 				'IdUser' => $this->IdUser,
 				'Id' => $this->iId,
 				'IdGroup' => $this->iId,
-				'IdGroupStr' => $this->IdGroupStr,
 				'Name' => $this->Name,
 
 				'IsOrganization' => $this->IsOrganization,
