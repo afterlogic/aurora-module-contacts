@@ -94,11 +94,11 @@ class CGroup extends AEntity
 		$this->GroupContacts = array();
 		if (!empty($aGroup['Contacts']) && is_array($aGroup['Contacts']))
 		{
-			$aContactIds = $aGroup['Contacts'];
-			foreach ($aContactIds as $sContactId)
+			$aContactUUIDs = $aGroup['Contacts'];
+			foreach ($aContactUUIDs as $sContactUUID)
 			{
 				$oGroupContact = \CGroupContact::createInstance();
-				$oGroupContact->IdContact = (int) $sContactId;
+				$oGroupContact->ContactUUID = $sContactUUID;
 				$this->GroupContacts[] = $oGroupContact;
 			}
 		}
@@ -110,12 +110,11 @@ class CGroup extends AEntity
 		$oContactsModule = \CApi::GetModule('Contacts');
 		 if ($oContactsModule)
 		 {
-			$aContacts = $oContactsModule->oApiContactsManager->getContacts(\EContactSortField::Name, \ESortOrder::ASC, 0, 299, [], $this->iId);
+			$aContacts = $oContactsModule->oApiContactsManager->getContacts(\EContactSortField::Name, \ESortOrder::ASC, 0, 299, [], $this->sUUID);
 
 			$mResult = array(
 				'IdUser' => $this->IdUser,
-				'Id' => $this->iId,
-				'IdGroup' => $this->iId,
+				'GroupUUID' => $this->sUUID,
 				'Name' => $this->Name,
 
 				'IsOrganization' => $this->IsOrganization,

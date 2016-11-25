@@ -47,7 +47,6 @@
  * @property string $ETag
  * @property bool $Auto
  * @property bool $HideInGAB
- * @property int $DateCreated
  * @property int $DateModified
  *
  * @ignore
@@ -90,8 +89,8 @@ class CContact extends AEntity
 			'PrimaryAddress'	=> array('int', EContactsPrimaryAddress::Personal),
 			'ViewEmail'			=> array('string', ''),
 
-			'DateCreated'		=> array('datetime', date('Y-m-d H:i:s')),
-			'DateModified'		=> array('datetime', date('Y-m-d H:i:s')),
+			'DateCreated'		=> array('datetime', ''),
+			'DateModified'		=> array('datetime', ''),
 
 			'UseFriendlyName'	=> array('bool', true),
 
@@ -262,15 +261,15 @@ class CContact extends AEntity
 
 			if (isset($oVCardObject->CATEGORIES))
 			{
-				$aGroupIds = $oVCardObject->CATEGORIES->getParts();
-				foreach($aGroupIds as $sGroupId)
+				$aGroupUUIDs = $oVCardObject->CATEGORIES->getParts();
+				foreach($aGroupUUIDs as $sGroupUUID)
 				{
-					if (!empty($sGroupId))
+					if (!empty($sGroupUUID))
 					{
-						$GroupContact = \CGroupContact::createInstance();
-						$GroupContact->IdContact = $this->iId;
-						$GroupContact->IdGroup = (int)$sGroupId;
-						$this->GroupsContacts[] = $GroupContact;
+						$oGroupContact = \CGroupContact::createInstance();
+						$oGroupContact->ContactUUID = $this->sUUID;
+						$oGroupContact->GroupUUID = $sGroupUUID;
+						$this->GroupsContacts[] = $oGroupContact;
 					}
 				}
 			}
@@ -614,13 +613,13 @@ class CContact extends AEntity
 		}
 
 		$this->GroupsContacts = array();
-		if (isset($aContact['GroupIds']) && is_array($aContact['GroupIds']))
+		if (isset($aContact['GroupUUIDs']) && is_array($aContact['GroupUUIDs']))
 		{
-			foreach ($aContact['GroupIds'] as $iId)
+			foreach ($aContact['GroupUUIDs'] as $sGroupUUID)
 			{
 				$oGroupContact = \CGroupContact::createInstance();
-				$oGroupContact->IdContact = $this->iId;
-				$oGroupContact->IdGroup = $iId;
+				$oGroupContact->ContactUUID = $this->sUUID;
+				$oGroupContact->GroupUUID = $sGroupUUID;
 				$this->GroupsContacts[] = $oGroupContact;
 			}
 		}
@@ -630,15 +629,15 @@ class CContact extends AEntity
 	
 	public function toResponseArray()
 	{
-		$aGroupIds = array();
+		$aGroupUUIDs = array();
 		foreach ($this->GroupsContacts as $oGroupContact)
 		{
-			$aGroupIds[] = $oGroupContact->IdGroup;
+			$aGroupUUIDs[] = $oGroupContact->GroupUUID;
 		}
 		
 		$aRes = array(
 			'IdUser' => $this->IdUser,
-			'IdContact' => $this->iId,
+			'UUID' => $this->sUUID,
 
 			'Storage' => $this->Storage,
 
@@ -686,7 +685,7 @@ class CContact extends AEntity
 			'BirthYear' => $this->BirthYear,
 			'ETag' => $this->ETag,
 			
-			'GroupIds' => $aGroupIds
+			'GroupUUIDs' => $aGroupUUIDs
 		);
 		
 		foreach ($this->ExtendedInformation as $sKey => $mValue)

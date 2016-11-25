@@ -472,7 +472,7 @@ class CApiContactsVCardHelper
 			$oContact->BusinessCompany,
 			$oContact->BusinessDepartment
 		);
-		$oVCard->CATEGORIES = $oContact->GroupIds;
+		$oVCard->CATEGORIES = $oContact->GroupUUIDs;
 
 		self::UpdateVCardAddressesFromContact($oContact, $oVCard);
 		self::UpdateVCardEmailsFromContact($oContact, $oVCard);

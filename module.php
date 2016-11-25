@@ -81,22 +81,22 @@ class ContactsModule extends AApiModule
 	
 	/**
 	 * 
-	 * @param int $IdGroup
+	 * @param string $GroupUUID
 	 * @return \CGroup
 	 */
-	public function GetGroup($IdGroup)
+	public function GetGroup($GroupUUID)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		return $this->oApiContactsManager->getGroup($IdGroup);
+		return $this->oApiContactsManager->getGroup($GroupUUID);
 	}
 	
 	/**
 	 * 
-	 * @param int $IdGroup
+	 * @param string $GroupUUID
 	 * @return array
 	 */
-	public function GetGroupEvents($IdGroup)
+	public function GetGroupEvents($GroupUUID)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
@@ -115,11 +115,11 @@ class ContactsModule extends AApiModule
 	 * @param int $SortField
 	 * @param int $SortOrder
 	 * @param string $Search
-	 * @param int $IdGroup
+	 * @param string $GroupUUID
 	 * @param array $Filters
 	 * @return array
 	 */
-	public function GetContacts($Offset = 0, $Limit = 20, $SortField = EContactSortField::Name, $SortOrder = ESortOrder::ASC, $Search = '', $IdGroup = 0, $Filters = array())
+	public function GetContacts($Offset = 0, $Limit = 20, $SortField = EContactSortField::Name, $SortOrder = ESortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array())
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 
@@ -183,8 +183,8 @@ class ContactsModule extends AApiModule
 			$aFilters = ['$OR' => $aFilters];
 		}
 
-		$iCount = $this->oApiContactsManager->getContactsCount($aFilters, $IdGroup);
-		$aContacts = $this->oApiContactsManager->getContacts($SortField, $SortOrder, $Offset, $Limit, $aFilters, $IdGroup);
+		$iCount = $this->oApiContactsManager->getContactsCount($aFilters, $GroupUUID);
+		$aContacts = $this->oApiContactsManager->getContacts($SortField, $SortOrder, $Offset, $Limit, $aFilters, $GroupUUID);
 		
 		$aList = array();
 		if (is_array($aContacts))
@@ -192,7 +192,7 @@ class ContactsModule extends AApiModule
 			foreach ($aContacts as $oContact)
 			{
 				$aList[] = array(
-					'Id' => $oContact->iId,
+					'UUID' => $oContact->sUUID,
 					'IdUser' => $oContact->IdUser,
 					'Name' => $oContact->FullName,
 					'Email' => $oContact->ViewEmail,
@@ -209,15 +209,15 @@ class ContactsModule extends AApiModule
 	
 	/**
 	 * 
-	 * @param int $IdContact
+	 * @param string $UUID
 	 * @return \CContact
 	 */
-	public function GetContact($IdContact)
+	public function GetContact($UUID)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		return $this->oApiContactsManager->getContact($IdContact);
-	}	
+		return $this->oApiContactsManager->getContact($UUID);
+	}
 
 	/**
 	 * @param array $Emails
@@ -271,10 +271,10 @@ class ContactsModule extends AApiModule
 	
 	/**
 	 * 
-	 * @param int $IdContact
+	 * @param string $ContactUUID
 	 * @return bool
 	 */
-	public function DeleteSuggestion($IdContact)
+	public function DeleteSuggestion($ContactUUID)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
@@ -284,7 +284,7 @@ class ContactsModule extends AApiModule
 	/**
 	 * 
 	 * @param array $Contact
-	 * @return boolean
+	 * @return bool|string
 	 * @throws \System\Exceptions\AuroraApiException
 	 */
 	public function CreateContact($Contact, $iUserId = 0)
@@ -307,12 +307,11 @@ class ContactsModule extends AApiModule
 		$oContact = \CContact::createInstance();
 		$oContact->IdUser = $oUser->iId;
 		$oContact->IdTenant = $oUser->IdTenant;
+
 		$oContact->populate($Contact);
 
 		$this->oApiContactsManager->createContact($oContact);
-		return $oContact ? array(
-			'IdContact' => $oContact->iId
-		) : false;
+		return $oContact ? $oContact->sUUID : false;
 	}	
 	
 	/**
@@ -324,7 +323,7 @@ class ContactsModule extends AApiModule
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oContact = $this->oApiContactsManager->getContact($Contact['IdContact']);
+		$oContact = $this->oApiContactsManager->getContact($Contact['UUID']);
 		$oContact->populate($Contact);
 		
 		return $this->oApiContactsManager->updateContact($oContact);
@@ -332,23 +331,23 @@ class ContactsModule extends AApiModule
 	
 	/**
 	 * 
-	 * @param array $ContactIds Array of string
+	 * @param array $ContactUUIDs Array of strings
 	 * @return bool
 	 */
-	public function DeleteContacts($ContactIds)
+	public function DeleteContacts($ContactUUIDs)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		return $this->oApiContactsManager->deleteContacts($ContactIds);
+		return $this->oApiContactsManager->deleteContacts($ContactUUIDs);
 	}	
 	
 	/**
 	 * 
-	 * @param array $ContactIds
+	 * @param array $ContactUUIDs
 	 * @return bool
 	 * @throws \System\Exceptions\AuroraApiException
 	 */
-	public function UpdateShared($ContactIds)
+	public function UpdateShared($ContactUUIDs)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		return true;
@@ -378,9 +377,7 @@ class ContactsModule extends AApiModule
 		$oGroup->populate($Group);
 
 		$this->oApiContactsManager->createGroup($oGroup);
-		return $oGroup ? array(
-			'IdGroup' => $oGroup->iId
-		) : false;
+		return $oGroup ? $oGroup->sUUID : false;
 	}	
 	
 	/**
@@ -392,7 +389,7 @@ class ContactsModule extends AApiModule
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oGroup = $this->oApiContactsManager->getGroup($Group['IdGroup']);
+		$oGroup = $this->oApiContactsManager->getGroup($Group['GroupUUID']);
 		if ($oGroup)
 		{
 			$oGroup->populate($Group);
@@ -404,29 +401,29 @@ class ContactsModule extends AApiModule
 	
 	/**
 	 * 
-	 * @param int $IdGroup
+	 * @param string $GroupUUID
 	 * @return bool
 	 */
-	public function DeleteGroup($IdGroup)
+	public function DeleteGroup($GroupUUID)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		return $this->oApiContactsManager->deleteGroups([$IdGroup]);
+		return $this->oApiContactsManager->deleteGroups([$GroupUUID]);
 	}
 	
 	/**
 	 * 
-	 * @param int $IdGroup
-	 * @param array $ContactIds Array of integers
+	 * @param string $GroupUUID
+	 * @param array $ContactUUIDs Array of strings
 	 * @return boolean
 	 */
-	public function AddContactsToGroup($IdGroup, $ContactIds)
+	public function AddContactsToGroup($GroupUUID, $ContactUUIDs)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		if (is_array($ContactIds) && !empty($ContactIds))
+		if (is_array($ContactUUIDs) && !empty($ContactUUIDs))
 		{
-			return $this->oApiContactsManager->addContactsToGroup((int) $IdGroup, $ContactIds);
+			return $this->oApiContactsManager->addContactsToGroup($GroupUUID, $ContactUUIDs);
 		}
 		
 		return true;
@@ -434,17 +431,17 @@ class ContactsModule extends AApiModule
 	
 	/**
 	 * 
-	 * @param int $IdGroup
-	 * @param array $ContactIds array of integers
+	 * @param string $GroupUUID
+	 * @param array $ContactUUIDs array of integers
 	 * @return boolean
 	 */
-	public function RemoveContactsFromGroup($IdGroup, $ContactIds)
+	public function RemoveContactsFromGroup($GroupUUID, $ContactUUIDs)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		if (is_array($ContactIds) && !empty($ContactIds))
+		if (is_array($ContactUUIDs) && !empty($ContactUUIDs))
 		{
-			return $this->oApiContactsManager->removeContactsFromGroup($IdGroup, $ContactIds);
+			return $this->oApiContactsManager->removeContactsFromGroup($GroupUUID, $ContactUUIDs);
 		}
 		
 		return true;
@@ -551,7 +548,7 @@ class ContactsModule extends AApiModule
 					$oContact = \CContact::createInstance();
 					$oContact->InitFromVCardStr($oAccount->IdUser, $sData);
 
-					$oContact->IdContact = 0;
+					$oContact->ContactUUID = '';
 
 					$bContactExists = false;
 					if (0 < strlen($oContact->ViewEmail))
@@ -560,7 +557,7 @@ class ContactsModule extends AApiModule
 						$oLocalContact = count($aLocalContacts) > 0 ? $aLocalContacts[0] : null;
 						if ($oLocalContact)
 						{
-							$oContact->IdContact = $oLocalContact->IdContact;
+							$oContact->ContactUUID = $oLocalContact->ContactUUID;
 							$bContactExists = true;
 						}
 					}
@@ -570,7 +567,7 @@ class ContactsModule extends AApiModule
 						
 						$oVcard = CApiMailVcard::createInstance();
 
-						$oVcard->Uid = $oContact->IdContact;
+						$oVcard->Uid = $oContact->sUUID;
 						$oVcard->File = $sTemptFile;
 						$oVcard->Exists = !!$bContactExists;
 						$oVcard->Name = $oContact->FullName;
@@ -625,15 +622,15 @@ class ContactsModule extends AApiModule
 	{
 		if ($aArgs['Type'] === 'User')
 		{
-			$aGroups = $this->oApiContactsManager->getGroups($aArgs['Id']);
+			$aGroups = $this->oApiContactsManager->getGroups($aArgs['UUID']);
 			if (count($aGroups) > 0)
 			{
-				$aGroupIds = [];
+				$aGroupUUIDs = [];
 				foreach ($aGroups as $oGroup)
 				{
-					$aGroupIds[] = $oGroup->iId;
+					$aGroupUUIDs[] = $oGroup->sUUID;
 				}
-				$this->oApiContactsManager->deleteGroups($aGroupIds);
+				$this->oApiContactsManager->deleteGroups($aGroupUUIDs);
 			}
 		}
 	}

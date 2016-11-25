@@ -32,15 +32,15 @@ class CApiContactsMainManager extends AApiManager
 	
 	/**
 	 * 
-	 * @param int $iIdContact
+	 * @param string $sContactUUID
 	 * @return \CContact
 	 */
-	public function getContact($iIdContact)
+	public function getContact($sContactUUID)
 	{
-		$oContact = $this->oEavManager->getEntity($iIdContact);
+		$oContact = $this->oEavManager->getEntity($sContactUUID);
 		if ($oContact)
 		{
-			$oContact->GroupsContacts = $this->getGroupContacts(null, $iIdContact);
+			$oContact->GroupsContacts = $this->getGroupContacts(null, $sContactUUID);
 		}
 		return $oContact;
 	}
@@ -48,13 +48,13 @@ class CApiContactsMainManager extends AApiManager
 	/**
 	 * Returns group item identified by its ID.
 	 * 
-	 * @param int $iGroupId Group ID 
+	 * @param string $sGroupUUID Group ID 
 	 * 
 	 * @return CGroup
 	 */
-	public function getGroup($iGroupId)
+	public function getGroup($sGroupUUID)
 	{
-		return $this->oEavManager->getEntity($iGroupId);
+		return $this->oEavManager->getEntity($sGroupUUID);
 	}
 	
 	/**
@@ -70,15 +70,15 @@ class CApiContactsMainManager extends AApiManager
 		$res = $this->oEavManager->saveEntity($oContact);
 		if ($res)
 		{
-			$aGroupContact = $this->getGroupContacts(null, $oContact->iId);
+			$aGroupContact = $this->getGroupContacts(null, $oContact->sUUID);
 			
 			function compare_func($oGroupContact1, $oGroupContact2)
 			{
-				if ($oGroupContact1->IdGroup === $oGroupContact2->IdGroup)
+				if ($oGroupContact1->GroupUUID === $oGroupContact2->GroupUUID)
 				{
 					return 0;
 				}
-				if ($oGroupContact1->IdGroup > $oGroupContact2->IdGroup)
+				if ($oGroupContact1->GroupUUID > $oGroupContact2->GroupUUID)
 				{
 					return -1;
 				}
@@ -86,13 +86,13 @@ class CApiContactsMainManager extends AApiManager
 			}
 
 			$aGroupContactToDelete = array_udiff($aGroupContact, $oContact->GroupsContacts, 'compare_func');
-			$aGroupContactIdsToDelete = array_map(
+			$aGroupContactUUIDsToDelete = array_map(
 				function($oGroupContact) { 
-					return $oGroupContact->iId; 
+					return $oGroupContact->sUUID; 
 				}, 
 				$aGroupContactToDelete
 			);
-			$this->oEavManager->deleteEntities($aGroupContactIdsToDelete);
+			$this->oEavManager->deleteEntities($aGroupContactUUIDsToDelete);
 			
 			$aGroupContactToAdd = array_udiff($oContact->GroupsContacts, $aGroupContact, 'compare_func');
 			foreach ($aGroupContactToAdd as $oGroupContact)
@@ -122,24 +122,24 @@ class CApiContactsMainManager extends AApiManager
 	 * @param int $iUserId User ID 
 	 * @param string $sSearch Search pattern. Default value is empty string.
 	 * @param string $sFirstCharacter If specified, will only return contacts with names starting from the specified character. Default value is empty string.
-	 * @param int $iGroupId Group ID. Default value is **0**.
+	 * @param string $sGroupUUID. Default value is **''**.
 	 * @param int $iTenantId Group ID. Default value is null.
 	 * @param bool $bAll Default value is null
 	 * 
 	 * @return int
 	 */
-	public function getContactsCount($aFilters = array(), $iIdGroup = 0)
+	public function getContactsCount($aFilters = [], $sGroupUUID = '')
 	{
-		$aIdContact = array();
-		if (is_numeric($iIdGroup) && $iIdGroup > 0)
+		$aContactUUIDs = [];
+		if (is_numeric($sGroupUUID) && $sGroupUUID > 0)
 		{
-			$aGroupContact = $this->getGroupContacts($iIdGroup);
+			$aGroupContact = $this->getGroupContacts($sGroupUUID);
 			foreach ($aGroupContact as $oGroupContact)
 			{
-				$aIdContact[] = $oGroupContact->IdContact;
+				$aContactUUIDs[] = $oGroupContact->ContactUUID;
 			}
 			
-			if (empty($aIdContact))
+			if (empty($aContactUUIDs))
 			{
 				return 0;
 			}
@@ -148,7 +148,7 @@ class CApiContactsMainManager extends AApiManager
 		return $this->oEavManager->getEntitiesCount(
 			'CContact', 
 			$aFilters,
-			$aIdContact
+			$aContactUUIDs
 		);
 	}
 
@@ -171,23 +171,23 @@ class CApiContactsMainManager extends AApiManager
 	 * @param int $iOffset Ordinal number of the contact item the list stars with. Default value is **0**.
 	 * @param int $iRequestLimit The upper limit for total number of contacts returned. Default value is **20**.
 	 * @param array $aFilters
-	 * @param int $iIdGroup
+	 * @param string $sGroupUUID
 	 * 
 	 * @return array|bool
 	 */
 	public function getContacts($iSortField = EContactSortField::Name, $iSortOrder = ESortOrder::ASC,
-		$iOffset = 0, $iRequestLimit = 20, $aFilters = [], $iIdGroup = 0)
+		$iOffset = 0, $iRequestLimit = 20, $aFilters = [], $sGroupUUID = '')
 	{
-		$aIdContact = array();
-		if (is_numeric($iIdGroup) && $iIdGroup > 0)
+		$aContactUUIDs = [];
+		if (is_numeric($sGroupUUID) && $sGroupUUID > 0)
 		{
-			$aGroupContact = $this->getGroupContacts($iIdGroup);
+			$aGroupContact = $this->getGroupContacts($sGroupUUID);
 			foreach ($aGroupContact as $oGroupContact)
 			{
-				$aIdContact[] = $oGroupContact->IdContact;
+				$aContactUUIDs[] = $oGroupContact->ContactUUID;
 			}
 			
-			if (empty($aIdContact))
+			if (empty($aContactUUIDs))
 			{
 				return array();
 			}
@@ -201,7 +201,7 @@ class CApiContactsMainManager extends AApiManager
 			$aFilters,
 			$iSortField === EContactSortField::Name ? 'FullName' : 'ViewEmail',
 			$iSortOrder,
-			$aIdContact
+			$aContactUUIDs
 		);
 	}
 
@@ -240,7 +240,7 @@ class CApiContactsMainManager extends AApiManager
 		{
 			foreach ($oContact->GroupsContacts as $oGroupContact)
 			{
-				$oGroupContact->IdContact = $oContact->iId;
+				$oGroupContact->ContactUUID = $oContact->sUUID;
 				$this->oEavManager->saveEntity($oGroupContact);
 			}
 		}
@@ -263,7 +263,7 @@ class CApiContactsMainManager extends AApiManager
 		{
 			foreach ($oGroup->GroupContacts as $oGroupContact)
 			{
-				$oGroupContact->IdGroup = $oGroup->iId;
+				$oGroupContact->GroupUUID = $oGroup->sUUID;
 				$res = $this->oEavManager->saveEntity($oGroupContact);
 			}
 		}
@@ -274,41 +274,41 @@ class CApiContactsMainManager extends AApiManager
 	/**
 	 * Deletes one or multiple contacts from address book.
 	 * 
-	 * @param array $aContactIds Array of integers
+	 * @param array $aContactUUIDs Array of strings
 	 * 
 	 * @return bool
 	 */
-	public function deleteContacts($aContactIds)
+	public function deleteContacts($aContactUUIDs)
 	{
 		$aEntitiesIds = array();
 		
-		foreach ($aContactIds as $iContact)
+		foreach ($aContactUUIDs as $sContactUUID)
 		{
-			$aEntitiesIds[] = $iContact;
-			$aGroupContact = $this->getGroupContacts(null, $iContact);
+			$aEntitiesIds[] = $sContactUUID;
+			$aGroupContact = $this->getGroupContacts(null, $sContactUUID);
 			foreach ($aGroupContact as $oGroupContact)
 			{
-				$aEntitiesIds[] = $oGroupContact->iId;
+				$aEntitiesIds[] = $oGroupContact->sUUID;
 			}
 		}
 		
 		return $this->oEavManager->deleteEntities($aEntitiesIds);
 	}
 
-	public function getGroupContacts($iIdGroup = null, $iIdContact = null)
+	public function getGroupContacts($sGroupUUID = null, $sContactUUID = null)
 	{
-		$aFilters = array();
-		if (is_numeric($iIdGroup) && $iIdGroup > 0)
+		$aFilters = [];
+		if (is_string($sGroupUUID) && $sGroupUUID !== '')
 		{
-			$aFilters = array('IdGroup' => $iIdGroup);
+			$aFilters = ['GroupUUID' => $sGroupUUID];
 		}
-		if (is_numeric($iIdContact) && $iIdContact > 0)
+		if (is_string($sContactUUID) && $sContactUUID > 0)
 		{
-			$aFilters = array('IdContact' => $iIdContact);
+			$aFilters = ['ContactUUID' => $sContactUUID];
 		}
 		return $this->oEavManager->getEntities(
 			'CGroupContact', 
-			array('IdGroup', 'IdContact'),
+			['GroupUUID', 'ContactUUID'],
 			0,
 			0,
 			$aFilters
@@ -318,21 +318,21 @@ class CApiContactsMainManager extends AApiManager
 	/**
 	 * Deletes specific groups from address book.
 	 * 
-	 * @param array $aGroupIds array of integers - groups identificators.
+	 * @param array $aGroupUUIDs array of strings - groups identificators.
 	 * 
 	 * @return bool
 	 */
-	public function deleteGroups($aGroupIds)
+	public function deleteGroups($aGroupUUIDs)
 	{
 		$aEntitiesIds = [];
 		
-		foreach ($aGroupIds as $iId)
+		foreach ($aGroupUUIDs as $sGroupUUID)
 		{
-			$aEntitiesIds[] = $iId;
-			$aGroupContact = $this->getGroupContacts($iId);
+			$aEntitiesIds[] = $sGroupUUID;
+			$aGroupContact = $this->getGroupContacts($sUUID);
 			foreach ($aGroupContact as $oGroupContact)
 			{
-				$aEntitiesIds[] = $oGroupContact->iId;
+				$aEntitiesIds[] = $oGroupContact->sUUID;
 			}
 		}
 		
@@ -346,11 +346,11 @@ class CApiContactsMainManager extends AApiManager
 	 * @param string $sSyncType Data source type. Currently, "csv" and "vcf" options are supported.
 	 * @param string $sTempFileName Path to the file data are imported from.
 	 * @param int $iParsedCount
-	 * @param int $iGroupId
+	 * @param string $sGroupUUID
 	 *
 	 * @return int|false If importing is successful, number of imported entries is returned. 
 	 */
-	public function import($iUserId, $sSyncType, $sTempFileName, &$iParsedCount, $iGroupId)
+	public function import($iUserId, $sSyncType, $sTempFileName, &$iParsedCount, $sGroupUUID)
 	{
 		$oApiUsersManager = CApi::GetSystemManager('users');
 		$oAccount = $oApiUsersManager->getDefaultAccount($iUserId);
@@ -365,7 +365,7 @@ class CApiContactsMainManager extends AApiManager
 			if (class_exists($sSyncClass))
 			{
 				$oSync = new $sSyncClass($this);
-				return $oSync->Import($iUserId, $sTempFileName, $iParsedCount, $iGroupId);
+				return $oSync->Import($iUserId, $sTempFileName, $iParsedCount, $sGroupUUID);
 			}
 		}
 		else if ($sSyncType === \EContactFileType::VCF)
@@ -383,7 +383,7 @@ class CApiContactsMainManager extends AApiManager
 				{
 					$oContact->IdTenant = $oAccount->IdTenant;
 				}
-				$oContact->GroupIds = array($iGroupId);
+				$oContact->GroupUUIDs = [$sGroupUUID];
 
 				if ($this->createContact($oContact))
 				{
@@ -439,30 +439,30 @@ class CApiContactsMainManager extends AApiManager
 	/**
 	 * Adds one or multiple contacts to the specific group. 
 	 * 
-	 * @param int $iIdGroup Group identificator to be used 
-	 * @param array $aContactIds Array of integers
+	 * @param string $sGroupUUID Group identificator to be used 
+	 * @param array $aContactUUIDs Array of integers
 	 * 
 	 * @return bool
 	 */
-	public function addContactsToGroup($iIdGroup, $aContactIds)
+	public function addContactsToGroup($sGroupUUID, $aContactUUIDs)
 	{
 		$res = true;
 		
-		$aCurrGroupContact = $this->getGroupContacts($iIdGroup);
-		$aCurrContactIds = array_map(
+		$aCurrGroupContact = $this->getGroupContacts($sGroupUUID);
+		$aCurrContactUUIDs = array_map(
 			function($oGroupContact) { 
-				return $oGroupContact->IdContact; 
+				return $oGroupContact->ContactUUID; 
 			}, 
 			$aCurrGroupContact
 		);
 		
-		foreach ($aContactIds as $iIdContact)
+		foreach ($aContactUUIDs as $sContactUUID)
 		{
-			if (!in_array($iIdContact, $aCurrContactIds))
+			if (!in_array($sContactUUID, $aCurrContactUUIDs))
 			{
 				$oGroupContact = \CGroupContact::createInstance();
-				$oGroupContact->IdGroup = $iIdGroup;
-				$oGroupContact->IdContact = (int) $iIdContact;
+				$oGroupContact->GroupUUID = $sGroupUUID;
+				$oGroupContact->ContactUUID = $sContactUUID;
 				$res = $res || $this->oEavManager->saveEntity($oGroupContact);
 			}
 		}
@@ -473,21 +473,21 @@ class CApiContactsMainManager extends AApiManager
 	/**
 	 * The method deletes one or multiple contacts from the group. 
 	 * 
-	 * @param int $iIdGroup Group identificator
-	 * @param array $aContactIds Array of integers
+	 * @param string $sGroupUUID Group identificator
+	 * @param array $aContactUUIDs Array of integers
 	 * 
 	 * @return bool
 	 */
-	public function removeContactsFromGroup($iIdGroup, $aContactIds)
+	public function removeContactsFromGroup($sGroupUUID, $aContactUUIDs)
 	{
-		$aCurrGroupContact = $this->getGroupContacts($iIdGroup);
+		$aCurrGroupContact = $this->getGroupContacts($sGroupUUID);
 		$aIdEntitiesToDelete = array();
 		
 		foreach ($aCurrGroupContact as $oGroupContact)
 		{
-			if (in_array($oGroupContact->IdContact, $aContactIds))
+			if (in_array($oGroupContact->ContactUUID, $aContactUUIDs))
 			{
-				$aIdEntitiesToDelete[] = $oGroupContact->iId;
+				$aIdEntitiesToDelete[] = $oGroupContact->sUUID;
 			}
 		}
 		

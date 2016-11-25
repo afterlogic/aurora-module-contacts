@@ -3,8 +3,8 @@
 /* -AFTERLOGIC LICENSE HEADER- */
 
 /**
- * @property int $IdGroup
- * @property int $IdContact
+ * @property string $GroupUUID
+ * @property string $ContactUUID
  */
 class CGroupContact extends AEntity
 {
@@ -15,8 +15,8 @@ class CGroupContact extends AEntity
 		$this->__USE_TRIM_IN_STRINGS__ = true;
 
 		$this->setStaticMap(array(
-			'IdGroup'	=> array('int', 0),
-			'IdContact'	=> array('int', 0),
+			'GroupUUID'	=> array('string', ''),
+			'ContactUUID'	=> array('string', 0),
 		));
 	}
 

@@ -54,10 +54,8 @@ class CApiContactsSyncCsv
 
 				if (is_array($aList))
 				{
-					$oContactListItem = null;
-					foreach ($aList as $oContactListItem)
+					foreach ($aList as $oContact)
 					{
-						$oContact = $this->oApiContactsManager->getContact($oContactListItem->Id);
 						if ($oContact)
 						{
 							$this->oFormatter->setContainer($oContact);
@@ -82,11 +80,11 @@ class CApiContactsSyncCsv
 	 * @param int $iUserId
 	 * @param string $sTempFileName
 	 * @param int $iParsedCount
-	 * @param int $iGroupId
+	 * @param string $sGroupUUID
 	 *
 	 * @return int
 	 */
-	public function Import($iUserId, $sTempFileName, &$iParsedCount, $iGroupId)
+	public function Import($iUserId, $sTempFileName, &$iParsedCount, $sGroupUUID)
 	{
 		$iCount = -1;
 		$iParsedCount = 0;
@@ -150,7 +148,7 @@ class CApiContactsSyncCsv
 					{
 						$oContact->IdTenant = $oAccount->IdTenant;
 					}
-					$oContact->GroupIds = array($iGroupId);
+					$oContact->GroupUUIDs = array($sGroupUUID);
 
 					if ($this->oApiContactsManager->createContact($oContact))
 					{
