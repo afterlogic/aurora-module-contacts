@@ -307,7 +307,6 @@ class ContactsModule extends AApiModule
 		$oContact = \CContact::createInstance();
 		$oContact->IdUser = $oUser->iId;
 		$oContact->IdTenant = $oUser->IdTenant;
-
 		$oContact->populate($Contact);
 
 		$this->oApiContactsManager->createContact($oContact);
