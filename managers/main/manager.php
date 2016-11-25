@@ -37,7 +37,7 @@ class CApiContactsMainManager extends AApiManager
 	 */
 	public function getContact($iIdContact)
 	{
-		$oContact = $this->oEavManager->getEntityById($iIdContact);
+		$oContact = $this->oEavManager->getEntity($iIdContact);
 		if ($oContact)
 		{
 			$oContact->GroupsContacts = $this->getGroupContacts(null, $iIdContact);
@@ -54,7 +54,7 @@ class CApiContactsMainManager extends AApiManager
 	 */
 	public function getGroup($iGroupId)
 	{
-		return $this->oEavManager->getEntityById($iGroupId);
+		return $this->oEavManager->getEntity($iGroupId);
 	}
 	
 	/**
