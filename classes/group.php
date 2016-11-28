@@ -112,7 +112,7 @@ class CGroup extends AEntity
 
 			$mResult = array(
 				'IdUser' => $this->IdUser,
-				'GroupUUID' => $this->sUUID,
+				'UUID' => $this->sUUID,
 				'Name' => $this->Name,
 
 				'IsOrganization' => $this->IsOrganization,

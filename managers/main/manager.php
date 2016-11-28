@@ -131,7 +131,7 @@ class CApiContactsMainManager extends AApiManager
 	public function getContactsCount($aFilters = [], $sGroupUUID = '')
 	{
 		$aContactUUIDs = [];
-		if (is_numeric($sGroupUUID) && $sGroupUUID > 0)
+		if (!empty($sGroupUUID))
 		{
 			$aGroupContact = $this->getGroupContacts($sGroupUUID);
 			foreach ($aGroupContact as $oGroupContact)
@@ -179,7 +179,7 @@ class CApiContactsMainManager extends AApiManager
 		$iOffset = 0, $iRequestLimit = 20, $aFilters = [], $sGroupUUID = '')
 	{
 		$aContactUUIDs = [];
-		if (is_numeric($sGroupUUID) && $sGroupUUID > 0)
+		if (!empty($sGroupUUID))
 		{
 			$aGroupContact = $this->getGroupContacts($sGroupUUID);
 			foreach ($aGroupContact as $oGroupContact)
@@ -302,7 +302,7 @@ class CApiContactsMainManager extends AApiManager
 		{
 			$aFilters = ['GroupUUID' => $sGroupUUID];
 		}
-		if (is_string($sContactUUID) && $sContactUUID > 0)
+		if (is_string($sContactUUID) && $sContactUUID !== '')
 		{
 			$aFilters = ['ContactUUID' => $sContactUUID];
 		}
@@ -463,7 +463,7 @@ class CApiContactsMainManager extends AApiManager
 				$oGroupContact = \CGroupContact::createInstance();
 				$oGroupContact->GroupUUID = $sGroupUUID;
 				$oGroupContact->ContactUUID = $sContactUUID;
-				$res = $res || $this->oEavManager->saveEntity($oGroupContact);
+				$res = $this->oEavManager->saveEntity($oGroupContact) || $res;
 			}
 		}
 		
