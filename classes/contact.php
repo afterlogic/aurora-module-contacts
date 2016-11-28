@@ -89,8 +89,8 @@ class CContact extends AEntity
 			'PrimaryAddress'	=> array('int', EContactsPrimaryAddress::Personal),
 			'ViewEmail'			=> array('string', ''),
 
-			'DateCreated'		=> array('datetime', ''),
-			'DateModified'		=> array('datetime', ''),
+			'DateCreated'		=> array('datetime', date('Y-m-d H:i:s')),
+			'DateModified'		=> array('datetime', date('Y-m-d H:i:s')),
 
 			'UseFriendlyName'	=> array('bool', true),
 
