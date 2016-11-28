@@ -47,6 +47,7 @@
  * @property string $ETag
  * @property bool $Auto
  * @property bool $HideInGAB
+ * @property int $DateCreated
  * @property int $DateModified
  *
  * @ignore
@@ -55,8 +56,6 @@
  */
 class CContact extends AEntity
 {
-	const STR_PREFIX = '040000008200E00074C5B7101A82E008';
-
 	/**
 	 * @var bool
 	 */
