@@ -310,8 +310,8 @@ class ContactsModule extends AApiModule
 
 		$oContact->populate($Contact);
 
-		$this->oApiContactsManager->createContact($oContact);
-		return $oContact ? $oContact->sUUID : false;
+		$mResult = $this->oApiContactsManager->createContact($oContact);
+		return $mResult && $oContact ? $oContact->sUUID : false;
 	}	
 	
 	/**
