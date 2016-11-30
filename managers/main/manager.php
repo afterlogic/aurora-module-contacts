@@ -32,15 +32,15 @@ class CApiContactsMainManager extends AApiManager
 	
 	/**
 	 * 
-	 * @param string $sContactUUID
+	 * @param string $sUUID
 	 * @return \CContact
 	 */
-	public function getContact($sContactUUID)
+	public function getContact($sUUID)
 	{
-		$oContact = $this->oEavManager->getEntity($sContactUUID);
+		$oContact = $this->oEavManager->getEntity($sUUID);
 		if ($oContact)
 		{
-			$oContact->GroupsContacts = $this->getGroupContacts(null, $sContactUUID);
+			$oContact->GroupsContacts = $this->getGroupContacts(null, $sUUID);
 		}
 		return $oContact;
 	}
@@ -48,13 +48,13 @@ class CApiContactsMainManager extends AApiManager
 	/**
 	 * Returns group item identified by its ID.
 	 * 
-	 * @param string $sGroupUUID Group ID 
+	 * @param string $sUUID Group ID 
 	 * 
 	 * @return CGroup
 	 */
-	public function getGroup($sGroupUUID)
+	public function getGroup($sUUID)
 	{
-		return $this->oEavManager->getEntity($sGroupUUID);
+		return $this->oEavManager->getEntity($sUUID);
 	}
 	
 	/**
@@ -280,19 +280,19 @@ class CApiContactsMainManager extends AApiManager
 	 */
 	public function deleteContacts($aContactUUIDs)
 	{
-		$aEntitiesIds = array();
+		$aEntitiesUUIDs = [];
 		
 		foreach ($aContactUUIDs as $sContactUUID)
 		{
-			$aEntitiesIds[] = $sContactUUID;
+			$aEntitiesUUIDs[] = $sContactUUID;
 			$aGroupContact = $this->getGroupContacts(null, $sContactUUID);
 			foreach ($aGroupContact as $oGroupContact)
 			{
-				$aEntitiesIds[] = $oGroupContact->sUUID;
+				$aEntitiesUUIDs[] = $oGroupContact->sUUID;
 			}
 		}
 		
-		return $this->oEavManager->deleteEntities($aEntitiesIds);
+		return $this->oEavManager->deleteEntities($aEntitiesUUIDs);
 	}
 
 	public function getGroupContacts($sGroupUUID = null, $sContactUUID = null)
@@ -324,19 +324,19 @@ class CApiContactsMainManager extends AApiManager
 	 */
 	public function deleteGroups($aGroupUUIDs)
 	{
-		$aEntitiesIds = [];
+		$aEntitiesUUIDs = [];
 		
 		foreach ($aGroupUUIDs as $sGroupUUID)
 		{
-			$aEntitiesIds[] = $sGroupUUID;
-			$aGroupContact = $this->getGroupContacts($sUUID);
+			$aEntitiesUUIDs[] = $sGroupUUID;
+			$aGroupContact = $this->getGroupContacts($sGroupUUID);
 			foreach ($aGroupContact as $oGroupContact)
 			{
-				$aEntitiesIds[] = $oGroupContact->sUUID;
+				$aEntitiesUUIDs[] = $oGroupContact->sContactUUID;
 			}
 		}
 		
-		return $this->oEavManager->deleteEntities($aEntitiesIds);
+		return $this->oEavManager->deleteEntities($aEntitiesUUIDs);
 	}
 
 	/**

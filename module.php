@@ -81,22 +81,22 @@ class ContactsModule extends AApiModule
 	
 	/**
 	 * 
-	 * @param string $GroupUUID
+	 * @param string $UUID
 	 * @return \CGroup
 	 */
-	public function GetGroup($GroupUUID)
+	public function GetGroup($UUID)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		return $this->oApiContactsManager->getGroup($GroupUUID);
+		return $this->oApiContactsManager->getGroup($UUID);
 	}
 	
 	/**
 	 * 
-	 * @param string $GroupUUID
+	 * @param string $UUID
 	 * @return array
 	 */
-	public function GetGroupEvents($GroupUUID)
+	public function GetGroupEvents($UUID)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
@@ -331,23 +331,23 @@ class ContactsModule extends AApiModule
 	
 	/**
 	 * 
-	 * @param array $ContactUUIDs Array of strings
+	 * @param array $UUIDs Array of strings
 	 * @return bool
 	 */
-	public function DeleteContacts($ContactUUIDs)
+	public function DeleteContacts($UUIDs)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		return $this->oApiContactsManager->deleteContacts($ContactUUIDs);
+		return $this->oApiContactsManager->deleteContacts($UUIDs);
 	}	
 	
 	/**
 	 * 
-	 * @param array $ContactUUIDs
+	 * @param array $UUIDs
 	 * @return bool
 	 * @throws \System\Exceptions\AuroraApiException
 	 */
-	public function UpdateShared($ContactUUIDs)
+	public function UpdateSharedContacts($UUIDs)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		return true;
@@ -389,7 +389,7 @@ class ContactsModule extends AApiModule
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oGroup = $this->oApiContactsManager->getGroup($Group['GroupUUID']);
+		$oGroup = $this->oApiContactsManager->getGroup($Group['UUID']);
 		if ($oGroup)
 		{
 			$oGroup->populate($Group);
@@ -401,14 +401,14 @@ class ContactsModule extends AApiModule
 	
 	/**
 	 * 
-	 * @param string $GroupUUID
+	 * @param string $UUID
 	 * @return bool
 	 */
-	public function DeleteGroup($GroupUUID)
+	public function DeleteGroup($UUID)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		return $this->oApiContactsManager->deleteGroups([$GroupUUID]);
+		return $this->oApiContactsManager->deleteGroups([$UUID]);
 	}
 	
 	/**
@@ -548,7 +548,7 @@ class ContactsModule extends AApiModule
 					$oContact = \CContact::createInstance();
 					$oContact->InitFromVCardStr($oAccount->IdUser, $sData);
 
-					$oContact->ContactUUID = '';
+					$oContact->sUUID = '';
 
 					$bContactExists = false;
 					if (0 < strlen($oContact->ViewEmail))
@@ -557,7 +557,7 @@ class ContactsModule extends AApiModule
 						$oLocalContact = count($aLocalContacts) > 0 ? $aLocalContacts[0] : null;
 						if ($oLocalContact)
 						{
-							$oContact->ContactUUID = $oLocalContact->ContactUUID;
+							$oContact->sUUID = $oLocalContact->sUUID;
 							$bContactExists = true;
 						}
 					}
@@ -634,5 +634,4 @@ class ContactsModule extends AApiModule
 			}
 		}
 	}
-	
 }
