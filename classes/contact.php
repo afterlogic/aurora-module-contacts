@@ -243,25 +243,28 @@ class CContact extends AEntity
 	 * @param int $iUserId
 	 * @param string $sData
 	 */
-	public function InitFromVCardStr($iUserId, $sData)
+	public function InitFromVCardStr($iUserId, $sData, $sUid = '')
 	{
 		$oVCard = \Sabre\VObject\Reader::read($sData, \Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES);
-		return $this->InitFromVCardObject($iUserId, $oVCard);
+		return $this->InitFromVCardObject($iUserId, $oVCard, $sUid);
 	}
 	
 	/**
 	 * @param int $iUserId
 	 * @param \Sabre\VObject\Component\VCard $oVCardObject
 	 */
-	public function InitFromVCardObject($iUserId, $oVCardObject)
+	public function InitFromVCardObject($iUserId, $oVCardObject, $sUid = '')
 	{
 		if ($oVCardObject)
 		{
-			$sUid = (isset($oVCardObject->UID)) ? (string)$oVCardObject->UID : \Sabre\VObject\UUIDUtil::getUUID();
+			if (empty($sUid))
+			{
+				$sUid = (isset($oVCardObject->UID)) ? (string)$oVCardObject->UID : \Sabre\VObject\UUIDUtil::getUUID();
+			}
 			
 			$this->IdUser = $iUserId;
 			$this->UseFriendlyName = true;
-			$this->sUUID = $sUid . '.vcf';
+			$this->sUUID = $sUid;
 
 			if (isset($oVCardObject->CATEGORIES))
 			{

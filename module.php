@@ -351,6 +351,39 @@ class ContactsModule extends AApiModule
 	
 	/**
 	 * 
+	 * @param int $UserId
+	 * @param string $VCard
+	 * @return bool|string
+	 * @throws \System\Exceptions\AuroraApiException
+	 */
+	public function CreateContactFromVCard($UserId, $VCard, $UUID)
+	{
+		if ($UserId > 0)
+		{
+			$oCoreDecorator = \CApi::GetModuleDecorator('Core');
+			if ($oCoreDecorator)
+			{
+				$oUser = $oCoreDecorator->GetUser($UserId);
+				if ($oUser instanceof \CUser)
+				{
+					$oContact = \CContact::createInstance();
+					$oContact->IdUser = $oUser->iId;
+					$oContact->IdTenant = $oUser->IdTenant;
+					$oContact->Storage = 'personal';
+
+					$oContact->InitFromVCardStr($UserId, $VCard, $UUID);
+
+					\CApi::LogObject($oContact, \ELogLevel::Full, 'd1-');
+					
+					$mResult = $this->oApiContactsManager->createContact($oContact);
+					return $mResult && $oContact ? $oContact->sUUID : false;
+				}
+			}
+		}
+	}	
+	
+	/**
+	 * 
 	 * @param array $Contact
 	 * @return bool
 	 */
