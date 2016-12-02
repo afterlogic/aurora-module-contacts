@@ -17,7 +17,7 @@ class ContactsModule extends AApiModule
 		$this->incClass('vcard-helper');
 		$this->incClass('enum');
 
-		$this->oApiContactsManager = $this->GetManager('main');
+		$this->oApiContactsManager = $this->GetManager();
 		
 		$this->subscribeEvent('Mail::GetBodyStructureParts', array($this, 'onGetBodyStructureParts'));
 		$this->subscribeEvent('Mail::ExtendMessageData', array($this, 'onExtendMessageData'));

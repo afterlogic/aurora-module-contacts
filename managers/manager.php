@@ -3,11 +3,11 @@
 /* -AFTERLOGIC LICENSE HEADER- */
 
 /**
- * CApiContactsMainManager class summary
+ * CApiContactsManager class summary
  * 
  * @package ContactsMain
  */
-class CApiContactsMainManager extends AApiManager
+class CApiContactsManager extends AApiManager
 {
 	private $oEavManager = null;
 
@@ -16,7 +16,7 @@ class CApiContactsMainManager extends AApiManager
 	 */
 	public function __construct(CApiGlobalManager &$oManager, $sForcedStorage = 'db', AApiModule $oModule = null)
 	{
-		parent::__construct('main', $oManager, $oModule);
+		parent::__construct('', $oManager, $oModule);
 
 		if ($oModule instanceof AApiModule)
 		{
