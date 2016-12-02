@@ -43,14 +43,17 @@ class CApiContactsSyncCsv
 		$iRequestLimit = 50;
 
 		$sResult = '';
-
-		$iCount = $this->oApiContactsManager->getContactsCount($iUserId);
+		$aFilters = ['$AND' => [
+			'IdUser' => [$iUserId, '='],
+			'Storage' => ['personal', '='],
+		]];
+		$iCount = $this->oApiContactsManager->getContactsCount($aFilters, '');
 		if (0 < $iCount)
 		{
 			while ($iOffset < $iCount)
 			{
 				$aList = $this->oApiContactsManager->getContacts(EContactSortField::Name, ESortOrder::ASC,
-					$iOffset, $iRequestLimit, ['IdUser' => [$iUserId, '=']], 0);
+					$iOffset, $iRequestLimit, $aFilters, '');
 
 				if (is_array($aList))
 				{
@@ -78,13 +81,13 @@ class CApiContactsSyncCsv
 
 	/**
 	 * @param int $iUserId
+	 * @param int $iTenantId
 	 * @param string $sTempFileName
 	 * @param int $iParsedCount
-	 * @param string $sGroupUUID
 	 *
 	 * @return int
 	 */
-	public function Import($iUserId, $sTempFileName, &$iParsedCount, $sGroupUUID)
+	public function Import($iUserId, $iTenantId, $sTempFileName, &$iParsedCount)
 	{
 		$iCount = -1;
 		$iParsedCount = 0;
@@ -93,9 +96,6 @@ class CApiContactsSyncCsv
 			$aCsv = api_Utils::CsvToArray($sTempFileName);
 			if (is_array($aCsv))
 			{
-				$oApiUsersManager = CApi::GetSystemManager('users');
-				$oAccount = $oApiUsersManager->getDefaultAccount($iUserId);
-
 				$iCount = 0;
 				foreach ($aCsv as $aCsvItem)
 				{
@@ -103,7 +103,7 @@ class CApiContactsSyncCsv
 
 					$this->oParser->reset();
 
-					$oContact = new CContact();
+					$oContact = \CContact::createInstance();
 					$oContact->IdUser = $iUserId;
 
 					$this->oParser->setContainer($aCsvItem);
@@ -111,7 +111,7 @@ class CApiContactsSyncCsv
 
 					foreach ($aParameters as $sPropertyName => $mValue)
 					{
-						if ($oContact->IsProperty($sPropertyName))
+						if ($oContact->isAttribute($sPropertyName))
 						{
 							$oContact->{$sPropertyName} = $mValue;
 						}
@@ -144,11 +144,12 @@ class CApiContactsSyncCsv
 					$iParsedCount++;
 					$oContact->__SKIP_VALIDATE__ = true;
 
-					if ($oAccount)
-					{
-						$oContact->IdTenant = $oAccount->IdTenant;
-					}
-					$oContact->GroupUUIDs = array($sGroupUUID);
+					$oContact->IdTenant = $iTenantId;
+					$oContact->Storage = 'personal';
+					
+					$oContact->SetViewEmail();
+					
+//					$oContact->GroupUUIDs = array($sGroupUUID);
 
 					if ($this->oApiContactsManager->createContact($oContact))
 					{

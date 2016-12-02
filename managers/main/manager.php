@@ -9,11 +9,6 @@
  */
 class CApiContactsMainManager extends AApiManager
 {
-	/*
-	 * @var $oApiContactsBaseManagerDAV CApiContactsBaseManager
-	 */
-	private $oApiContactsBaseManagerDAV;
-	
 	private $oEavManager = null;
 
 	/**
@@ -25,7 +20,6 @@ class CApiContactsMainManager extends AApiManager
 
 		if ($oModule instanceof AApiModule)
 		{
-			$this->oApiContactsBaseManagerDAV = $oModule->GetManager('base', 'sabredav');
 			$this->oEavManager = \CApi::GetSystemManager('eav', 'db');
 		}
 	}
@@ -343,6 +337,7 @@ class CApiContactsMainManager extends AApiManager
 	 * Allows for importing data into user's address book.
 	 * 
 	 * @param int $iUserId User ID
+	 * @param int $iTenantId Tenant ID
 	 * @param string $sSyncType Data source type. Currently, "csv" and "vcf" options are supported.
 	 * @param string $sTempFileName Path to the file data are imported from.
 	 * @param int $iParsedCount
@@ -350,22 +345,19 @@ class CApiContactsMainManager extends AApiManager
 	 *
 	 * @return int|false If importing is successful, number of imported entries is returned. 
 	 */
-	public function import($iUserId, $sSyncType, $sTempFileName, &$iParsedCount, $sGroupUUID)
+	public function import($iUserId, $iTenantId, $sSyncType, $sTempFileName, &$iParsedCount, $sGroupUUID = '')
 	{
-		$oApiUsersManager = CApi::GetSystemManager('users');
-		$oAccount = $oApiUsersManager->getDefaultAccount($iUserId);
-
 		if ($sSyncType === \EContactFileType::CSV)
 		{
-			$this->inc('helpers.'.$sSyncType.'.formatter');
-			$this->inc('helpers.'.$sSyncType.'.parser');
-			$this->inc('helpers.sync.'.$sSyncType);
+			$this->incClass($sSyncType.'.formatter');
+			$this->incClass($sSyncType.'.parser');
+			$this->incClass('sync.'.$sSyncType);
 
-			$sSyncClass = 'CApi'.ucfirst($this->GetManagerName()).'Sync'.ucfirst($sSyncType);
+			$sSyncClass = 'CApiContactsSync'.ucfirst($sSyncType);
 			if (class_exists($sSyncClass))
 			{
 				$oSync = new $sSyncClass($this);
-				return $oSync->Import($iUserId, $sTempFileName, $iParsedCount, $sGroupUUID);
+				return $oSync->Import($iUserId, $iTenantId, $sTempFileName, $iParsedCount, $sGroupUUID);
 			}
 		}
 		else if ($sSyncType === \EContactFileType::VCF)
@@ -379,11 +371,9 @@ class CApiContactsMainManager extends AApiManager
 
 				$oContact->InitFromVCardObject($iUserId, $oVCard);
 
-				if ($oAccount)
-				{
-					$oContact->IdTenant = $oAccount->IdTenant;
-				}
-				$oContact->GroupUUIDs = [$sGroupUUID];
+				$oContact->IdTenant = $iTenantId;
+				
+//				$oContact->GroupUUIDs = [$sGroupUUID];
 
 				if ($this->createContact($oContact))
 				{

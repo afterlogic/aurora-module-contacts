@@ -23,6 +23,11 @@ class ContactsModule extends AApiModule
 		$this->subscribeEvent('Mail::ExtendMessageData', array($this, 'onExtendMessageData'));
 		$this->subscribeEvent('MobileSync::GetInfo', array($this, 'onGetMobileSyncInfo'));
 		$this->subscribeEvent('AdminPanelWebclient::DeleteEntity::before', array($this, 'onBeforeDeleteEntity'));
+		
+		$this->setObjectMap('CUser', array(
+				'ContactsPerPage' => array('int', $this->getConfig('ContactsPerPage', 20)),
+			)
+		);
 	}
 	
 	/**
@@ -37,8 +42,15 @@ class ContactsModule extends AApiModule
 		$aStorages = array();
 		$this->broadcastEvent('GetStorage', $aStorages);
 		
+		$oUser = \CApi::getAuthenticatedUser();
+		$ContactsPerPage = $this->getConfig('ContactsPerPage', 20);
+		if ($oUser && $oUser->Role === \EUserRole::NormalUser && isset($oUser->{$this->GetName().'::ContactsPerPage'}))
+		{
+			$ContactsPerPage = $oUser->{$this->GetName().'::ContactsPerPage'};
+		}
+		
 		return array(
-			'ContactsPerPage' => $this->getConfig('ContactsPerPage', 20),
+			'ContactsPerPage' => $ContactsPerPage,
 			'ImportContactsLink' => $this->getConfig('ImportContactsLink', ''),
 			'Storages' => $aStorages,
 			'EContactsPrimaryEmail' => (new \EContactsPrimaryEmail)->getMap(),
@@ -48,23 +60,46 @@ class ContactsModule extends AApiModule
 		);
 	}
 	
-	private function downloadContacts($sSyncType)
+	public function UpdateSettings($ContactsPerPage)
 	{
-		$oAccount = $this->getDefaultAccountFromParam();
-		if ($this->oApiCapabilityManager->isContactsSupported($oAccount))
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
+		$oUser = \CApi::getAuthenticatedUser();
+		if ($oUser)
 		{
-			$sOutput = $this->oApiContactsManager->export($oAccount->IdUser, $sSyncType);
-			if (false !== $sOutput)
+			if ($oUser->Role === \EUserRole::NormalUser)
 			{
-				header('Pragma: public');
-				header('Content-Type: text/csv');
-				header('Content-Disposition: attachment; filename="export.' . $sSyncType . '";');
-				header('Content-Transfer-Encoding: binary');
-
-				return $sOutput;
+				$oCoreDecorator = \CApi::GetModuleDecorator('Core');
+				$oUser->{$this->GetName().'::ContactsPerPage'} = $ContactsPerPage;
+				return $oCoreDecorator->UpdateUserObject($oUser);
+			}
+			if ($oUser->Role === \EUserRole::SuperAdmin)
+			{
+				$oSettings =& CApi::GetSettings();
+				$oSettings->SetConf('ContactsPerPage', $ContactsPerPage);
+				return $oSettings->Save();
 			}
 		}
+		
 		return false;
+	}
+	
+	private function downloadContacts($sSyncType)
+	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
+		$iUserId = \CApi::getAuthenticatedUserId();
+		
+		$sOutput = $this->oApiContactsManager->export($iUserId, $sSyncType);
+		if (false !== $sOutput)
+		{
+			header('Pragma: public');
+			header('Content-Type: text/csv');
+			header('Content-Disposition: attachment; filename="export.' . $sSyncType . '";');
+			header('Content-Transfer-Encoding: binary');
+		}
+		
+		return $sOutput;
 	}
 	
 	/**
@@ -162,7 +197,7 @@ class ContactsModule extends AApiModule
 				'BusinessEmail' => ['%'.$Search.'%', 'LIKE'],
 				'OtherEmail' => ['%'.$Search.'%', 'LIKE'],
 			];
-			if (count($aFilters) > 1)
+			if (count($aFilters) > 0)
 			{
 				$aFilters = [
 					'$AND' => [
@@ -459,77 +494,72 @@ class ContactsModule extends AApiModule
 		}
 	}
 	
-	public function UploadContacts()
+	public function UploadContacts($UploadData)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oAccount = $this->getDefaultAccountFromParam();
-
-		if (!$this->oApiCapabilityManager->isPersonalContactsSupported($oAccount))
-		{
-			throw new \System\Exceptions\AuroraApiException(\System\Notifications::ContactsNotAllowed);
-		}
-		
-		$aFileData = $this->getParamValue('FileData', null);
-		$sAdditionalData = $this->getParamValue('AdditionalData', '{}');
-		$aAdditionalData = @json_decode($sAdditionalData, true);
-
 		$sError = '';
 		$aResponse = array(
 			'ImportedCount' => 0,
 			'ParsedCount' => 0
 		);
+		
+		$oUser = \CApi::getAuthenticatedUser();
 
-		if (is_array($aFileData)) {
-			
-			$sFileType = strtolower(\api_Utils::GetFileExtension($aFileData['name']));
+		if (is_array($UploadData))
+		{
+			$sFileType = strtolower(\api_Utils::GetFileExtension($UploadData['name']));
 			$bIsCsvVcfExtension  = $sFileType === 'csv' || $sFileType === 'vcf';
 
-			if ($bIsCsvVcfExtension) {
-				
+			if ($bIsCsvVcfExtension)
+			{
 				$oApiFileCacheManager = \CApi::GetSystemManager('filecache');
-				$sSavedName = 'import-post-' . md5($aFileData['name'] . $aFileData['tmp_name']);
-				if ($oApiFileCacheManager->moveUploadedFile($oAccount, $sSavedName, $aFileData['tmp_name'])) {
-						$iParsedCount = 0;
+				$sSavedName = 'import-post-' . md5($UploadData['name'] . $UploadData['tmp_name']);
+				if ($oApiFileCacheManager->moveUploadedFile($oUser->sUUID, $sSavedName, $UploadData['tmp_name']))
+				{
+					$iParsedCount = 0;
 
-						$iImportedCount = $this->oApiContactsManager->import(
-							$oAccount->IdUser,
-							$sFileType,
-							$oApiFileCacheManager->generateFullFilePath($oAccount, $sSavedName),
-							$iParsedCount
-						);
+					$iImportedCount = $this->oApiContactsManager->import(
+						$oUser->iId,
+						$oUser->IdTenant,
+						$sFileType,
+						$oApiFileCacheManager->generateFullFilePath($oUser->sUUID, $sSavedName),
+						$iParsedCount
+					);
 
-					if (false !== $iImportedCount && -1 !== $iImportedCount) {
-						
+					if (false !== $iImportedCount && -1 !== $iImportedCount)
+					{
 						$aResponse['ImportedCount'] = $iImportedCount;
 						$aResponse['ParsedCount'] = $iParsedCount;
-					} else {
-						
+					}
+					else
+					{
 						$sError = 'unknown';
 					}
 
-					$oApiFileCacheManager->clear($oAccount, $sSavedName);
-				} else {
-					
+					$oApiFileCacheManager->clear($oUser->sUUID, $sSavedName);
+				}
+				else
+				{
 					$sError = 'unknown';
 				}
-			} else {
-				
+			}
+			else
+			{
 				throw new \System\Exceptions\AuroraApiException(\System\Notifications::IncorrectFileExtension);
 			}
 		}
-		else {
-			
+		else
+		{
 			$sError = 'unknown';
 		}
 
-		if (0 < strlen($sError)) {
-			
+		if (0 < strlen($sError))
+		{
 			$aResponse['Error'] = $sError;
 		}
 
 		return $aResponse;
-		
 	}
 	
 	public function onExtendMessageData($oAccount, &$oMessage, $aData)

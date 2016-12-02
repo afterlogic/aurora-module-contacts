@@ -163,6 +163,11 @@ class CContact extends AEntity
 		parent::__set($sKey, $mValue);
 	}
 	
+	public function SetViewEmail()
+	{
+		$this->ViewEmail = $this->getViewEmail();
+	}
+	
 	protected function getViewEmail()
 	{
 		switch ((int) $this->PrimaryEmail)
