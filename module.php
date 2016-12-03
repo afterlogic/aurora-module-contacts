@@ -351,19 +351,34 @@ class ContactsModule extends AApiModule
 	
 	/**
 	 * 
-	 * @param int $UserId
+	 * @param int $iUserId
 	 * @param string $VCard
 	 * @return bool|string
 	 * @throws \System\Exceptions\AuroraApiException
 	 */
-	public function CreateContactFromVCard($UserId, $VCard, $UUID)
+	public function CreateContactFromVCard($iUserId, $VCard, $UUID)
 	{
-		if ($UserId > 0)
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
+		$oUser = \CApi::getAuthenticatedUser();
+		
+		if ($iUserId > 0 && $iUserId !== $oUser->iId)
+		{
+			\CApi::checkUserRoleIsAtLeast(\EUserRole::SuperAdmin);
+			
+			$oCoreDecorator = \CApi::GetModuleDecorator('Core');
+			if ($oCoreDecorator)
+			{
+				$oUser = $oCoreDecorator->GetUser($iUserId);
+			}
+		}
+
+		if ($iUserId > 0)
 		{
 			$oCoreDecorator = \CApi::GetModuleDecorator('Core');
 			if ($oCoreDecorator)
 			{
-				$oUser = $oCoreDecorator->GetUser($UserId);
+				$oUser = $oCoreDecorator->GetUser($iUserId);
 				if ($oUser instanceof \CUser)
 				{
 					$oContact = \CContact::createInstance();
@@ -371,10 +386,8 @@ class ContactsModule extends AApiModule
 					$oContact->IdTenant = $oUser->IdTenant;
 					$oContact->Storage = 'personal';
 
-					$oContact->InitFromVCardStr($UserId, $VCard, $UUID);
+					$oContact->InitFromVCardStr($iUserId, $VCard, $UUID);
 
-					\CApi::LogObject($oContact, \ELogLevel::Full, 'd1-');
-					
 					$mResult = $this->oApiContactsManager->createContact($oContact);
 					return $mResult && $oContact ? $oContact->sUUID : false;
 				}
