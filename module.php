@@ -436,6 +436,49 @@ class ContactsModule extends AApiModule
 	
 	/**
 	 * 
+	 * @param int $iUserId
+	 * @param string $VCard
+	 * @return bool|string
+	 * @throws \System\Exceptions\AuroraApiException
+	 */
+	public function UpdateContactFromVCard($iUserId, $VCard, $UUID)
+	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		
+		$oUser = \CApi::getAuthenticatedUser();
+		
+		if ($iUserId > 0 && $iUserId !== $oUser->iId)
+		{
+			\CApi::checkUserRoleIsAtLeast(\EUserRole::SuperAdmin);
+			
+			$oCoreDecorator = \CApi::GetModuleDecorator('Core');
+			if ($oCoreDecorator)
+			{
+				$oUser = $oCoreDecorator->GetUser($iUserId);
+			}
+		}
+
+		if ($iUserId > 0)
+		{
+			$oCoreDecorator = \CApi::GetModuleDecorator('Core');
+			if ($oCoreDecorator)
+			{
+				$oUser = $oCoreDecorator->GetUser($iUserId);
+				if ($oUser instanceof \CUser)
+				{
+					$oContact = $this->oApiContactsManager->getContact($UUID);
+
+					$oContact->InitFromVCardStr($iUserId, $VCard, $UUID);
+					
+					$mResult = $this->oApiContactsManager->updateContact($oContact);
+					return $mResult && $oContact ? $oContact->sUUID : false;
+				}
+			}
+		}
+	}	
+	
+	/**
+	 * 
 	 * @param array $UUIDs Array of strings
 	 * @return bool
 	 */
