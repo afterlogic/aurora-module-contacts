@@ -341,11 +341,12 @@ class CApiContactsManager extends AApiManager
 	 * @param string $sSyncType Data source type. Currently, "csv" and "vcf" options are supported.
 	 * @param string $sTempFileName Path to the file data are imported from.
 	 * @param int $iParsedCount
+	 * @param string $sStorage
 	 * @param string $sGroupUUID
 	 *
 	 * @return int|false If importing is successful, number of imported entries is returned. 
 	 */
-	public function import($iUserId, $iTenantId, $sSyncType, $sTempFileName, &$iParsedCount, $sGroupUUID = '')
+	public function import($iUserId, $iTenantId, $sSyncType, $sTempFileName, &$iParsedCount, $sStorage = '', $sGroupUUID = '')
 	{
 		if ($sSyncType === \EContactFileType::CSV)
 		{
@@ -357,7 +358,7 @@ class CApiContactsManager extends AApiManager
 			if (class_exists($sSyncClass))
 			{
 				$oSync = new $sSyncClass($this);
-				return $oSync->Import($iUserId, $iTenantId, $sTempFileName, $iParsedCount, $sGroupUUID);
+				return $oSync->Import($iUserId, $iTenantId, $sTempFileName, $iParsedCount, $sStorage, $sGroupUUID);
 			}
 		}
 		else if ($sSyncType === \EContactFileType::VCF)
@@ -391,10 +392,11 @@ class CApiContactsManager extends AApiManager
 	 * 
 	 * @param int $iUserId User ID 
 	 * @param string $sSyncType Data source type. Currently, "csv" and "vcf" options are supported. 
+	 * @param string $Storage
 	 * 
 	 * @return string | bool
 	 */
-	public function export($iUserId, $sSyncType)
+	public function export($iUserId, $sSyncType, $Storage)
 	{
 		if ($sSyncType === \EContactFileType::CSV)
 		{
@@ -406,7 +408,7 @@ class CApiContactsManager extends AApiManager
 			if (class_exists($sSyncClass))
 			{
 				$oSync = new $sSyncClass($this);
-				return $oSync->Export($iUserId);
+				return $oSync->Export($iUserId, $Storage);
 			}
 		}
 		else if ($sSyncType === \EContactFileType::VCF)

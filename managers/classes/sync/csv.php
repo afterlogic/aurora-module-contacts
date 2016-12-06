@@ -34,10 +34,11 @@ class CApiContactsSyncCsv
 
 	/**
 	 * @param int $iUserId
+	 * @param string $Storage
 	 *
 	 * @return string
 	 */
-	public function Export($iUserId)
+	public function Export($iUserId, $Storage)
 	{
 		$iOffset = 0;
 		$iRequestLimit = 50;
@@ -45,7 +46,7 @@ class CApiContactsSyncCsv
 		$sResult = '';
 		$aFilters = ['$AND' => [
 			'IdUser' => [$iUserId, '='],
-			'Storage' => ['personal', '='],
+			'Storage' => [$Storage, '='],
 		]];
 		$iCount = $this->oApiContactsManager->getContactsCount($aFilters, '');
 		if (0 < $iCount)
@@ -84,10 +85,12 @@ class CApiContactsSyncCsv
 	 * @param int $iTenantId
 	 * @param string $sTempFileName
 	 * @param int $iParsedCount
+	 * @param string $sStorage
+	 * @param string $sGroupUUID
 	 *
 	 * @return int
 	 */
-	public function Import($iUserId, $iTenantId, $sTempFileName, &$iParsedCount)
+	public function Import($iUserId, $iTenantId, $sTempFileName, &$iParsedCount, $sStorage = '', $sGroupUUID = '')
 	{
 		$iCount = -1;
 		$iParsedCount = 0;
@@ -142,14 +145,12 @@ class CApiContactsSyncCsv
 					}					
 
 					$iParsedCount++;
-					$oContact->__SKIP_VALIDATE__ = true;
 
 					$oContact->IdTenant = $iTenantId;
-					$oContact->Storage = 'personal';
+					$oContact->Storage = $sStorage;
 					
 					$oContact->SetViewEmail();
-					
-//					$oContact->GroupUUIDs = array($sGroupUUID);
+					$oContact->AddGroup($sGroupUUID);
 
 					if ($this->oApiContactsManager->createContact($oContact))
 					{

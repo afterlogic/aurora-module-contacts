@@ -58,21 +58,6 @@ class CGroup extends AEntity
 	{
 		return new CGroup($sModule, $oParams);
 	}
-	
-	/**
-	 * @return bool
-	 */
-	public function validate()
-	{
-		switch (true)
-		{
-			case api_Validate::IsEmpty($this->Name):
-				throw new CApiValidationException(Errs::Validation_FieldIsEmpty, null, array(
-					'{{ClassName}}' => 'CGroup', '{{ClassField}}' => 'Name'));
-		}
-
-		return true;
-	}
 
 	public function populate($aGroup)
 	{

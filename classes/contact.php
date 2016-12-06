@@ -6,16 +6,19 @@
  * @property int $IdUser
  * @property int $IdTenant
  * @property string $Storage
- * @property string $IdTypeLink
  * @property string $FullName
  * @property bool $UseFriendlyName
  * @property int $PrimaryEmail
+ * @property int $PrimaryPhone
+ * @property int $PrimaryAddress
+ * @property string $ViewEmail
  * @property string $Title
  * @property string $FirstName
  * @property string $LastName
  * @property string $NickName
  * @property string $Skype
  * @property string $Facebook
+ * 
  * @property string $PersonalEmail
  * @property string $PersonalAddress
  * @property string $PersonalCity
@@ -39,16 +42,15 @@
  * @property string $BusinessPhone
  * @property string $BusinessFax
  * @property string $BusinessWeb
+ * 
  * @property string $OtherEmail
  * @property string $Notes
  * @property int $BirthDay
  * @property int $BirthMonth
  * @property int $BirthYear
+ * 
  * @property string $ETag
  * @property bool $Auto
- * @property bool $HideInGAB
- * @property int $DateCreated
- * @property int $DateModified
  *
  * @ignore
  * @package Contactsmain
@@ -56,16 +58,6 @@
  */
 class CContact extends AEntity
 {
-	/**
-	 * @var bool
-	 */
-	public $__LOCK_DATE_MODIFIED__;
-
-	/**
-	 * @var bool
-	 */
-	public $__SKIP_VALIDATE__;
-
 	public $GroupsContacts = array();
 	
 	public $ExtendedInformation = array();
@@ -79,22 +71,15 @@ class CContact extends AEntity
 		$this->setStaticMap(array(
 			'IdUser'		=> array('int', 0),
 			'IdTenant'		=> array('int', 0),
-
 			'Storage'		=> array('string', ''),
-			'IdTypeLink'	=> array('string', ''),
-
+			'FullName'		=> array('string', ''),
+			'UseFriendlyName'	=> array('bool', true),
 			'PrimaryEmail'		=> array('int', EContactsPrimaryEmail::Personal),
 			'PrimaryPhone'		=> array('int', EContactsPrimaryPhone::Personal),
 			'PrimaryAddress'	=> array('int', EContactsPrimaryAddress::Personal),
 			'ViewEmail'			=> array('string', ''),
 
-			'DateCreated'		=> array('datetime', date('Y-m-d H:i:s')),
-			'DateModified'		=> array('datetime', date('Y-m-d H:i:s')),
-
-			'UseFriendlyName'	=> array('bool', true),
-
 			'Title'			=> array('string', ''),
-			'FullName'		=> array('string', ''),
 			'FirstName'		=> array('string', ''),
 			'LastName'		=> array('string', ''),
 			'NickName'		=> array('string', ''),
@@ -136,11 +121,7 @@ class CContact extends AEntity
 			'ETag'				=> array('string', ''),
 			
 			'Auto'				=> array('bool', false),
-			'HideInGAB'			=> array('bool', false),
 		));
-
-		$this->__LOCK_DATE_MODIFIED__ = false;
-		$this->__SKIP_VALIDATE__ = false;
 	}
 	
 	public static function createInstance($sModule = 'Contacts', $oParams = array())
@@ -181,64 +162,7 @@ class CContact extends AEntity
 				return (string) $this->OtherEmail;
 		}
 	}
-	
-	/**
-	 * @return bool
-	 */
-	public function validate()
-	{
-		if (!$this->__SKIP_VALIDATE__)
-		{
-			switch (true)
-			{
-				case
-					api_Validate::IsEmpty($this->FullName) &&
-					api_Validate::IsEmpty($this->PersonalEmail) &&
-					api_Validate::IsEmpty($this->BusinessEmail) &&
-					api_Validate::IsEmpty($this->OtherEmail):
 
-					throw new CApiValidationException(Errs::Validation_FieldIsEmpty_OutInfo);
-			}
-		}
-
-		return true;
-	}
-
-	private function compareProperty($oContact, $sName)
-	{
-		if ($this->{$sName} !== $oContact->{$sName})
-		{
-			$this->{$sName} = $oContact->{$sName};
-			return false;
-		}
-
-		return true;
-	}
-
-	/**
-	 * @param CContact $oContact
-	 * @retur bool
-	 */
-	public function CompareAndComputedByNewGlobalContact($oContact)
-	{
-		$iChanged = 1;
-
-		foreach (array(
-			'Title', 'FullName', 'FirstName', 'LastName', 'NickName', 'PrimaryEmail',
-			'PersonalEmail', 'PersonalAddress', 'PersonalCity', 'PersonalState', 'PersonalZip', 'PersonalCountry',
-			'PersonalPhone', 'PersonalFax', 'PersonalMobile', 'PersonalWeb',
-			'BusinessEmail', 'BusinessCompany', 'BusinessAddress', 'BusinessCity', 'BusinessState', 'BusinessZip', 'BusinessCountry',
-			'BusinessJobTitle', 'BusinessDepartment', 'BusinessOffice', 'BusinessPhone', 'BusinessFax', 'BusinessWeb',
-			'OtherEmail', 'Notes', 'Skype', 'Facebook', 'BirthDay', 'BirthMonth', 'BirthYear', 'HideInGAB'
-		) as $Prop)
-		{
-			$iChanged &= $this->compareProperty($oContact, $Prop);
-		}
-
-		return !$iChanged;
-	}
-	
-		
 	/**
 	 * @param int $iUserId
 	 * @param string $sData
@@ -263,7 +187,6 @@ class CContact extends AEntity
 			}
 			
 			$this->IdUser = $iUserId;
-			$this->UseFriendlyName = true;
 			$this->sUUID = $sUid;
 
 			if (isset($oVCardObject->CATEGORIES))
@@ -271,13 +194,7 @@ class CContact extends AEntity
 				$aGroupUUIDs = $oVCardObject->CATEGORIES->getParts();
 				foreach($aGroupUUIDs as $sGroupUUID)
 				{
-					if (!empty($sGroupUUID))
-					{
-						$oGroupContact = \CGroupContact::createInstance();
-						$oGroupContact->ContactUUID = $this->sUUID;
-						$oGroupContact->GroupUUID = $sGroupUUID;
-						$this->GroupsContacts[] = $oGroupContact;
-					}
+					$this->AddGroup($sGroupUUID);
 				}
 			}
 			
@@ -468,20 +385,38 @@ class CContact extends AEntity
 		}
 	}
 	
+	public function AddGroup($sGroupUUID)
+	{
+		if (!empty($sGroupUUID))
+		{
+			$oGroupContact = \CGroupContact::createInstance();
+			$oGroupContact->ContactUUID = $this->sUUID;
+			$oGroupContact->GroupUUID = $sGroupUUID;
+			$this->GroupsContacts[] = $oGroupContact;
+		}
+	}
+	
 	public function populate($aContact)
 	{
-		if (isset($aContact['PrimaryEmail']))
-		{
-			$this->PrimaryEmail = $aContact['PrimaryEmail'];
-		}
 		if (isset($aContact['Storage']))
 		{
 			$this->Storage = $aContact['Storage'];
 		}
-
 		if (isset($aContact['FullName']))
 		{
 			$this->FullName = $aContact['FullName'];
+		}
+		if (isset($aContact['PrimaryEmail']))
+		{
+			$this->PrimaryEmail = $aContact['PrimaryEmail'];
+		}
+		if (isset($aContact['PrimaryPhone']))
+		{
+			$this->PrimaryPhone = $aContact['PrimaryPhone'];
+		}
+		if (isset($aContact['PrimaryAddress']))
+		{
+			$this->PrimaryAddress = $aContact['PrimaryAddress'];
 		}
 		if (isset($aContact['FirstName']))
 		{
@@ -624,10 +559,7 @@ class CContact extends AEntity
 		{
 			foreach ($aContact['GroupUUIDs'] as $sGroupUUID)
 			{
-				$oGroupContact = \CGroupContact::createInstance();
-				$oGroupContact->ContactUUID = $this->sUUID;
-				$oGroupContact->GroupUUID = $sGroupUUID;
-				$this->GroupsContacts[] = $oGroupContact;
+				$this->AddGroup($sGroupUUID);
 			}
 		}
 		
@@ -645,14 +577,11 @@ class CContact extends AEntity
 		$aRes = array(
 			'IdUser' => $this->IdUser,
 			'UUID' => $this->sUUID,
-
 			'Storage' => $this->Storage,
-
-			'PrimaryEmail' => $this->PrimaryEmail,
-			'UseFriendlyName' => $this->UseFriendlyName,
-
 			'FullName' => $this->FullName,
-			'Title' => $this->Title,
+			'PrimaryEmail' => $this->PrimaryEmail,
+			'PrimaryPhone' => $this->PrimaryPhone,
+			'PrimaryAddress' => $this->PrimaryAddress,
 			'FirstName' => $this->FirstName,
 			'LastName' => $this->LastName,
 			'NickName' => $this->NickName,

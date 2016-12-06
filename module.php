@@ -84,22 +84,22 @@ class ContactsModule extends AApiModule
 		return false;
 	}
 	
-	private function downloadContacts($sSyncType)
+	public function Export($Type, $Storage)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		$iUserId = \CApi::getAuthenticatedUserId();
 		
-		$sOutput = $this->oApiContactsManager->export($iUserId, $sSyncType);
+		$sOutput = $this->oApiContactsManager->export($iUserId, $Type, $Storage);
 		if (false !== $sOutput)
 		{
 			header('Pragma: public');
 			header('Content-Type: text/csv');
-			header('Content-Disposition: attachment; filename="export.' . $sSyncType . '";');
+			header('Content-Disposition: attachment; filename="export.' . $Type . '";');
 			header('Content-Transfer-Encoding: binary');
 		}
 		
-		return $sOutput;
+		echo $sOutput;
 	}
 	
 	/**
@@ -276,20 +276,6 @@ class ContactsModule extends AApiModule
 		return $aContacts;
 	}	
 	
-	public function DownloadContactsAsCSV()
-	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		
-		return $this->downloadContacts('csv');
-	}
-	
-	public function DownloadContactsAsVCF()
-	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		
-		return $this->downloadContacts('vcf');
-	}
-
 	/**
 	 * 
 	 * @param string $Search
@@ -540,7 +526,7 @@ class ContactsModule extends AApiModule
 		}
 	}
 	
-	public function UploadContacts($UploadData)
+	public function UploadContacts($UploadData, $Storage, $GroupUUID)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
@@ -570,7 +556,9 @@ class ContactsModule extends AApiModule
 						$oUser->IdTenant,
 						$sFileType,
 						$oApiFileCacheManager->generateFullFilePath($oUser->sUUID, $sSavedName),
-						$iParsedCount
+						$iParsedCount,
+						$Storage,
+						$GroupUUID
 					);
 
 					if (false !== $iImportedCount && -1 !== $iImportedCount)
