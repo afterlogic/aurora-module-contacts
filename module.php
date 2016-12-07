@@ -9,6 +9,8 @@ class ContactsModule extends AApiModule
 		'ImportContactsLink' => array('', 'string'),
 	);
 	
+	protected $aImportExportFormats = ['csv', 'vcf'];
+	
 	public function init() 
 	{
 		$this->incClass('contact');
@@ -57,6 +59,7 @@ class ContactsModule extends AApiModule
 			'EContactsPrimaryPhone' => (new \EContactsPrimaryPhone)->getMap(),
 			'EContactsPrimaryAddress' => (new \EContactsPrimaryAddress)->getMap(),
 			'EContactSortField' => (new \EContactSortField)->getMap(),
+			'ImportExportFormats' => $this->aImportExportFormats,
 		);
 	}
 	
@@ -541,9 +544,8 @@ class ContactsModule extends AApiModule
 		if (is_array($UploadData))
 		{
 			$sFileType = strtolower(\api_Utils::GetFileExtension($UploadData['name']));
-			$bIsCsvVcfExtension  = $sFileType === 'csv' || $sFileType === 'vcf';
 
-			if ($bIsCsvVcfExtension)
+			if (in_array($sFileType, $this->aImportExportFormats))
 			{
 				$oApiFileCacheManager = \CApi::GetSystemManager('filecache');
 				$sSavedName = 'import-post-' . md5($UploadData['name'] . $UploadData['tmp_name']);
