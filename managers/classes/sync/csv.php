@@ -114,7 +114,7 @@ class CApiContactsSyncCsv
 
 					foreach ($aParameters as $sPropertyName => $mValue)
 					{
-						if ($oContact->isAttribute($sPropertyName))
+						if (isset($oContact->{$sPropertyName}))
 						{
 							$oContact->{$sPropertyName} = $mValue;
 						}
