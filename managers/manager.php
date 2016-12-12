@@ -390,14 +390,27 @@ class CApiContactsManager extends AApiManager
 	/**
 	 * Allows for exporting data from user's address book. 
 	 * 
-	 * @param int $iUserId User ID 
-	 * @param string $sSyncType Data source type. Currently, "csv" and "vcf" options are supported. 
-	 * @param string $Storage
+	 * @param string $sSyncType Data source type. Currently, "csv" and "vcf" options are supported.
+	 * @param array $aFilters
+	 * @param string $sGroupUUID
+	 * @param array $aContactUUIDs
 	 * 
 	 * @return string | bool
 	 */
-	public function export($iUserId, $sSyncType, $Storage)
+	public function export($sSyncType, $aFilters = [], $sGroupUUID = '', $aContactUUIDs = [])
 	{
+		if (empty($aContactUUIDs) && !empty($sGroupUUID))
+		{
+			$aGroupContact = $this->getGroupContacts($sGroupUUID);
+			foreach ($aGroupContact as $oGroupContact)
+			{
+				$aContactUUIDs[] = $oGroupContact->ContactUUID;
+			}
+		}
+		
+		$aContacts = $this->oEavManager->getEntities('CContact', array(), 0, 0, $aFilters, 'FullName',
+			ESortOrder::ASC, $aContactUUIDs);
+		
 		if ($sSyncType === \EContactFileType::CSV)
 		{
 			$this->incClass($sSyncType.'.formatter');
@@ -408,18 +421,17 @@ class CApiContactsManager extends AApiManager
 			if (class_exists($sSyncClass))
 			{
 				$oSync = new $sSyncClass($this);
-				return $oSync->Export($iUserId, $Storage);
+				return $oSync->Export($aContacts);
 			}
 		}
 		else if ($sSyncType === \EContactFileType::VCF)
 		{
             $sOutput = '';
-			$aContactItems = $this->oApiContactsBaseManagerDAV->GetContactItemObjects($iUserId);
-			if (is_array($aContactItems))
+			if (is_array($aContacts))
 			{
-				foreach ($aContactItems as $oContactItem)
+				foreach ($aContacts as $oContact)
 				{
-					$sOutput .= \Sabre\VObject\Reader::read($oContactItem->get())->serialize();
+					$sOutput .= \Sabre\VObject\Reader::read($oContact->get())->serialize();
 				}
 			}
 			return $sOutput;            

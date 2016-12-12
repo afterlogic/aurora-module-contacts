@@ -33,46 +33,23 @@ class CApiContactsSyncCsv
 	}
 
 	/**
-	 * @param int $iUserId
-	 * @param string $Storage
+	 * @param array $aContacts
 	 *
 	 * @return string
 	 */
-	public function Export($iUserId, $Storage)
+	public function Export($aContacts)
 	{
-		$iOffset = 0;
-		$iRequestLimit = 50;
-
 		$sResult = '';
-		$aFilters = ['$AND' => [
-			'IdUser' => [$iUserId, '='],
-			'Storage' => [$Storage, '='],
-		]];
-		$iCount = $this->oApiContactsManager->getContactsCount($aFilters, '');
-		if (0 < $iCount)
+		
+		if (is_array($aContacts))
 		{
-			while ($iOffset < $iCount)
+			foreach ($aContacts as $oContact)
 			{
-				$aList = $this->oApiContactsManager->getContacts(EContactSortField::Name, ESortOrder::ASC,
-					$iOffset, $iRequestLimit, $aFilters, '');
-
-				if (is_array($aList))
+				if ($oContact)
 				{
-					foreach ($aList as $oContact)
-					{
-						if ($oContact)
-						{
-							$this->oFormatter->setContainer($oContact);
-							$this->oFormatter->form();
-							$sResult .= $this->oFormatter->getValue();
-						}
-					}
-
-					$iOffset += $iRequestLimit;
-				}
-				else
-				{
-					break;
+					$this->oFormatter->setContainer($oContact);
+					$this->oFormatter->form();
+					$sResult .= $this->oFormatter->getValue();
 				}
 			}
 		}

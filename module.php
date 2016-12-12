@@ -87,13 +87,14 @@ class ContactsModule extends AApiModule
 		return false;
 	}
 	
-	public function Export($Type, $Storage)
+	public function Export($Type, $Filters = [], $GroupUUID = '', $ContactUUIDs = [])
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$iUserId = \CApi::getAuthenticatedUserId();
+		$aFilters = $this->prepareFilters($Filters);
 		
-		$sOutput = $this->oApiContactsManager->export($iUserId, $Type, $Storage);
+		$sOutput = $this->oApiContactsManager->export($Type, $aFilters, $GroupUUID, $ContactUUIDs);
+		
 		if (false !== $sOutput)
 		{
 			header('Pragma: public');
@@ -146,27 +147,15 @@ class ContactsModule extends AApiModule
 		return $this->oApiContactsManager;
 	}
 	
-	/**
-	 * 
-	 * @param int $Offset
-	 * @param int $Limit
-	 * @param int $SortField
-	 * @param int $SortOrder
-	 * @param string $Search
-	 * @param string $GroupUUID
-	 * @param array $Filters
-	 * @return array
-	 */
-	public function GetContacts($Offset = 0, $Limit = 20, $SortField = EContactSortField::Name, $SortOrder = ESortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array())
+	private function prepareFilters($aRawFilters)
 	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-
 		$aFilters = [];
-		if (is_array($Filters))
+		
+		if (is_array($aRawFilters))
 		{
 			$iAndIndex = 1;
 			$iOrIndex = 1;
-			foreach ($Filters as $aSubFilters)
+			foreach ($aRawFilters as $aSubFilters)
 			{
 				if (is_array($aSubFilters))
 				{
@@ -191,6 +180,26 @@ class ContactsModule extends AApiModule
 				}
 			}
 		}
+		
+		return $aFilters;
+	}
+	
+	/**
+	 * 
+	 * @param int $Offset
+	 * @param int $Limit
+	 * @param int $SortField
+	 * @param int $SortOrder
+	 * @param string $Search
+	 * @param string $GroupUUID
+	 * @param array $Filters
+	 * @return array
+	 */
+	public function GetContacts($Offset = 0, $Limit = 20, $SortField = EContactSortField::Name, $SortOrder = ESortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array())
+	{
+		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+
+		$aFilters = $this->prepareFilters($Filters);
 		
 		if (!empty($Search))
 		{
