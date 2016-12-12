@@ -697,7 +697,7 @@ class ContactsModule extends AApiModule
 	{
 		if ($aArgs['Type'] === 'User')
 		{
-			$aGroups = $this->oApiContactsManager->getGroups($aArgs['UUID']);
+			$aGroups = $this->oApiContactsManager->getGroups($aArgs['Id']);
 			if (count($aGroups) > 0)
 			{
 				$aGroupUUIDs = [];
