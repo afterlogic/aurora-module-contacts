@@ -73,7 +73,7 @@ class CApiContactsSyncCsv
 		$iParsedCount = 0;
 		if (file_exists($sTempFileName))
 		{
-			$aCsv = api_Utils::CsvToArray($sTempFileName);
+			$aCsv = $this->csvToArray($sTempFileName);
 			if (is_array($aCsv))
 			{
 				$iCount = 0;
@@ -140,5 +140,71 @@ class CApiContactsSyncCsv
 		}
 
 		return $iCount;
+	}
+	
+	/**
+	 * @return string $sFileName
+	 * @return string
+	 */
+	private static function csvToArray($sFileName)
+	{
+		if (!file_exists($sFileName) || !is_readable($sFileName))
+		{
+			return false;
+		}
+
+		$aHeaders = null;
+		$aData = array();
+
+		@setlocale(LC_CTYPE, 'en_US.UTF-8');
+		\ini_set('auto_detect_line_endings', true);
+		
+		if (false !== ($rHandle = @fopen($sFileName, 'rb')))
+		{
+			$sDelimiterSearchString = @fread($rHandle, 2000);
+			rewind($rHandle);
+
+			$sDelimiter = (
+				(int) substr_count($sDelimiterSearchString, ',') > (int) substr_count($sDelimiterSearchString, ';'))
+					? ',' : ';';
+
+			while (false !== ($mRow = fgetcsv($rHandle, 5000, $sDelimiter, '"')))
+			{
+				$mRow = preg_replace('/[\r\n]+/', "\n", $mRow);
+				if (!is_array($mRow) || count($mRow) === 0 || count($mRow) === 1 && empty($mRow[0]))
+				{
+					continue;
+				}
+				if (null === $aHeaders)
+				{
+					if (3 >= count($mRow))
+					{
+						CApi::Log('Invalid csv headers');
+						CApi::LogObject($mRow);
+						fclose($rHandle);
+						return $aData;
+					}
+
+					$aHeaders = $mRow;
+				}
+				else
+				{
+					$aNewItem = array();
+					foreach ($aHeaders as $iIndex => $sHeaderValue)
+					{
+						$aNewItem[@iconv('utf-8', 'utf-8//IGNORE', $sHeaderValue)] =
+							isset($mRow[$iIndex]) ? $mRow[$iIndex] : '';
+					}
+
+					$aData[] = $aNewItem;
+				}
+			}
+
+			fclose($rHandle);
+		}
+
+		ini_set('auto_detect_line_endings', false);
+
+		return $aData;
 	}
 }
