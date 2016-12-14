@@ -189,14 +189,14 @@ class CContact extends AEntity
 			$this->IdUser = $iUserId;
 			$this->sUUID = $sUid;
 
-			if (isset($oVCardObject->CATEGORIES))
-			{
-				$aGroupUUIDs = $oVCardObject->CATEGORIES->getParts();
-				foreach($aGroupUUIDs as $sGroupUUID)
-				{
-					$this->AddGroup($sGroupUUID);
-				}
-			}
+//			if (isset($oVCardObject->CATEGORIES))
+//			{
+//				$aGroupUUIDs = $oVCardObject->CATEGORIES->getParts();
+//				foreach($aGroupUUIDs as $sGroupUUID)
+//				{
+//					$this->AddGroup($sGroupUUID);
+//				}
+//			}
 			
 			$this->FullName = (isset($oVCardObject->FN)) ? (string)$oVCardObject->FN : '';
 

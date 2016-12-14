@@ -46,7 +46,6 @@ class ContactsModule extends AApiModule
 		
 		$aFormats = [];
 		$this->broadcastEvent('GetImportExportFormats', $aFormats);
-		$this->aImportExportFormats = array_merge($this->aImportExportFormats, $aFormats);
 		
 		$oUser = \CApi::getAuthenticatedUser();
 		$ContactsPerPage = $this->getConfig('ContactsPerPage', 20);
@@ -63,7 +62,7 @@ class ContactsModule extends AApiModule
 			'EContactsPrimaryPhone' => (new \EContactsPrimaryPhone)->getMap(),
 			'EContactsPrimaryAddress' => (new \EContactsPrimaryAddress)->getMap(),
 			'EContactSortField' => (new \EContactSortField)->getMap(),
-			'ImportExportFormats' => $this->aImportExportFormats,
+			'ImportExportFormats' => array_merge($this->aImportExportFormats, $aFormats),
 		);
 	}
 	
@@ -103,9 +102,9 @@ class ContactsModule extends AApiModule
 		
 		if ($Format === 'csv')
 		{
-			$this->incClass($Format.'.formatter');
-			$this->incClass($Format.'.parser');
-			$this->incClass('sync.'.$Format);
+			$this->incClass('../managers/classes/'.$Format.'/formatter');
+			$this->incClass('../managers/classes/'.$Format.'/parser');
+			$this->incClass('../managers/classes/sync/'.$Format);
 
 			$sSyncClass = 'CApiContactsSync'.ucfirst($Format);
 			if (class_exists($sSyncClass))
@@ -582,25 +581,46 @@ class ContactsModule extends AApiModule
 		{
 			$sFileType = strtolower(\api_Utils::GetFileExtension($UploadData['name']));
 
-			if (in_array($sFileType, $this->aImportExportFormats))
+			$aFormats = [];
+			$this->broadcastEvent('GetImportExportFormats', $aFormats);
+			if (in_array($sFileType, array_merge($this->aImportExportFormats, $aFormats)))
 			{
 				$oApiFileCacheManager = \CApi::GetSystemManager('filecache');
 				$sSavedName = 'import-post-' . md5($UploadData['name'] . $UploadData['tmp_name']);
 				if ($oApiFileCacheManager->moveUploadedFile($oUser->sUUID, $sSavedName, $UploadData['tmp_name']))
 				{
+					$iImportedCount = false;
 					$iParsedCount = 0;
+					
+					if ($sFileType === 'csv')
+					{
+						$this->incClass('../managers/classes/'.$sFileType.'/formatter');
+						$this->incClass('../managers/classes/'.$sFileType.'/parser');
+						$this->incClass('../managers/classes/sync/'.$sFileType);
 
-					$iImportedCount = $this->oApiContactsManager->import(
-						$oUser->iId,
-						$oUser->IdTenant,
-						$sFileType,
-						$oApiFileCacheManager->generateFullFilePath($oUser->sUUID, $sSavedName),
-						$iParsedCount,
-						$Storage,
-						$GroupUUID
-					);
+						$sSyncClass = 'CApiContactsSync'.ucfirst($sFileType);
+						if (class_exists($sSyncClass))
+						{
+							$oSync = new $sSyncClass($this->oApiContactsManager);
+							$iImportedCount = $oSync->Import($oUser->iId, $oUser->IdTenant, 
+									$oApiFileCacheManager->generateFullFilePath($oUser->sUUID, $sSavedName), 
+									$iParsedCount, $Storage, $GroupUUID);
+						}
+					}
+					else
+					{
+						$aArgs = [
+							'Format' => $sFileType,
+							'User' => $oUser,
+							'TempFileName' => $oApiFileCacheManager->generateFullFilePath($oUser->sUUID, $sSavedName),
+							'Storage' => $Storage,
+							'GroupUUID' => $GroupUUID,
+						];
+						$this->broadcastEvent('Import', $aArgs, $iParsedCount);
+						$iImportedCount = $iParsedCount;
+					}
 
-					if (false !== $iImportedCount && -1 !== $iImportedCount)
+					if (is_int($iImportedCount) && $iImportedCount >= 0)
 					{
 						$aResponse['ImportedCount'] = $iImportedCount;
 						$aResponse['ParsedCount'] = $iParsedCount;

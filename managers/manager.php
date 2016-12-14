@@ -334,60 +334,6 @@ class CApiContactsManager extends AApiManager
 	}
 
 	/**
-	 * Allows for importing data into user's address book.
-	 * 
-	 * @param int $iUserId User ID
-	 * @param int $iTenantId Tenant ID
-	 * @param string $sSyncType Data source type. Currently, "csv" and "vcf" options are supported.
-	 * @param string $sTempFileName Path to the file data are imported from.
-	 * @param int $iParsedCount
-	 * @param string $sStorage
-	 * @param string $sGroupUUID
-	 *
-	 * @return int|false If importing is successful, number of imported entries is returned. 
-	 */
-	public function import($iUserId, $iTenantId, $sSyncType, $sTempFileName, &$iParsedCount, $sStorage = '', $sGroupUUID = '')
-	{
-		if ($sSyncType === \EContactFileType::CSV)
-		{
-			$this->incClass($sSyncType.'.formatter');
-			$this->incClass($sSyncType.'.parser');
-			$this->incClass('sync.'.$sSyncType);
-
-			$sSyncClass = 'CApiContactsSync'.ucfirst($sSyncType);
-			if (class_exists($sSyncClass))
-			{
-				$oSync = new $sSyncClass($this);
-				return $oSync->Import($iUserId, $iTenantId, $sTempFileName, $iParsedCount, $sStorage, $sGroupUUID);
-			}
-		}
-		else if ($sSyncType === \EContactFileType::VCF)
-		{
-			// You can either pass a readable stream, or a string.
-			$oHandler = fopen($sTempFileName, 'r');
-			$oSplitter = new \Sabre\VObject\Splitter\VCard($oHandler);
-			while($oVCard = $oSplitter->getNext())
-			{
-				$oContact = new \CContact();
-
-				$oContact->InitFromVCardObject($iUserId, $oVCard);
-
-				$oContact->IdTenant = $iTenantId;
-				
-//				$oContact->GroupUUIDs = [$sGroupUUID];
-
-				if ($this->createContact($oContact))
-				{
-					$iParsedCount++;
-				}
-			}
-			return $iParsedCount;
-		}
-
-		return false;
-	}
-
-	/**
 	 * Adds one or multiple contacts to the specific group. 
 	 * 
 	 * @param string $sGroupUUID Group identificator to be used 
