@@ -166,14 +166,14 @@ class CApiContactsManager extends AApiManager
 	 * @param int $iRequestLimit The upper limit for total number of contacts returned. Default value is **20**.
 	 * @param array $aFilters
 	 * @param string $sGroupUUID
+	 * @param array $aContactUUIDs
 	 * 
 	 * @return array|bool
 	 */
 	public function getContacts($iSortField = EContactSortField::Name, $iSortOrder = ESortOrder::ASC,
-		$iOffset = 0, $iRequestLimit = 20, $aFilters = [], $sGroupUUID = '')
+		$iOffset = 0, $iRequestLimit = 20, $aFilters = [], $sGroupUUID = '', $aContactUUIDs = [])
 	{
-		$aContactUUIDs = [];
-		if (!empty($sGroupUUID))
+		if (empty($aContactUUIDs) && !empty($sGroupUUID))
 		{
 			$aGroupContact = $this->getGroupContacts($sGroupUUID);
 			foreach ($aGroupContact as $oGroupContact)
@@ -384,59 +384,6 @@ class CApiContactsManager extends AApiManager
 			return $iParsedCount;
 		}
 
-		return false;
-	}
-
-	/**
-	 * Allows for exporting data from user's address book. 
-	 * 
-	 * @param string $sSyncType Data source type. Currently, "csv" and "vcf" options are supported.
-	 * @param array $aFilters
-	 * @param string $sGroupUUID
-	 * @param array $aContactUUIDs
-	 * 
-	 * @return string | bool
-	 */
-	public function export($sSyncType, $aFilters = [], $sGroupUUID = '', $aContactUUIDs = [])
-	{
-		if (empty($aContactUUIDs) && !empty($sGroupUUID))
-		{
-			$aGroupContact = $this->getGroupContacts($sGroupUUID);
-			foreach ($aGroupContact as $oGroupContact)
-			{
-				$aContactUUIDs[] = $oGroupContact->ContactUUID;
-			}
-		}
-		
-		$aContacts = $this->oEavManager->getEntities('CContact', array(), 0, 0, $aFilters, 'FullName',
-			ESortOrder::ASC, $aContactUUIDs);
-		
-		if ($sSyncType === \EContactFileType::CSV)
-		{
-			$this->incClass($sSyncType.'.formatter');
-			$this->incClass($sSyncType.'.parser');
-			$this->incClass('sync.'.$sSyncType);
-
-			$sSyncClass = 'CApiContactsSync'.ucfirst($sSyncType);
-			if (class_exists($sSyncClass))
-			{
-				$oSync = new $sSyncClass($this);
-				return $oSync->Export($aContacts);
-			}
-		}
-		else if ($sSyncType === \EContactFileType::VCF)
-		{
-            $sOutput = '';
-			if (is_array($aContacts))
-			{
-				foreach ($aContacts as $oContact)
-				{
-					$sOutput .= \Sabre\VObject\Reader::read($oContact->get())->serialize();
-				}
-			}
-			return $sOutput;            
-		}
-		
 		return false;
 	}
 

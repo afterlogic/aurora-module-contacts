@@ -9,7 +9,7 @@ class ContactsModule extends AApiModule
 		'ImportContactsLink' => array('', 'string'),
 	);
 	
-	protected $aImportExportFormats = ['csv', 'vcf'];
+	protected $aImportExportFormats = ['csv'];
 	
 	public function init() 
 	{
@@ -43,6 +43,10 @@ class ContactsModule extends AApiModule
 		
 		$aStorages = array();
 		$this->broadcastEvent('GetStorage', $aStorages);
+		
+		$aFormats = [];
+		$this->broadcastEvent('GetImportExportFormats', $aFormats);
+		$this->aImportExportFormats = array_merge($this->aImportExportFormats, $aFormats);
 		
 		$oUser = \CApi::getAuthenticatedUser();
 		$ContactsPerPage = $this->getConfig('ContactsPerPage', 20);
@@ -87,19 +91,43 @@ class ContactsModule extends AApiModule
 		return false;
 	}
 	
-	public function Export($Type, $Filters = [], $GroupUUID = '', $ContactUUIDs = [])
+	public function Export($Format, $Filters = [], $GroupUUID = '', $ContactUUIDs = [])
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		$aFilters = $this->prepareFilters($Filters);
 		
-		$sOutput = $this->oApiContactsManager->export($Type, $aFilters, $GroupUUID, $ContactUUIDs);
+		$aContacts = $this->oApiContactsManager->getContacts(EContactSortField::Name, ESortOrder::ASC, 0, 0, $aFilters, $GroupUUID, $ContactUUIDs);
 		
-		if (false !== $sOutput)
+		$sOutput = '';
+		
+		if ($Format === 'csv')
+		{
+			$this->incClass($Format.'.formatter');
+			$this->incClass($Format.'.parser');
+			$this->incClass('sync.'.$Format);
+
+			$sSyncClass = 'CApiContactsSync'.ucfirst($Format);
+			if (class_exists($sSyncClass))
+			{
+				$oSync = new $sSyncClass($this->oApiContactsManager);
+				$sOutput = $oSync->Export($aContacts);
+			}
+		}
+		else
+		{
+			$aArgs = [
+				'Format' => $Format,
+				'Contacts' => $aContacts,
+			];
+			$this->broadcastEvent('GetExportOutput', $aArgs, $sOutput);
+		}
+		
+		if (is_string($sOutput) && !empty($sOutput))
 		{
 			header('Pragma: public');
 			header('Content-Type: text/csv');
-			header('Content-Disposition: attachment; filename="export.' . $Type . '";');
+			header('Content-Disposition: attachment; filename="export.' . $Format . '";');
 			header('Content-Transfer-Encoding: binary');
 		}
 		
@@ -538,7 +566,7 @@ class ContactsModule extends AApiModule
 		}
 	}
 	
-	public function UploadContacts($UploadData, $Storage, $GroupUUID)
+	public function Import($UploadData, $Storage, $GroupUUID)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
