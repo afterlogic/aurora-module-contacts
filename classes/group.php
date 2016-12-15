@@ -61,21 +61,57 @@ class CGroup extends AEntity
 
 	public function populate($aGroup)
 	{
-		$this->IsOrganization = $aGroup['IsOrganization'];
-		$this->Name = $aGroup['Name'];
-		$this->Email = $aGroup['Email'];
-		$this->Country = $aGroup['Country'];
-		$this->City = $aGroup['City'];
-		$this->Company = $aGroup['Company'];
-		$this->Fax = $aGroup['Fax'];
-		$this->Phone = $aGroup['Phone'];
-		$this->State = $aGroup['State'];
-		$this->Street = $aGroup['Street'];
-		$this->Web = $aGroup['Web'];
-		$this->Zip = $aGroup['Zip'];
+		if (isset($aGroup['IsOrganization']))
+		{
+			$this->IsOrganization = $aGroup['IsOrganization'];
+		}
+		if (isset($aGroup['Name']))
+		{
+			$this->Name = $aGroup['Name'];
+		}
+		if (isset($aGroup['Email']))
+		{
+			$this->Email = $aGroup['Email'];
+		}
+		if (isset($aGroup['Country']))
+		{
+			$this->Country = $aGroup['Country'];
+		}
+		if (isset($aGroup['City']))
+		{
+			$this->City = $aGroup['City'];
+		}
+		if (isset($aGroup['Company']))
+		{
+			$this->Company = $aGroup['Company'];
+		}
+		if (isset($aGroup['Fax']))
+		{
+			$this->Fax = $aGroup['Fax'];
+		}
+		if (isset($aGroup['Phone']))
+		{
+			$this->Phone = $aGroup['Phone'];
+		}
+		if (isset($aGroup['State']))
+		{
+			$this->State = $aGroup['State'];
+		}
+		if (isset($aGroup['Street']))
+		{
+			$this->Street = $aGroup['Street'];
+		}
+		if (isset($aGroup['Web']))
+		{
+			$this->Web = $aGroup['Web'];
+		}
+		if (isset($aGroup['Zip']))
+		{
+			$this->Zip = $aGroup['Zip'];
+		}
 		
 		$this->GroupContacts = array();
-		if (!empty($aGroup['Contacts']) && is_array($aGroup['Contacts']))
+		if (isset($aGroup['Contacts']) && is_array($aGroup['Contacts']))
 		{
 			$aContactUUIDs = $aGroup['Contacts'];
 			foreach ($aContactUUIDs as $sContactUUID)

@@ -206,17 +206,21 @@ class CApiContactsManager extends AApiManager
 	 * 
 	 * @return array|bool
 	 */
-	public function getGroups($iUserId)
+	public function getGroups($iUserId, $aFilters = [])
 	{
-		return $this->oEavManager->getEntities(
-			'CGroup', 
-			array(),
-			0,
-			0,
-			array('IdUser' => $iUserId),
-			'Name',
-			ESortOrder::ASC
-		);
+		if (count($aFilters) > 0)
+		{
+			$aFilters['IdUser'] = [$iUserId, '='];
+			$aFilters = [
+				'$AND' => $aFilters
+			];
+		}
+		else
+		{
+			$aFilters = ['IdUser' => [$iUserId, '=']];
+		}
+		
+		return $this->oEavManager->getEntities('CGroup', [], 0, 0, $aFilters, 'Name', ESortOrder::ASC);
 	}
 
 	/**

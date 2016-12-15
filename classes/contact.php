@@ -189,14 +189,36 @@ class CContact extends AEntity
 			$this->IdUser = $iUserId;
 			$this->sUUID = $sUid;
 
-//			if (isset($oVCardObject->CATEGORIES))
-//			{
-//				$aGroupUUIDs = $oVCardObject->CATEGORIES->getParts();
-//				foreach($aGroupUUIDs as $sGroupUUID)
-//				{
-//					$this->AddGroup($sGroupUUID);
-//				}
-//			}
+			if (isset($oVCardObject->CATEGORIES))
+			{
+				$aGroupNames = $oVCardObject->CATEGORIES->getParts();
+				if (is_array($aGroupNames) && count($aGroupNames) > 0)
+				{
+					$oContactsDecorator = \CApi::GetModuleDecorator('Contacts');
+					$oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
+					if ($oApiContactsManager)
+					{
+						foreach($aGroupNames as $sGroupName)
+						{
+							$aGroups = $oApiContactsManager->getGroups($iUserId, ['Name' => [$sGroupName, '=']]);
+							if (is_array($aGroups) && count($aGroups) > 0)
+							{
+								$this->AddGroup($aGroups[0]->sUUID);
+							}
+							elseif (!empty($sGroupName))
+							{
+								$oGroup = \CGroup::createInstance();
+								$oGroup->IdUser = $iUserId;
+
+								$oGroup->populate(['Name' => $sGroupName]);
+
+								$oApiContactsManager->createGroup($oGroup);
+								$this->AddGroup($oGroup->sUUID);
+							}
+						}
+					}
+				}
+			}
 			
 			$this->FullName = (isset($oVCardObject->FN)) ? (string)$oVCardObject->FN : '';
 
