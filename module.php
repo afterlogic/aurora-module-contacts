@@ -16,7 +16,6 @@ class ContactsModule extends AApiModule
 		$this->incClass('contact');
 		$this->incClass('group-contact');
 		$this->incClass('group');
-		$this->incClass('vcard-helper');
 		$this->incClass('enum');
 
 		$this->oApiContactsManager = $this->GetManager();
