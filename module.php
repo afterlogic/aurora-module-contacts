@@ -705,7 +705,7 @@ class ContactsModule extends AApiModule
 		}
 	}	
 	
-    public function onGetMobileSyncInfo(&$aData)
+    public function onGetMobileSyncInfo($aArgs, &$mResult)
 	{
 		$iUserId = \CApi::getAuthenticatedUserId();
 		$oDavModule = \CApi::GetModuleDecorator('Dav');
@@ -713,7 +713,7 @@ class ContactsModule extends AApiModule
 		$sDavLogin = $oDavModule->GetLogin();
 		$sDavServer = $oDavModule->GetServerUrl();
 
-		$aData['Dav']['Contacts'] = [
+		$mResult['Dav']['Contacts'] = [
 			[
 				'Name' => $this->i18N('LABEL_PERSONAL_CONTACTS', $iUserId),
 				'Url' => $sDavServer.'/addressbooks/'.$sDavLogin.'/'.\Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME
@@ -732,7 +732,7 @@ class ContactsModule extends AApiModule
 			]
 		];
 		
-		$aData['Dav']['Contacts'] = array(
+		$mResult['Dav']['Contacts'] = array(
 			'PersonalContactsUrl' => $sDavServer.'/addressbooks/'.$sDavLogin.'/'.\Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME,
 			'CollectedAddressesUrl' => $sDavServer.'/addressbooks/'.$sDavLogin.'/'.\Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_NAME,
 			'SharedWithAllUrl' => $sDavServer.'/addressbooks/'.$sDavLogin.'/'.\Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME,
