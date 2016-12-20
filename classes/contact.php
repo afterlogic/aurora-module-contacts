@@ -62,29 +62,33 @@ class CContact extends AEntity
 	
 	public $ExtendedInformation = array();
 	
-	public function __construct($sModule, $oParams)
+	/**
+	 * 
+	 * @param string $sModule
+	 */
+	public function __construct($sModule)
 	{
 		parent::__construct(get_class($this), $sModule);
 
 		$this->__USE_TRIM_IN_STRINGS__ = true;
 
 		$this->setStaticMap(array(
-			'IdUser'		=> array('int', 0),
-			'IdTenant'		=> array('int', 0),
-			'Storage'		=> array('string', ''),
-			'FullName'		=> array('string', ''),
+			'IdUser'			=> array('int', 0),
+			'IdTenant'			=> array('int', 0),
+			'Storage'			=> array('string', ''),
+			'FullName'			=> array('string', ''),
 			'UseFriendlyName'	=> array('bool', true),
 			'PrimaryEmail'		=> array('int', EContactsPrimaryEmail::Personal),
 			'PrimaryPhone'		=> array('int', EContactsPrimaryPhone::Personal),
 			'PrimaryAddress'	=> array('int', EContactsPrimaryAddress::Personal),
 			'ViewEmail'			=> array('string', ''),
 
-			'Title'			=> array('string', ''),
-			'FirstName'		=> array('string', ''),
-			'LastName'		=> array('string', ''),
-			'NickName'		=> array('string', ''),
-			'Skype'			=> array('string', ''),
-			'Facebook'		=> array('string', ''),
+			'Title'				=> array('string', ''),
+			'FirstName'			=> array('string', ''),
+			'LastName'			=> array('string', ''),
+			'NickName'			=> array('string', ''),
+			'Skype'				=> array('string', ''),
+			'Facebook'			=> array('string', ''),
 
 			'PersonalEmail'		=> array('string', ''),
 			'PersonalAddress'	=> array('string', ''),
@@ -114,9 +118,9 @@ class CContact extends AEntity
 			'OtherEmail'		=> array('string', ''),
 			'Notes'				=> array('string', ''),
 
-			'BirthDay'		=> array('int', 0),
+			'BirthDay'			=> array('int', 0),
 			'BirthMonth'		=> array('int', 0),
-			'BirthYear'		=> array('int', 0),
+			'BirthYear'			=> array('int', 0),
 
 			'ETag'				=> array('string', ''),
 			
@@ -124,15 +128,19 @@ class CContact extends AEntity
 		));
 	}
 	
-	public static function createInstance($sModule = 'Contacts', $oParams = array())
+	/**
+	 * Creates instance of CContact
+	 * @param string $sModule Module name
+	 * @return \CContact
+	 */
+	public static function createInstance($sModule = 'Contacts')
 	{
-		return new CContact($sModule, $oParams);
+		return new CContact($sModule);
 	}
 
 	/**
 	 * @param string $sKey
 	 * @param mixed $mValue
-	 * @return void
 	 */
 	public function __set($sKey, $mValue)
 	{
@@ -144,11 +152,59 @@ class CContact extends AEntity
 		parent::__set($sKey, $mValue);
 	}
 	
-	public function SetViewEmail()
+	/**
+	 * Adds groups to contact. Groups are specified by names.
+	 * @param array $aGroupNames List of group names.
+	 */
+	protected function addGroupsFromNames($aGroupNames)
 	{
-		$this->ViewEmail = $this->getViewEmail();
+		if (is_array($aGroupNames) && count($aGroupNames) > 0)
+		{
+			$oContactsDecorator = \CApi::GetModuleDecorator('Contacts');
+			$oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
+			if ($oApiContactsManager)
+			{
+				foreach($aGroupNames as $sGroupName)
+				{
+					$aGroups = $oApiContactsManager->getGroups($this->IdUser, ['Name' => [$sGroupName, '=']]);
+					if (is_array($aGroups) && count($aGroups) > 0)
+					{
+						$this->addGroup($aGroups[0]->sUUID);
+					}
+					elseif (!empty($sGroupName))
+					{
+						$oGroup = \CGroup::createInstance();
+						$oGroup->IdUser = $this->IdUser;
+
+						$oGroup->populate(['Name' => $sGroupName]);
+
+						$oApiContactsManager->createGroup($oGroup);
+						$this->addGroup($oGroup->sUUID);
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Add group to contact.
+	 * @param string $sGroupUUID Group UUID.
+	 */
+	protected function addGroup($sGroupUUID)
+	{
+		if (!empty($sGroupUUID))
+		{
+			$oGroupContact = \CGroupContact::createInstance();
+			$oGroupContact->ContactUUID = $this->sUUID;
+			$oGroupContact->GroupUUID = $sGroupUUID;
+			$this->GroupsContacts[] = $oGroupContact;
+		}
 	}
 	
+	/**
+	 * Returns value of email that is specified as primary.
+	 * @return string
+	 */
 	protected function getViewEmail()
 	{
 		switch ((int) $this->PrimaryEmail)
@@ -162,264 +218,58 @@ class CContact extends AEntity
 				return (string) $this->OtherEmail;
 		}
 	}
-
+	
 	/**
-	 * @param int $iUserId
-	 * @param string $sData
+	 * Sets ViewEmail field.
+	 */
+	public function SetViewEmail()
+	{
+		$this->ViewEmail = $this->getViewEmail();
+	}
+	
+	/**
+	 * Inits contacts from Vcard string.
+	 * @param int $iUserId User identificator.
+	 * @param string $sData Vcard string.
+	 * @param string $sUid Contact UUID.
 	 */
 	public function InitFromVCardStr($iUserId, $sData, $sUid = '')
 	{
 		$oVCard = \Sabre\VObject\Reader::read($sData, \Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES);
-		return $this->InitFromVCardObject($iUserId, $oVCard, $sUid);
+		$aContactData = CApiContactsVCardHelper::GetContactDataFromVcard($oVCard);
+		
+		$oUser = null;
+		$oCoreDecorator = \CApi::GetModuleDecorator('Core');
+		if ($oCoreDecorator)
+		{
+			$oUser = $oCoreDecorator->GetUser($iUserId);
+		}
+		
+		$this->Populate($aContactData, $oUser);
+		
+		if (!empty($sUid))
+		{
+			$this->sUUID = $sUid;
+		}
 	}
 	
 	/**
-	 * @param int $iUserId
-	 * @param \Sabre\VObject\Component\VCard $oVCardObject
+	 * Populate contact with specified data.
+	 * @param array $aContact List of contact data.
+	 * @param \CUser $oUser User.
 	 */
-	public function InitFromVCardObject($iUserId, $oVCardObject, $sUid = '')
+	public function Populate($aContact, $oUser = null)
 	{
-		if ($oVCardObject)
+		if (isset($oUser))
 		{
-			if (empty($sUid))
-			{
-				$sUid = (isset($oVCardObject->UID)) ? (string)$oVCardObject->UID : \Sabre\VObject\UUIDUtil::getUUID();
-			}
-			
-			$this->IdUser = $iUserId;
-			$this->sUUID = $sUid;
-
-			if (isset($oVCardObject->CATEGORIES))
-			{
-				$aGroupNames = $oVCardObject->CATEGORIES->getParts();
-				if (is_array($aGroupNames) && count($aGroupNames) > 0)
-				{
-					$oContactsDecorator = \CApi::GetModuleDecorator('Contacts');
-					$oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
-					if ($oApiContactsManager)
-					{
-						foreach($aGroupNames as $sGroupName)
-						{
-							$aGroups = $oApiContactsManager->getGroups($iUserId, ['Name' => [$sGroupName, '=']]);
-							if (is_array($aGroups) && count($aGroups) > 0)
-							{
-								$this->AddGroup($aGroups[0]->sUUID);
-							}
-							elseif (!empty($sGroupName))
-							{
-								$oGroup = \CGroup::createInstance();
-								$oGroup->IdUser = $iUserId;
-
-								$oGroup->populate(['Name' => $sGroupName]);
-
-								$oApiContactsManager->createGroup($oGroup);
-								$this->AddGroup($oGroup->sUUID);
-							}
-						}
-					}
-				}
-			}
-			
-			$this->FullName = (isset($oVCardObject->FN)) ? (string)$oVCardObject->FN : '';
-
-			if (isset($oVCardObject->N))
-			{
-				$aNames = $oVCardObject->N->getParts();
-
-				$this->LastName = (!empty($aNames[0])) ? $aNames[0] : '';
-				$this->FirstName = (!empty($aNames[1])) ? $aNames[1] : '';
-				$this->Title = (!empty($aNames[3])) ? $aNames[3] : '';
-			}
-
-			$this->NickName = (isset($oVCardObject->NICKNAME)) ? (string) $oVCardObject->NICKNAME : '';
-			$this->Notes = (isset($oVCardObject->NOTE)) ? (string) $oVCardObject->NOTE : '';
-
-			if (isset($oVCardObject->BDAY))
-			{
-				$aDateTime = explode('T', (string)$oVCardObject->BDAY);
-				if (isset($aDateTime[0]))
-				{
-					$aDate = explode('-', $aDateTime[0]);
-					$this->BirthYear = $aDate[0];
-					$this->BirthMonth = $aDate[1];
-					$this->BirthDay = $aDate[2];
-				}
-			}
-
-			if (isset($oVCardObject->ORG))
-			{
-				$aOrgs = $oVCardObject->ORG->getParts();
-
-				$this->BusinessCompany = (!empty($aOrgs[0])) ? $aOrgs[0] : '';
-				$this->BusinessDepartment = (!empty($aOrgs[1])) ? $aOrgs[1] : '';
-			}
-
-			$this->BusinessJobTitle = (isset($oVCardObject->TITLE)) ? (string)$oVCardObject->TITLE : '';
-
-			if (isset($oVCardObject->ADR))
-			{
-				foreach($oVCardObject->ADR as $oAdr)
-				{
-					$aAdrs = $oAdr->getParts();
-					if ($oTypes = $oAdr['TYPE'])
-					{
-						if ($oTypes->has('WORK'))
-						{
-							$this->BusinessAddress = isset($aAdrs[2]) ? $aAdrs[2] : '';
-							$this->BusinessCity = isset($aAdrs[3]) ? $aAdrs[3] : '';
-							$this->BusinessState = isset($aAdrs[4]) ? $aAdrs[4] : '';
-							$this->BusinessZip = isset($aAdrs[5]) ? $aAdrs[5] : '';
-							$this->BusinessCountry = isset($aAdrs[6]) ? $aAdrs[6] : '';
-						}
-						if ($oTypes->has('HOME'))
-						{
-							$this->PersonalAddress = isset($aAdrs[2]) ? $aAdrs[2] : '';
-							$this->PersonalCity = isset($aAdrs[3]) ? $aAdrs[3] : '';
-							$this->PersonalState = isset($aAdrs[4]) ? $aAdrs[4] : '';
-							$this->PersonalZip = isset($aAdrs[5]) ? $aAdrs[5] : '';
-							$this->PersonalCountry = isset($aAdrs[6]) ? $aAdrs[6] : '';
-						}
-					}
-				}
-			}
-
-			if (isset($oVCardObject->EMAIL))
-			{
-				foreach($oVCardObject->EMAIL as $oEmail)
-				{
-					if ($oType = $oEmail['TYPE'])
-					{
-						if ($oType->has('WORK') || $oType->has('INTERNET'))
-						{
-							$this->BusinessEmail = (string)$oEmail;
-							if ($oType->has('PREF'))
-							{
-								$this->PrimaryEmail = EContactsPrimaryEmail::Business;
-							}
-						}
-						else if ($oType->has('HOME'))
-						{
-							$this->PersonalEmail = (string)$oEmail;
-							if ($oType->has('PREF'))
-							{
-								$this->PrimaryEmail = EContactsPrimaryEmail::Personal;
-							}
-						}
-						else if ($oType->has('OTHER'))
-						{
-							$this->OtherEmail = (string)$oEmail;
-							if ($oType->has('PREF'))
-							{
-								$this->PrimaryEmail = EContactsPrimaryEmail::Other;
-							}
-						}
-						else if ($oEmail->group && isset($oVCardObject->{$oEmail->group.'.X-ABLABEL'}) &&
-							strtolower((string) $oVCardObject->{$oEmail->group.'.X-ABLABEL'}) === '_$!<other>!$_')
-						{
-							$this->OtherEmail = (string)$oEmail;
-							if ($oType->has('PREF'))
-							{
-								$this->PrimaryEmail = EContactsPrimaryEmail::Other;
-							}
-						}
-					}
-				}
-				if (empty($this->PrimaryEmail))
-				{
-					if (!empty($this->PersonalEmail))
-					{
-						$this->PrimaryEmail = EContactsPrimaryEmail::Personal;
-					}
-					else if (!empty($this->BusinessEmail))
-					{
-						$this->PrimaryEmail = EContactsPrimaryEmail::Business;
-					}
-					else if (!empty($this->OtherEmail))
-					{
-						$this->PrimaryEmail = EContactsPrimaryEmail::Other;
-					}
-				}
-			}
-
-			if (isset($oVCardObject->URL))
-			{
-				foreach($oVCardObject->URL as $oUrl)
-				{
-					if ($oTypes = $oUrl['TYPE'])
-					{
-						if ($oTypes->has('HOME'))
-						{
-							$this->PersonalWeb = (string)$oUrl;
-						}
-						else if ($oTypes->has('WORK'))
-						{
-							$this->BusinessWeb = (string)$oUrl;
-						}
-					}
-				}
-			}
-
-			if (isset($oVCardObject->TEL))
-			{
-				foreach($oVCardObject->TEL as $oTel)
-				{
-					if ($oTypes = $oTel['TYPE'])
-					{
-						if ($oTypes->has('FAX'))
-						{
-							if ($oTypes->has('HOME'))
-							{
-								$this->PersonalFax = (string)$oTel;
-							}
-							if ($oTypes->has('WORK'))
-							{
-								$this->BusinessFax = (string)$oTel;
-							}
-						}
-						else
-						{
-							if ($oTypes->has('CELL'))
-							{
-								$this->PersonalMobile = (string)$oTel;
-							}
-							else if ($oTypes->has('HOME'))
-							{
-								$this->PersonalPhone = (string)$oTel;
-							}
-							else if ($oTypes->has('WORK'))
-							{
-								$this->BusinessPhone = (string)$oTel;
-							}
-						}
-					}
-				}
-			}
-
-			if (isset($oVCardObject->{'X-AFTERLOGIC-OFFICE'}))
-			{
-				$this->BusinessOffice = (string)$oVCardObject->{'X-AFTERLOGIC-OFFICE'};
-			}
-
-			if (isset($oVCardObject->{'X-AFTERLOGIC-USE-FRIENDLY-NAME'}))
-			{
-				$this->UseFriendlyName = '1' === (string)$oVCardObject->{'X-AFTERLOGIC-USE-FRIENDLY-NAME'};
-			}
+			$this->IdUser = $oUser->iId;
+			$this->IdTenant = $oUser->IdTenant;
 		}
-	}
-	
-	public function AddGroup($sGroupUUID)
-	{
-		if (!empty($sGroupUUID))
+		
+		if (isset($aContact['UUID']))
 		{
-			$oGroupContact = \CGroupContact::createInstance();
-			$oGroupContact->ContactUUID = $this->sUUID;
-			$oGroupContact->GroupUUID = $sGroupUUID;
-			$this->GroupsContacts[] = $oGroupContact;
+			$this->sUUID = $aContact['UUID'];
 		}
-	}
-	
-	public function populate($aContact)
-	{
 		if (isset($aContact['Storage']))
 		{
 			$this->Storage = $aContact['Storage'];
@@ -581,13 +431,22 @@ class CContact extends AEntity
 		{
 			foreach ($aContact['GroupUUIDs'] as $sGroupUUID)
 			{
-				$this->AddGroup($sGroupUUID);
+				$this->addGroup($sGroupUUID);
 			}
 		}
 		
-		$this->ViewEmail = $this->getViewEmail();
+		if (isset($aContact['GroupNames']))
+		{
+			$this->addGroupsFromNames($aContact['GroupNames']);
+		}
+		
+		$this->SetViewEmail();
 	}
 	
+	/**
+	 * Returns array with contact data.
+	 * @return array
+	 */
 	public function toResponseArray()
 	{
 		$aGroupUUIDs = array();

@@ -13,11 +13,6 @@ class CApiContactsSyncCsv
 	/**
 	 * @var CApiContactsCsvFormatter
 	 */
-	protected $oApiContactsManager;
-
-	/**
-	 * @var CApiContactsCsvParser
-	 */
 	protected $oFormatter;
 
 	/**
@@ -25,9 +20,8 @@ class CApiContactsSyncCsv
 	 */
 	protected $oParser;
 
-	public function __construct($oApiContactsManager)
+	public function __construct()
 	{
-		$this->oApiContactsManager = $oApiContactsManager;
 		$this->oFormatter = new CApiContactsCsvFormatter();
 		$this->oParser = new CApiContactsCsvParser();
 	}
@@ -58,22 +52,16 @@ class CApiContactsSyncCsv
 	}
 
 	/**
-	 * @param int $iUserId
-	 * @param int $iTenantId
-	 * @param string $sTempFileName
-	 * @param int $iParsedCount
-	 * @param string $sStorage
-	 * @param string $sGroupUUID
-	 *
-	 * @return int
+	 * @param array $aArgs
+	 * @param array $mImportResult
 	 */
-	public function Import($iUserId, $iTenantId, $sTempFileName, &$iParsedCount, $sStorage = '', $sGroupUUID = '')
+	public function Import($aArgs, &$mImportResult)
 	{
 		$iCount = -1;
 		$iParsedCount = 0;
-		if (file_exists($sTempFileName))
+		if (file_exists($aArgs['TempFileName']))
 		{
-			$aCsv = $this->csvToArray($sTempFileName);
+			$aCsv = $this->csvToArray($aArgs['TempFileName']);
 			if (is_array($aCsv))
 			{
 				$iCount = 0;
@@ -82,64 +70,72 @@ class CApiContactsSyncCsv
 					set_time_limit(30);
 
 					$this->oParser->reset();
-
-					$oContact = \CContact::createInstance();
-					$oContact->IdUser = $iUserId;
-
 					$this->oParser->setContainer($aCsvItem);
-					$aParameters = $this->oParser->getParameters();
+					$aContactData = $this->oParser->getParameters();
 
-					foreach ($aParameters as $sPropertyName => $mValue)
+					if (!isset($aContactData['FullName']) || empty($aContactData['FullName']))
 					{
-						if (isset($oContact->{$sPropertyName}))
+						$aFullName = [];
+						if (isset($aContactData['FirstName']) && !empty(trim($aContactData['FirstName'])))
 						{
-							$oContact->{$sPropertyName} = $mValue;
+							$aFullName[] = trim($aContactData['FirstName']);
+						}
+						if (isset($aContactData['LastName']) && !empty(trim($aContactData['LastName'])))
+						{
+							$aFullName[] = trim($aContactData['LastName']);
+						}
+						if (count($aFullName) > 0)
+						{
+							$aContactData['FullName'] = join(' ', $aFullName);
 						}
 					}
+					
+					if (isset($aContactData['PersonalEmail']) && !empty($aContactData['PersonalEmail']))
+					{
+						$aContactData['PrimaryEmail'] = \EContactsPrimaryEmail::Personal;
+					}
+					else if (isset($aContactData['BusinessEmail']) && !empty($aContactData['BusinessEmail']))
+					{
+						$aContactData['PrimaryEmail'] = \EContactsPrimaryEmail::Business;
+					}
+					else if (isset($aContactData['OtherEmail']) && !empty($aContactData['OtherEmail']))
+					{
+						$aContactData['PrimaryEmail'] = \EContactsPrimaryEmail::Other;
+					}
+					
+					if (isset($aContactData['BirthYear']))
+					{
+						if (strlen($aContactData['BirthYear']) === 2)
+						{
+							$oDt = DateTime::createFromFormat('y', $aContactData['BirthYear']);
+							$aContactData['BirthYear'] = $oDt->format('Y');
+						}
+						$aContactData['BirthYear'] = (int) $aContactData['BirthYear'];
+					}
 
-					if (0 === strlen($oContact->FullName))
+					if (!empty($aArgs['GroupUUID']))
 					{
-						$oContact->FullName = trim($oContact->FirstName.' '.$oContact->LastName);
+						$aContactData['GroupUUIDs'] = [$aArgs['GroupUUID']];
 					}
-					
-					if (0 !== strlen($oContact->PersonalEmail))
-					{
-						$oContact->PrimaryEmail = \EContactsPrimaryEmail::Personal;
-					}
-					else if (0 !== strlen($oContact->BusinessEmail))
-					{
-						$oContact->PrimaryEmail = \EContactsPrimaryEmail::Business;
-					}
-					else if (0 !== strlen($oContact->OtherEmail))
-					{
-						$oContact->PrimaryEmail = \EContactsPrimaryEmail::Other;
-					}
-					
-					if (strlen($oContact->BirthYear) === 2)
-					{
-						$oDt = DateTime::createFromFormat('y', $oContact->BirthYear);
-						$oContact->BirthYear = $oDt->format('Y');
-					}					
 
 					$iParsedCount++;
-
-					$oContact->IdTenant = $iTenantId;
-					$oContact->Storage = $sStorage;
 					
-					$oContact->SetViewEmail();
-					$oContact->AddGroup($sGroupUUID);
-
-					if ($this->oApiContactsManager->createContact($oContact))
+					$oContactsDecorator = \CApi::GetModuleDecorator('Contacts');
+					if ($oContactsDecorator && $oContactsDecorator->CreateContact($aContactData, $aArgs['User']->iId))
 					{
 						$iCount++;
 					}
 
-					unset($oContact, $aParameters, $aCsvItem);
+					unset($aContactData, $aCsvItem);
 				}
 			}
 		}
-
-		return $iCount;
+		
+		if ($iCount > -1)
+		{
+			$mImportResult['ParsedCount'] = $iParsedCount;
+			$mImportResult['ImportedCount'] = $iCount;
+		}
 	}
 	
 	/**

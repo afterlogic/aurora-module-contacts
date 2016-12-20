@@ -24,6 +24,7 @@ class ContactsModule extends AApiModule
 		$this->subscribeEvent('Mail::ExtendMessageData', array($this, 'onExtendMessageData'));
 		$this->subscribeEvent('MobileSync::GetInfo', array($this, 'onGetMobileSyncInfo'));
 		$this->subscribeEvent('AdminPanelWebclient::DeleteEntity::before', array($this, 'onBeforeDeleteEntity'));
+		$this->subscribeEvent('Contacts::Import', array($this, 'onImportCsv'));
 		
 		$this->setObjectMap('CUser', array(
 				'ContactsPerPage' => array('int', $this->getConfig('ContactsPerPage', 20)),
@@ -101,14 +102,13 @@ class ContactsModule extends AApiModule
 		
 		if ($Format === 'csv')
 		{
-			$this->incClass('../managers/classes/'.$Format.'/formatter');
-			$this->incClass('../managers/classes/'.$Format.'/parser');
-			$this->incClass('../managers/classes/sync/'.$Format);
+			$this->incClass('csv-formatter');
+			$this->incClass('csv-parser');
+			$this->incClass('csv-sync');
 
-			$sSyncClass = 'CApiContactsSync'.ucfirst($Format);
-			if (class_exists($sSyncClass))
+			if (class_exists('CApiContactsSyncCsv'))
 			{
-				$oSync = new $sSyncClass($this->oApiContactsManager);
+				$oSync = new CApiContactsSyncCsv();
 				$sOutput = $oSync->Export($aContacts);
 			}
 		}
@@ -161,12 +161,12 @@ class ContactsModule extends AApiModule
 	 * @param string $UUID
 	 * @return array
 	 */
-	public function GetGroupEvents($UUID)
-	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		
-		return [];
-	}	
+//	public function GetGroupEvents($UUID)
+//	{
+//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		
+//		return [];
+//	}	
 	
 	public function GetApiContactsManager()
 	{
@@ -321,24 +321,24 @@ class ContactsModule extends AApiModule
 	 * @param bool $PhoneOnly
 	 * @return array
 	 */
-	public function GetSuggestions($Search, $Storage = '', $PhoneOnly = false)
-	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		
-		return $this->GetContacts(0, 20, EContactSortField::Frequency, ESortOrder::ASC, $Search);
-	}	
+//	public function GetSuggestions($Search, $Storage = '', $PhoneOnly = false)
+//	{
+//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		
+//		return $this->GetContacts(0, 20, EContactSortField::Frequency, ESortOrder::ASC, $Search);
+//	}	
 	
 	/**
 	 * 
 	 * @param string $ContactUUID
 	 * @return bool
 	 */
-	public function DeleteSuggestion($ContactUUID)
-	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		
-		return true;
-	}	
+//	public function DeleteSuggestion($ContactUUID)
+//	{
+//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		
+//		return true;
+//	}	
 	
 	/**
 	 * 
@@ -364,10 +364,7 @@ class ContactsModule extends AApiModule
 		}
 		
 		$oContact = \CContact::createInstance();
-		$oContact->IdUser = $oUser->iId;
-		$oContact->IdTenant = $oUser->IdTenant;
-
-		$oContact->populate($Contact);
+		$oContact->Populate($Contact, $oUser);
 
 		$mResult = $this->oApiContactsManager->createContact($oContact);
 		return $mResult && $oContact ? $oContact->sUUID : false;
@@ -429,7 +426,7 @@ class ContactsModule extends AApiModule
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		$oContact = $this->oApiContactsManager->getContact($Contact['UUID']);
-		$oContact->populate($Contact);
+		$oContact->Populate($Contact);
 		
 		return $this->oApiContactsManager->updateContact($oContact);
 	}
@@ -452,22 +449,22 @@ class ContactsModule extends AApiModule
 	 * @return bool
 	 * @throws \System\Exceptions\AuroraApiException
 	 */
-	public function UpdateSharedContacts($UUIDs)
-	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		return true;
-	}	
+//	public function UpdateSharedContacts($UUIDs)
+//	{
+//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		return true;
+//	}	
 	
 	/**
 	 * 
 	 * @param string $File
 	 * @return array
 	 */
-	public function AddContactsFromFile($File)
-	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-		return true;
-	}	
+//	public function AddContactsFromFile($File)
+//	{
+//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		return true;
+//	}	
 	
 	/**
 	 * @return array
@@ -580,65 +577,36 @@ class ContactsModule extends AApiModule
 		{
 			$sFileType = strtolower(\api_Utils::GetFileExtension($UploadData['name']));
 
-			$aFormats = [];
-			$this->broadcastEvent('GetImportExportFormats', $aFormats);
-			if (in_array($sFileType, array_merge($this->aImportExportFormats, $aFormats)))
+			$oApiFileCacheManager = \CApi::GetSystemManager('filecache');
+			$sSavedName = 'import-post-' . md5($UploadData['name'] . $UploadData['tmp_name']);
+			if ($oApiFileCacheManager->moveUploadedFile($oUser->sUUID, $sSavedName, $UploadData['tmp_name']))
 			{
-				$oApiFileCacheManager = \CApi::GetSystemManager('filecache');
-				$sSavedName = 'import-post-' . md5($UploadData['name'] . $UploadData['tmp_name']);
-				if ($oApiFileCacheManager->moveUploadedFile($oUser->sUUID, $sSavedName, $UploadData['tmp_name']))
+				$aArgs = [
+					'Format' => $sFileType,
+					'User' => $oUser,
+					'TempFileName' => $oApiFileCacheManager->generateFullFilePath($oUser->sUUID, $sSavedName),
+					'Storage' => $Storage,
+					'GroupUUID' => $GroupUUID,
+				];
+
+				$mImportResult = [];
+				$this->broadcastEvent('Import', $aArgs, $mImportResult);
+
+				if (is_array($mImportResult) && count($mImportResult) === 2)
 				{
-					$iImportedCount = false;
-					$iParsedCount = 0;
-					
-					if ($sFileType === 'csv')
-					{
-						$this->incClass('../managers/classes/'.$sFileType.'/formatter');
-						$this->incClass('../managers/classes/'.$sFileType.'/parser');
-						$this->incClass('../managers/classes/sync/'.$sFileType);
-
-						$sSyncClass = 'CApiContactsSync'.ucfirst($sFileType);
-						if (class_exists($sSyncClass))
-						{
-							$oSync = new $sSyncClass($this->oApiContactsManager);
-							$iImportedCount = $oSync->Import($oUser->iId, $oUser->IdTenant, 
-									$oApiFileCacheManager->generateFullFilePath($oUser->sUUID, $sSavedName), 
-									$iParsedCount, $Storage, $GroupUUID);
-						}
-					}
-					else
-					{
-						$aArgs = [
-							'Format' => $sFileType,
-							'User' => $oUser,
-							'TempFileName' => $oApiFileCacheManager->generateFullFilePath($oUser->sUUID, $sSavedName),
-							'Storage' => $Storage,
-							'GroupUUID' => $GroupUUID,
-						];
-						$this->broadcastEvent('Import', $aArgs, $iParsedCount);
-						$iImportedCount = $iParsedCount;
-					}
-
-					if (is_int($iImportedCount) && $iImportedCount >= 0)
-					{
-						$aResponse['ImportedCount'] = $iImportedCount;
-						$aResponse['ParsedCount'] = $iParsedCount;
-					}
-					else
-					{
-						$sError = 'unknown';
-					}
-
-					$oApiFileCacheManager->clear($oUser->sUUID, $sSavedName);
+					$aResponse['ImportedCount'] = $mImportResult['ImportedCount'];
+					$aResponse['ParsedCount'] = $mImportResult['ParsedCount'];
 				}
 				else
 				{
-					$sError = 'unknown';
+					throw new \System\Exceptions\AuroraApiException(\System\Notifications::IncorrectFileExtension);
 				}
+
+				$oApiFileCacheManager->clear($oUser->sUUID, $sSavedName);
 			}
 			else
 			{
-				throw new \System\Exceptions\AuroraApiException(\System\Notifications::IncorrectFileExtension);
+				$sError = 'unknown';
 			}
 		}
 		else
@@ -652,6 +620,25 @@ class ContactsModule extends AApiModule
 		}
 
 		return $aResponse;
+	}
+	
+	public function onImportCsv($aArgs, &$mImportResult)
+	{
+		if ($aArgs['Format'] === 'csv')
+		{
+			$mImportResult['ParsedCount'] = 0;
+			$mImportResult['ImportedCount'] = 0;
+			
+			$this->incClass('csv-formatter');
+			$this->incClass('csv-parser');
+			$this->incClass('csv-sync');
+
+			if (class_exists('CApiContactsSyncCsv'))
+			{
+				$oSync = new CApiContactsSyncCsv();
+				$oSync->Import($aArgs, $mImportResult);
+			}
+		}
 	}
 	
 	public function onExtendMessageData($oAccount, &$oMessage, $aData)
