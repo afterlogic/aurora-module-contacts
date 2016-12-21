@@ -356,7 +356,7 @@ class CApiContactsManager extends AApiManager
 	/**
 	 * Adds one or multiple contacts to the specific group. 
 	 * 
-	 * @param string $sGroupUUID Group identificator to be used 
+	 * @param string $sGroupUUID Group identifier to be used 
 	 * @param array $aContactUUIDs Array of integers
 	 * 
 	 * @return bool
@@ -390,7 +390,7 @@ class CApiContactsManager extends AApiManager
 	/**
 	 * The method deletes one or multiple contacts from the group. 
 	 * 
-	 * @param string $sGroupUUID Group identificator
+	 * @param string $sGroupUUID Group identifier
 	 * @param array $aContactUUIDs Array of integers
 	 * 
 	 * @return bool

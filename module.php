@@ -68,7 +68,7 @@ class ContactsModule extends AApiModule
 	
 	/***** public functions might be called with web API *****/
 	/**
-	 * Obtaines list of module settings for authenticated user.
+	 * Obtains list of module settings for authenticated user.
 	 * @return array
 	 */
 	public function GetSettings()
@@ -311,7 +311,7 @@ class ContactsModule extends AApiModule
 	/**
 	 * Creates contact with specified parameters.
 	 * @param array $Contact Parameters of contact to create.
-	 * @param int $iUserId Identificator of user that should own a new contact.
+	 * @param int $iUserId Identifier of user that should own a new contact.
 	 * @return bool|string
 	 * @throws \System\Exceptions\AuroraApiException
 	 */

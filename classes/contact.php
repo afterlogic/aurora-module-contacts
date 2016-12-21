@@ -245,7 +245,7 @@ class CContact extends AEntity
 	
 	/**
 	 * Inits contacts from Vcard string.
-	 * @param int $iUserId User identificator.
+	 * @param int $iUserId User identifier.
 	 * @param string $sData Vcard string.
 	 * @param string $sUid Contact UUID.
 	 */
