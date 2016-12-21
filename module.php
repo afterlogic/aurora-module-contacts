@@ -29,6 +29,11 @@ class ContactsModule extends AApiModule
 	
 	protected $aImportExportFormats = ['csv'];
 	
+	/**
+	 * Initializes Contacts Module.
+	 * 
+	 * @ignore
+	 */
 	public function init() 
 	{
 		$this->incClass('contact');
@@ -50,9 +55,20 @@ class ContactsModule extends AApiModule
 		);
 	}
 	
+	/***** public functions *****/
+	/**
+	 * Returns API contacts manager.
+	 * @return \CApiContactsManager
+	 */
+	public function GetApiContactsManager()
+	{
+		return $this->oApiContactsManager;
+	}
+	/***** public functions *****/
+	
+	/***** public functions might be called with web API *****/
 	/**
 	 * Obtaines list of module settings for authenticated user.
-	 * 
 	 * @return array
 	 */
 	public function GetSettings()
@@ -84,6 +100,11 @@ class ContactsModule extends AApiModule
 		);
 	}
 	
+	/**
+	 * Updates module's settings - saves them to config.json file or to user settings in db.
+	 * @param int $ContactsPerPage Count of contacts per page.
+	 * @return boolean
+	 */
 	public function UpdateSettings($ContactsPerPage)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
@@ -108,6 +129,13 @@ class ContactsModule extends AApiModule
 		return false;
 	}
 	
+	/**
+	 * Exports specified contacts to a file with specified format.
+	 * @param string $Format File format that should be used for export.
+	 * @param array $Filters Filters for obtaining specified contacts.
+	 * @param string $GroupUUID UUID of group that should contain contacts for export.
+	 * @param array $ContactUUIDs List of UUIDs of contacts that should be exported.
+	 */
 	public function Export($Format, $Filters = [], $GroupUUID = '', $ContactUUIDs = [])
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
@@ -151,6 +179,7 @@ class ContactsModule extends AApiModule
 	}
 	
 	/**
+	 * Returns all groups for authenticated user.
 	 * @return array
 	 */
 	public function GetGroups()
@@ -163,8 +192,8 @@ class ContactsModule extends AApiModule
 	}
 	
 	/**
-	 * 
-	 * @param string $UUID
+	 * Returns group with specified UUID.
+	 * @param string $UUID UUID of group to return.
 	 * @return \CGroup
 	 */
 	public function GetGroup($UUID)
@@ -175,68 +204,14 @@ class ContactsModule extends AApiModule
 	}
 	
 	/**
-	 * 
-	 * @param string $UUID
-	 * @return array
-	 */
-//	public function GetGroupEvents($UUID)
-//	{
-//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-//		
-//		return [];
-//	}	
-	
-	public function GetApiContactsManager()
-	{
-		return $this->oApiContactsManager;
-	}
-	
-	private function prepareFilters($aRawFilters)
-	{
-		$aFilters = [];
-		
-		if (is_array($aRawFilters))
-		{
-			$iAndIndex = 1;
-			$iOrIndex = 1;
-			foreach ($aRawFilters as $aSubFilters)
-			{
-				if (is_array($aSubFilters))
-				{
-					foreach ($aSubFilters as $sKey => $a2ndSubFilters)
-					{
-						if (is_array($a2ndSubFilters))
-						{
-							$sNewKey = $sKey;
-							if ($sKey === '$AND')
-							{
-								$sNewKey = $iAndIndex.'$AND';
-								$iAndIndex++;
-							}
-							if ($sKey === '$OR')
-							{
-								$sNewKey = $iOrIndex.'$OR';
-								$iOrIndex++;
-							}
-							$aFilters[$sNewKey] = $a2ndSubFilters;
-						}
-					}
-				}
-			}
-		}
-		
-		return $aFilters;
-	}
-	
-	/**
-	 * 
-	 * @param int $Offset
-	 * @param int $Limit
-	 * @param int $SortField
-	 * @param int $SortOrder
-	 * @param string $Search
-	 * @param string $GroupUUID
-	 * @param array $Filters
+	 * Returns list of contacts for specified parameters.
+	 * @param int $Offset Offset of contacts list.
+	 * @param int $Limit Limit of result contacts list.
+	 * @param int $SortField Name of field order by.
+	 * @param int $SortOrder Sorting direction.
+	 * @param string $Search Search string.
+	 * @param string $GroupUUID UUID of group that should contain all returned contacts.
+	 * @param array $Filters Other conditions for obtaining contacts list.
 	 * @return array
 	 */
 	public function GetContacts($Offset = 0, $Limit = 20, $SortField = EContactSortField::Name, $SortOrder = ESortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array())
@@ -299,8 +274,8 @@ class ContactsModule extends AApiModule
 	}	
 	
 	/**
-	 * 
-	 * @param string $UUID
+	 * Returns contact with specified UUID.
+	 * @param string $UUID UUID of contact to return.
 	 * @return \CContact
 	 */
 	public function GetContact($UUID)
@@ -311,7 +286,8 @@ class ContactsModule extends AApiModule
 	}
 
 	/**
-	 * @param array $Emails
+	 * Returns list of contacts with specified emails.
+	 * @param array $Emails List of emails of contacts to return.
 	 * @return array
 	 */
 	public function GetContactsByEmails($Emails)
@@ -333,34 +309,9 @@ class ContactsModule extends AApiModule
 	}	
 	
 	/**
-	 * 
-	 * @param string $Search
-	 * @param string $Storage
-	 * @param bool $PhoneOnly
-	 * @return array
-	 */
-//	public function GetSuggestions($Search, $Storage = '', $PhoneOnly = false)
-//	{
-//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-//		
-//		return $this->GetContacts(0, 20, EContactSortField::Frequency, ESortOrder::ASC, $Search);
-//	}	
-	
-	/**
-	 * 
-	 * @param string $ContactUUID
-	 * @return bool
-	 */
-//	public function DeleteSuggestion($ContactUUID)
-//	{
-//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-//		
-//		return true;
-//	}	
-	
-	/**
-	 * 
-	 * @param array $Contact
+	 * Creates contact with specified parameters.
+	 * @param array $Contact Parameters of contact to create.
+	 * @param int $iUserId Identificator of user that should own a new contact.
 	 * @return bool|string
 	 * @throws \System\Exceptions\AuroraApiException
 	 */
@@ -435,8 +386,8 @@ class ContactsModule extends AApiModule
 	}	
 	
 	/**
-	 * 
-	 * @param array $Contact
+	 * Updates contact with specified parameters.
+	 * @param array $Contact Parameters of contact to update.
 	 * @return bool
 	 */
 	public function UpdateContact($Contact)
@@ -493,8 +444,8 @@ class ContactsModule extends AApiModule
 	}	
 	
 	/**
-	 * 
-	 * @param array $UUIDs Array of strings
+	 * Deletes contacts with specified UUIDs.
+	 * @param array $UUIDs Array of strings - UUIDs of contacts to delete.
 	 * @return bool
 	 */
 	public function DeleteContacts($UUIDs)
@@ -505,29 +456,8 @@ class ContactsModule extends AApiModule
 	}	
 	
 	/**
-	 * 
-	 * @param array $UUIDs
-	 * @return bool
-	 * @throws \System\Exceptions\AuroraApiException
-	 */
-//	public function UpdateSharedContacts($UUIDs)
-//	{
-//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-//		return true;
-//	}	
-	
-	/**
-	 * 
-	 * @param string $File
-	 * @return array
-	 */
-//	public function AddContactsFromFile($File)
-//	{
-//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-//		return true;
-//	}	
-	
-	/**
+	 * Creates group with specified parameters.
+	 * @param array $Group Parameters of group to create.
 	 * @return array
 	 */
 	public function CreateGroup($Group)
@@ -545,7 +475,8 @@ class ContactsModule extends AApiModule
 	
 	/**
 	 * 
-	 * @param array $Group
+	 * Updates group with specified parameters.
+	 * @param array $Group Parameters of group to update.
 	 * @return boolean
 	 */
 	public function UpdateGroup($Group)
@@ -563,8 +494,8 @@ class ContactsModule extends AApiModule
 	}	
 	
 	/**
-	 * 
-	 * @param string $UUID
+	 * Deletes group with specified UUID.
+	 * @param string $UUID UUID of group to delete.
 	 * @return bool
 	 */
 	public function DeleteGroup($UUID)
@@ -575,9 +506,9 @@ class ContactsModule extends AApiModule
 	}
 	
 	/**
-	 * 
-	 * @param string $GroupUUID
-	 * @param array $ContactUUIDs Array of strings
+	 * Adds specified contacts to specified group.
+	 * @param string $GroupUUID UUID of group.
+	 * @param array $ContactUUIDs Array of strings - UUIDs of contacts to add to group.
 	 * @return boolean
 	 */
 	public function AddContactsToGroup($GroupUUID, $ContactUUIDs)
@@ -593,9 +524,9 @@ class ContactsModule extends AApiModule
 	}
 	
 	/**
-	 * 
-	 * @param string $GroupUUID
-	 * @param array $ContactUUIDs array of integers
+	 * Removes specified contacts from specified group.
+	 * @param string $GroupUUID UUID of group.
+	 * @param array $ContactUUIDs Array of strings - UUIDs of contacts to remove from group.
 	 * @return boolean
 	 */
 	public function RemoveContactsFromGroup($GroupUUID, $ContactUUIDs)
@@ -610,18 +541,14 @@ class ContactsModule extends AApiModule
 		return true;
 	}	
 	
-	public function onGetBodyStructureParts($aParts, &$aResultParts)
-	{
-		foreach ($aParts as $oPart)
-		{
-			if ($oPart instanceof \MailSo\Imap\BodyStructure && 
-					($oPart->ContentType() === 'text/vcard' || $oPart->ContentType() === 'text/x-vcard'))
-			{
-				$aResultParts[] = $oPart;
-			}
-		}
-	}
-	
+	/**
+	 * Imports contacts from file with specified format.
+	 * @param array $UploadData Array of uploaded file data.
+	 * @param string $Storage Storage name.
+	 * @param array $GroupUUID Group UUID.
+	 * @return string
+	 * @throws \System\Exceptions\AuroraApiException
+	 */
 	public function Import($UploadData, $Storage, $GroupUUID)
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
@@ -681,6 +608,90 @@ class ContactsModule extends AApiModule
 		}
 
 		return $aResponse;
+	}
+	
+//	public function GetGroupEvents($UUID)
+//	{
+//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		
+//		return [];
+//	}	
+	
+//	public function GetSuggestions($Search, $Storage = '', $PhoneOnly = false)
+//	{
+//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		
+//		return $this->GetContacts(0, 20, EContactSortField::Frequency, ESortOrder::ASC, $Search);
+//	}	
+	
+//	public function DeleteSuggestion($ContactUUID)
+//	{
+//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		
+//		return true;
+//	}	
+	
+//	public function UpdateSharedContacts($UUIDs)
+//	{
+//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		return true;
+//	}	
+	
+//	public function AddContactsFromFile($File)
+//	{
+//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		return true;
+//	}	
+	/***** public functions might be called with web API *****/
+	
+	/***** private functions *****/
+	private function prepareFilters($aRawFilters)
+	{
+		$aFilters = [];
+		
+		if (is_array($aRawFilters))
+		{
+			$iAndIndex = 1;
+			$iOrIndex = 1;
+			foreach ($aRawFilters as $aSubFilters)
+			{
+				if (is_array($aSubFilters))
+				{
+					foreach ($aSubFilters as $sKey => $a2ndSubFilters)
+					{
+						if (is_array($a2ndSubFilters))
+						{
+							$sNewKey = $sKey;
+							if ($sKey === '$AND')
+							{
+								$sNewKey = $iAndIndex.'$AND';
+								$iAndIndex++;
+							}
+							if ($sKey === '$OR')
+							{
+								$sNewKey = $iOrIndex.'$OR';
+								$iOrIndex++;
+							}
+							$aFilters[$sNewKey] = $a2ndSubFilters;
+						}
+					}
+				}
+			}
+		}
+		
+		return $aFilters;
+	}
+	
+	public function onGetBodyStructureParts($aParts, &$aResultParts)
+	{
+		foreach ($aParts as $oPart)
+		{
+			if ($oPart instanceof \MailSo\Imap\BodyStructure && 
+					($oPart->ContentType() === 'text/vcard' || $oPart->ContentType() === 'text/x-vcard'))
+			{
+				$aResultParts[] = $oPart;
+			}
+		}
 	}
 	
 	public function onImportCsv($aArgs, &$mImportResult)
@@ -804,4 +815,5 @@ class ContactsModule extends AApiModule
 			}
 		}
 	}
+	/***** private functions *****/
 }
