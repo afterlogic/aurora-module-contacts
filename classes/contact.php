@@ -286,6 +286,10 @@ class CContact extends AEntity
 		{
 			$this->sUUID = $aContact['UUID'];
 		}
+		if (empty($this->sUUID))
+		{
+			$this->sUUID = $this->generateUUID();
+		}
 		if (isset($aContact['Storage']))
 		{
 			$this->Storage = $aContact['Storage'];
