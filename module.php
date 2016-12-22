@@ -68,6 +68,58 @@ class ContactsModule extends AApiModule
 	
 	/***** public functions might be called with web API *****/
 	/**
+	 * @apiDefine Contacts Contacts Module
+	 * Main Contacts module. It provides PHP and Web APIs for managing contacts.
+	 */
+	
+	/**
+	 * @api {post} ?/Api/ GetSettings
+	 * @apiName GetSettings
+	 * @apiGroup Contacts
+	 * @apiDescription Obtains list of module settings for authenticated user.
+	 * 
+	 * @apiParam {string=Contacts} Module Module name
+	 * @apiParam {string=GetSettings} Method Method name
+	 * @apiParam {string} [AuthToken] Auth token
+	 * 
+	 * @apiParamExample {json} Request-Example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'GetSettings',
+	 *	AuthToken: 'token_value'
+	 * }
+	 * 
+	 * @apiSuccess {object[]} Result Array of response objects.
+	 * @apiSuccess {string} Result.Module Module name.
+	 * @apiSuccess {string} Result.Method Method name.
+	 * @apiSuccess {mixed} Result.Result List of module settings in case of success, otherwise **false**.
+	 * @apiSuccess {int} Result.Result.ContactsPerPage=20 Count of contacts that will be displayed on one page.
+	 * @apiSuccess {string} Result.Result.ImportContactsLink=&quot;&quot; Link for learning more about CSV format.
+	 * @apiSuccess {array} Result.Result.Storages='[]' List of storages wich will be shown in the interface.
+	 * @apiSuccess {array} Result.Result.ImportExportFormats='[]' List of formats that can be used for import and export contacts.
+	 * @apiSuccess {array} Result.Result.EContactsPrimaryEmail='[]' Enumeration with primary email values.
+	 * @apiSuccess {array} Result.Result.EContactsPrimaryPhone='[]' Enumeration with primary phone values.
+	 * @apiSuccess {array} Result.Result.EContactsPrimaryAddress='[]' Enumeration with primary address values.
+	 * @apiSuccess {array} Result.Result.EContactSortField='[]' Enumeration with sort field values.
+	 * @apiSuccess {int} [Result.ErrorCode] Error code
+	 * 
+	 * @apiSuccessExample {json} Success response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'GetSettings',
+	 *	Result: { ContactsPerPage: 20, ImportContactsLink: '', Storages: ['personal', 'team'], ImportExportFormats: ['csv', 'vcf'], EContactsPrimaryEmail: {'Personal': 0, 'Business': 1, 'Other': 2}, EContactsPrimaryPhone: {'Mobile': 0, 'Personal': 1, 'Business': 2}, EContactsPrimaryAddress: {'Personal': 0, 'Business': 1}, EContactSortField: {'Name': 1, 'Email': 2, 'Frequency': 3} }
+	 * }
+	 * 
+	 * @apiSuccessExample {json} Error response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'GetSettings',
+	 *	Result: false,
+	 *	ErrorCode: 102
+	 * }
+	 */
+	
+	/**
 	 * Obtains list of module settings for authenticated user.
 	 * @return array
 	 */
@@ -101,6 +153,50 @@ class ContactsModule extends AApiModule
 	}
 	
 	/**
+	 * @api {post} ?/Api/ UpdateSettings
+	 * @apiName UpdateSettings
+	 * @apiGroup Contacts
+	 * @apiDescription Updates module's settings - saves them to config.json file.
+	 * 
+	 * @apiParam {string=Contacts} Module Module name
+	 * @apiParam {string=UpdateSettings} Method Method name
+	 * @apiParam {string} AuthToken Auth token
+	 * @apiParam {string} Parameters JSON.stringified object <br>
+	 * {<br>
+	 * &emsp; **ContactsPerPage** *int* Count of contacts per page.<br>
+	 * }
+	 * 
+	 * @apiParamExample {json} Request-Example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'UpdateSettings',
+	 *	AuthToken: 'token_value',
+	 *	Parameters: '{ ContactsPerPage: 10 }'
+	 * }
+	 * 
+	 * @apiSuccess {object[]} Result Array of response objects.
+	 * @apiSuccess {string} Result.Module Module name
+	 * @apiSuccess {string} Result.Method Method name
+	 * @apiSuccess {bool} Result.Result Indicates if settings were updated successfully.
+	 * @apiSuccess {int} [Result.ErrorCode] Error code
+	 * 
+	 * @apiSuccessExample {json} Success response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'UpdateSettings',
+	 *	Result: true
+	 * }
+	 * 
+	 * @apiSuccessExample {json} Error response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'UpdateSettings',
+	 *	Result: false,
+	 *	ErrorCode: 102
+	 * }
+	 */
+	
+	/**
 	 * Updates module's settings - saves them to config.json file or to user settings in db.
 	 * @param int $ContactsPerPage Count of contacts per page.
 	 * @return boolean
@@ -128,6 +224,49 @@ class ContactsModule extends AApiModule
 		
 		return false;
 	}
+	
+	/**
+	 * @api {post} ?/Api/ Export
+	 * @apiName Export
+	 * @apiGroup Contacts
+	 * @apiDescription Exports specified contacts to a file with specified format.
+	 * 
+	 * @apiParam {string=Contacts} Module Module name
+	 * @apiParam {string=Export} Method Method name
+	 * @apiParam {string} AuthToken Auth token
+	 * @apiParam {string} Parameters JSON.stringified object <br>
+	 * {<br>
+	 * &emsp; **Format** *string* File format that should be used for export.<br>
+	 * &emsp; **Filters** *array* Filters for obtaining specified contacts.<br>
+	 * &emsp; **GroupUUID** *string* UUID of group that should contain contacts for export.<br>
+	 * &emsp; **ContactUUIDs** *array* List of UUIDs of contacts that should be exported.<br>
+	 * }
+	 * 
+	 * @apiParamExample {json} Request-Example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'Export',
+	 *	AuthToken: 'token_value',
+	 *	Parameters: '{ Format: "csv", Filters: [], GroupUUID: "", ContactUUIDs: [] }'
+	 * }
+	 * 
+	 * @apiSuccess {object[]} Result Array of response objects.
+	 * @apiSuccess {string} Result.Module Module name
+	 * @apiSuccess {string} Result.Method Method name
+	 * @apiSuccess {mixed} Result.Result Contents of CSV or VCF file in case of success, otherwise **false**.
+	 * @apiSuccess {int} [Result.ErrorCode] Error code
+	 * 
+	 * @apiSuccessExample {json} Success response example:
+	 * contents of CSV or VCF file 
+	 * 
+	 * @apiSuccessExample {json} Error response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'Export',
+	 *	Result: false,
+	 *	ErrorCode: 102
+	 * }
+	 */
 	
 	/**
 	 * Exports specified contacts to a file with specified format.
@@ -179,6 +318,45 @@ class ContactsModule extends AApiModule
 	}
 	
 	/**
+	 * @api {post} ?/Api/ GetGroups
+	 * @apiName GetGroups
+	 * @apiGroup Contacts
+	 * @apiDescription Returns all groups for authenticated user.
+	 * 
+	 * @apiParam {string=Contacts} Module Module name
+	 * @apiParam {string=GetGroups} Method Method name
+	 * @apiParam {string} AuthToken Auth token
+	 * 
+	 * @apiParamExample {json} Request-Example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'GetGroups',
+	 *	AuthToken: 'token_value'
+	 * }
+	 * 
+	 * @apiSuccess {object[]} Result Array of response objects.
+	 * @apiSuccess {string} Result.Module Module name
+	 * @apiSuccess {string} Result.Method Method name
+	 * @apiSuccess {mixed} Result.Result List of groups in case of success, otherwise **false**.
+	 * @apiSuccess {int} [Result.ErrorCode] Error code
+	 * 
+	 * @apiSuccessExample {json} Success response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'GetGroups',
+	 *	Result: [{City: '', Company: '', Contacts: [], Country: '', Email: '', Fax: '', IdUser: 3, IsOrganization: false, Name: 'group_name', Phone: '', State: '', Street: '', UUID: '1ec99b23-28c2-40b5-8f70-950015a291ec', Web: '', Zip: ''}]
+	 * }
+	 * 
+	 * @apiSuccessExample {json} Error response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'GetGroups',
+	 *	Result: false,
+	 *	ErrorCode: 102
+	 * }
+	 */
+	
+	/**
 	 * Returns all groups for authenticated user.
 	 * @return array
 	 */
@@ -192,6 +370,63 @@ class ContactsModule extends AApiModule
 	}
 	
 	/**
+	 * @api {post} ?/Api/ GetGroup
+	 * @apiName GetGroup
+	 * @apiGroup Contacts
+	 * @apiDescription Returns group with specified UUID.
+	 * 
+	 * @apiParam {string=Contacts} Module Module name
+	 * @apiParam {string=GetGroup} Method Method name
+	 * @apiParam {string} AuthToken Auth token
+	 * @apiParam {string} Parameters JSON.stringified object <br>
+	 * {<br>
+	 * &emsp; **$UUID** *string* UUID of group to return.<br>
+	 * }
+	 * 
+	 * @apiParamExample {json} Request-Example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'GetGroup',
+	 *	AuthToken: 'token_value',
+	 *	Parameters: '{ UUID: "group_uuid" }'
+	 * }
+	 * 
+	 * @apiSuccess {object[]} Result Array of response objects.
+	 * @apiSuccess {string} Result.Module Module name
+	 * @apiSuccess {string} Result.Method Method name
+	 * @apiSuccess {mixed} Result.Result Group object in case of success, otherwise **false**.
+	 * @apiSuccess {string} Result.Result.City=&quot;&quot;
+	 * @apiSuccess {string} Result.Result.Company=&quot;&quot;
+	 * @apiSuccess {array} Result.Result.Contacts='[]'
+	 * @apiSuccess {string} Result.Result.Country=&quot;&quot;
+	 * @apiSuccess {string} Result.Result.Email=&quot;&quot;
+	 * @apiSuccess {string} Result.Result.Fax=&quot;&quot;
+	 * @apiSuccess {int} Result.Result.IdUser=0
+	 * @apiSuccess {bool} Result.Result.IsOrganization=false
+	 * @apiSuccess {string} Result.Result.Name=&quot;&quot;
+	 * @apiSuccess {string} Result.Result.Phone=&quot;&quot;
+	 * @apiSuccess {string} Result.Result.Street=&quot;&quot;
+	 * @apiSuccess {string} Result.Result.UUID=&quot;&quot;
+	 * @apiSuccess {string} Result.Result.Web=&quot;&quot;
+	 * @apiSuccess {string} Result.Result.Zip=&quot;&quot;
+	 * @apiSuccess {int} [Result.ErrorCode] Error code
+	 * 
+	 * @apiSuccessExample {json} Success response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'GetGroup',
+	 *	Result: {City: '', Company: 'group_company', Contacts: [], Country: '', Email: '', Fax: '', IdUser: 3, IsOrganization: true, Name: 'group_name', Phone:'', State:'', Street:'', UUID: 'group_uuid', Web:'', Zip: ''}
+	 * 
+	 * @apiSuccessExample {json} Error response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'GetGroup',
+	 *	Result: false,
+	 *	ErrorCode: 102
+	 * }
+	 */
+	
+	/**
 	 * Returns group with specified UUID.
 	 * @param string $UUID UUID of group to return.
 	 * @return \CGroup
@@ -202,6 +437,59 @@ class ContactsModule extends AApiModule
 		
 		return $this->oApiContactsManager->getGroup($UUID);
 	}
+	
+	/**
+	 * @api {post} ?/Api/ GetContacts
+	 * @apiName GetContacts
+	 * @apiGroup Contacts
+	 * @apiDescription Returns list of contacts for specified parameters.
+	 * 
+	 * @apiParam {string=Contacts} Module Module name
+	 * @apiParam {string=GetContacts} Method Method name
+	 * @apiParam {string} AuthToken Auth token
+	 * @apiParam {string} Parameters JSON.stringified object <br>
+	 * {<br>
+	 * &emsp; **Offset** *int* Offset of contacts list.<br>
+	 * &emsp; **Limit** *int* Limit of result contacts list.<br>
+	 * &emsp; **SortField** *int* Name of field order by.<br>
+	 * &emsp; **SortOrder** *int* Sorting direction.<br>
+	 * &emsp; **Storage** *string* Storage value.<br>
+	 * &emsp; **Search** *string* Search string.<br>
+	 * &emsp; **GroupUUID** *string* UUID of group that should contain all returned contacts.<br>
+	 * &emsp; **Filters** *array* Other conditions for obtaining contacts list.<br>
+	 * }
+	 * 
+	 * @apiParamExample {json} Request-Example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'GetContacts',
+	 *	AuthToken: 'token_value',
+	 *	Parameters: '{ Offset: 0, Limit: 20, SortField: 1, SortOrder: 0, Storage: "personal", Search: "", GroupUUID: "", Filters: [] }'
+	 * }
+	 * 
+	 * @apiSuccess {object[]} Result Array of response objects.
+	 * @apiSuccess {string} Result.Module Module name
+	 * @apiSuccess {string} Result.Method Method name
+	 * @apiSuccess {mixed} Result.Result Object with contacts data in case of success, otherwise **false**.
+	 * @apiSuccess {int} Result.Result.ContactCount Count of contacts that are obtained with specified conditions.
+	 * @apiSuccess {array} Result.Result.List List of contacts objects.
+	 * @apiSuccess {int} [Result.ErrorCode] Error code
+	 * 
+	 * @apiSuccessExample {json} Success response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'GetContacts',
+	 *	Result: '{"ContactCount": 6, "List": [{"UUID": "contact_uuid", "IdUser": 3, "Name": "", "Email": "contact@email.com", "Storage": "personal"}]}'
+	 * }
+	 * 
+	 * @apiSuccessExample {json} Error response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'GetContacts',
+	 *	Result: false,
+	 *	ErrorCode: 102
+	 * }
+	 */
 	
 	/**
 	 * Returns list of contacts for specified parameters.
@@ -274,6 +562,50 @@ class ContactsModule extends AApiModule
 	}	
 	
 	/**
+	 * @api {post} ?/Api/ GetContact
+	 * @apiName GetContact
+	 * @apiGroup Contacts
+	 * @apiDescription Returns contact with specified UUID.
+	 * 
+	 * @apiParam {string=Contacts} Module Module name
+	 * @apiParam {string=GetContact} Method Method name
+	 * @apiParam {string} AuthToken Auth token
+	 * @apiParam {string} Parameters JSON.stringified object <br>
+	 * {<br>
+	 * &emsp; **UUID** *string* UUID of contact to return.<br>
+	 * }
+	 * 
+	 * @apiParamExample {json} Request-Example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'GetContact',
+	 *	AuthToken: 'token_value',
+	 *	Parameters: '{ UUID: "contact_uuid" }'
+	 * }
+	 * 
+	 * @apiSuccess {object[]} Result Array of response objects.
+	 * @apiSuccess {string} Result.Module Module name
+	 * @apiSuccess {string} Result.Method Method name
+	 * @apiSuccess {mixed} Result.Result Object with contact data in case of success, otherwise **false**.
+	 * @apiSuccess {int} [Result.ErrorCode] Error code
+	 * 
+	 * @apiSuccessExample {json} Success response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'GetContact',
+	 *	Result: '{"IdUser": 3, "UUID": "group_uuid", "Storage": "personal", "FullName": "", "PrimaryEmail": 0, "PrimaryPhone": 1, "PrimaryAddress": 0, "FirstName": "", "LastName": "", "NickName": "", "Skype": "", "Facebook": "", "PersonalEmail": "contact@email.com", "PersonalAddress": "", "PersonalCity": "", "PersonalState": "", "PersonalZip": "", "PersonalCountry": "", "PersonalWeb": "", "PersonalFax": "", "PersonalPhone": "", "PersonalMobile": "123-234-234", "BusinessEmail": "", "BusinessCompany": "", "BusinessAddress": "", "BusinessCity": "", "BusinessState": "", "BusinessZip": "", "BusinessCountry": "", "BusinessJobTitle": "", "BusinessDepartment": "", "BusinessOffice": "", "BusinessPhone": "", "BusinessFax": "", "BusinessWeb": "", "OtherEmail": "", "Notes": "", "BirthDay": 0, "BirthMonth": 0, "BirthYear": 0, "ETag": "", "GroupUUIDs": ["group1_uuid", "group2_uuid"]}'
+	 * }
+	 * 
+	 * @apiSuccessExample {json} Error response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'GetContact',
+	 *	Result: false,
+	 *	ErrorCode: 102
+	 * }
+	 */
+	
+	/**
 	 * Returns contact with specified UUID.
 	 * @param string $UUID UUID of contact to return.
 	 * @return \CContact
@@ -285,6 +617,50 @@ class ContactsModule extends AApiModule
 		return $this->oApiContactsManager->getContact($UUID);
 	}
 
+	/**
+	 * @api {post} ?/Api/ GetContactsByEmails
+	 * @apiName GetContactsByEmails
+	 * @apiGroup Contacts
+	 * @apiDescription Returns list of contacts with specified emails.
+	 * 
+	 * @apiParam {string=Contacts} Module Module name
+	 * @apiParam {string=GetContactsByEmails} Method Method name
+	 * @apiParam {string} AuthToken Auth token
+	 * @apiParam {string} Parameters JSON.stringified object <br>
+	 * {<br>
+	 * &emsp; **Emails** *array* List of emails of contacts to return.<br>
+	 * }
+	 * 
+	 * @apiParamExample {json} Request-Example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'GetContactsByEmails',
+	 *	AuthToken: 'token_value',
+	 *	Parameters: '{ Emails: ["contact@email.com"] }'
+	 * }
+	 * 
+	 * @apiSuccess {object[]} Result Array of response objects.
+	 * @apiSuccess {string} Result.Module Module name
+	 * @apiSuccess {string} Result.Method Method name
+	 * @apiSuccess {mixed} Result.Result List of contacts in case of success, otherwise **false**.
+	 * @apiSuccess {int} [Result.ErrorCode] Error code
+	 * 
+	 * @apiSuccessExample {json} Success response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'GetContactsByEmails',
+	 *	Result: [{"IdUser": 3, "UUID": "group_uuid", "Storage": "personal", "FullName": "", "PrimaryEmail": 0, "PrimaryPhone": 1, "PrimaryAddress": 0, "FirstName": "", "LastName": "", "NickName": "", "Skype": "", "Facebook": "", "PersonalEmail": "contact@email.com", "PersonalAddress": "", "PersonalCity": "", "PersonalState": "", "PersonalZip": "", "PersonalCountry": "", "PersonalWeb": "", "PersonalFax": "", "PersonalPhone": "", "PersonalMobile": "123-234-234", "BusinessEmail": "", "BusinessCompany": "", "BusinessAddress": "", "BusinessCity": "", "BusinessState": "", "BusinessZip": "", "BusinessCountry": "", "BusinessJobTitle": "", "BusinessDepartment": "", "BusinessOffice": "", "BusinessPhone": "", "BusinessFax": "", "BusinessWeb": "", "OtherEmail": "", "Notes": "", "BirthDay": 0, "BirthMonth": 0, "BirthYear": 0, "ETag": "", "GroupUUIDs": ["group1_uuid", "group2_uuid"]}]
+	 * }
+	 * 
+	 * @apiSuccessExample {json} Error response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'GetContactsByEmails',
+	 *	Result: false,
+	 *	ErrorCode: 102
+	 * }
+	 */
+	
 	/**
 	 * Returns list of contacts with specified emails.
 	 * @param array $Emails List of emails of contacts to return.
@@ -307,6 +683,50 @@ class ContactsModule extends AApiModule
 		
 		return $aContacts;
 	}	
+	
+	/**
+	 * @api {post} ?/Api/ CreateContact
+	 * @apiName CreateContact
+	 * @apiGroup Contacts
+	 * @apiDescription Creates contact with specified parameters.
+	 * 
+	 * @apiParam {string=Contacts} Module Module name
+	 * @apiParam {string=CreateContact} Method Method name
+	 * @apiParam {string} AuthToken Auth token
+	 * @apiParam {string} Parameters JSON.stringified object <br>
+	 * {<br>
+	 * &emsp; **Contact** *object* Parameters of contact to create.<br>
+	 * }
+	 * 
+	 * @apiParamExample {json} Request-Example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'CreateContact',
+	 *	AuthToken: 'token_value',
+	 *	Parameters: '{"Contact": {"UUID": "", "PrimaryEmail": 0, "PrimaryPhone": 0, "PrimaryAddress": 0, "FullName": "second", "FirstName": "", "LastName": "", "NickName": "", "Storage": "personal", "ItsMe": false, "Skype": "", "Facebook": "", "PersonalEmail": "contact2@email.com", "PersonalAddress": "", "PersonalCity": "", "PersonalState": "", "PersonalZip": "", "PersonalCountry": "", "PersonalWeb": "", "PersonalFax": "", "PersonalPhone": "", "PersonalMobile": "", "BusinessEmail": "", "BusinessCompany": "", "BusinessJobTitle": "", "BusinessDepartment": "", "BusinessOffice": "", "BusinessAddress": "", "BusinessCity": "", "BusinessState": "", "BusinessZip": "", "BusinessCountry": "", "BusinessFax": "", "BusinessPhone": "", "BusinessWeb": "", "OtherEmail": "", "Notes": "", "ETag": "", "BirthDay": 0, "BirthMonth": 0, "BirthYear": 0, "GroupUUIDs": []}}'
+	 * }
+	 * 
+	 * @apiSuccess {object[]} Result Array of response objects.
+	 * @apiSuccess {string} Result.Module Module name
+	 * @apiSuccess {string} Result.Method Method name
+	 * @apiSuccess {mixed} Result.Result New contact UUID in case of success, otherwise **false**.
+	 * @apiSuccess {int} [Result.ErrorCode] Error code
+	 * 
+	 * @apiSuccessExample {json} Success response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'CreateContact',
+	 *	Result: 'new_contact_uuid'
+	 * }
+	 * 
+	 * @apiSuccessExample {json} Error response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'CreateContact',
+	 *	Result: false,
+	 *	ErrorCode: 102
+	 * }
+	 */
 	
 	/**
 	 * Creates contact with specified parameters.
@@ -386,6 +806,50 @@ class ContactsModule extends AApiModule
 	}	
 	
 	/**
+	 * @api {post} ?/Api/ UpdateContact
+	 * @apiName UpdateContact
+	 * @apiGroup Contacts
+	 * @apiDescription Updates contact with specified parameters.
+	 * 
+	 * @apiParam {string=Contacts} Module Module name
+	 * @apiParam {string=UpdateContact} Method Method name
+	 * @apiParam {string} AuthToken Auth token
+	 * @apiParam {string} Parameters JSON.stringified object <br>
+	 * {<br>
+	 * &emsp; **Contact** *array* Parameters of contact to update.<br>
+	 * }
+	 * 
+	 * @apiParamExample {json} Request-Example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'UpdateContact',
+	 *	AuthToken: 'token_value',
+	 *	Parameters: '{"Contact": {"UUID": "contact2_uuid", "PrimaryEmail": 0, "PrimaryPhone": 0, "PrimaryAddress": 0, "FullName": "contact2", "FirstName": "", "LastName": "", "NickName": "", "Storage": "personal", "ItsMe": false, "Skype": "", "Facebook": "", "PersonalEmail": "contact2@email.com", "PersonalAddress": "", "PersonalCity": "", "PersonalState": "", "PersonalZip": "", "PersonalCountry": "", "PersonalWeb": "", "PersonalFax": "", "PersonalPhone": "", "PersonalMobile": "", "BusinessEmail": "", "BusinessCompany": "", "BusinessJobTitle": "", "BusinessDepartment": "", "BusinessOffice": "", "BusinessAddress": "", "BusinessCity": "", "BusinessState": "", "BusinessZip": "", "BusinessCountry": "", "BusinessFax": "", "BusinessPhone": "", "BusinessWeb": "", "OtherEmail": "", "Notes": "", "ETag": "", "BirthDay": 0, "BirthMonth": 0, "BirthYear": 0, "GroupUUIDs": []}}'
+	 * }
+	 * 
+	 * @apiSuccess {object[]} Result Array of response objects.
+	 * @apiSuccess {string} Result.Module Module name
+	 * @apiSuccess {string} Result.Method Method name
+	 * @apiSuccess {bool} Result.Result Indicates if contact was updated successfully.
+	 * @apiSuccess {int} [Result.ErrorCode] Error code
+	 * 
+	 * @apiSuccessExample {json} Success response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'UpdateContact',
+	 *	Result: true
+	 * }
+	 * 
+	 * @apiSuccessExample {json} Error response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'UpdateContact',
+	 *	Result: false,
+	 *	ErrorCode: 102
+	 * }
+	 */
+	
+	/**
 	 * Updates contact with specified parameters.
 	 * @param array $Contact Parameters of contact to update.
 	 * @return bool
@@ -444,6 +908,50 @@ class ContactsModule extends AApiModule
 	}	
 	
 	/**
+	 * @api {post} ?/Api/ DeleteContacts
+	 * @apiName DeleteContacts
+	 * @apiGroup Contacts
+	 * @apiDescription Deletes contacts with specified UUIDs.
+	 * 
+	 * @apiParam {string=Contacts} Module Module name
+	 * @apiParam {string=DeleteContacts} Method Method name
+	 * @apiParam {string} AuthToken Auth token
+	 * @apiParam {string} Parameters JSON.stringified object <br>
+	 * {<br>
+	 * &emsp; **UUIDs** *array* Array of strings - UUIDs of contacts to delete.<br>
+	 * }
+	 * 
+	 * @apiParamExample {json} Request-Example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'DeleteContacts',
+	 *	AuthToken: 'token_value',
+	 *	Parameters: '{ UUIDs: ["uuid1", "uuid"] }'
+	 * }
+	 * 
+	 * @apiSuccess {object[]} Result Array of response objects.
+	 * @apiSuccess {string} Result.Module Module name
+	 * @apiSuccess {string} Result.Method Method name
+	 * @apiSuccess {bool} Result.Result Indicates if contacts were deleted successfully.
+	 * @apiSuccess {int} [Result.ErrorCode] Error code
+	 * 
+	 * @apiSuccessExample {json} Success response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'DeleteContacts',
+	 *	Result: true
+	 * }
+	 * 
+	 * @apiSuccessExample {json} Error response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'DeleteContacts',
+	 *	Result: false,
+	 *	ErrorCode: 102
+	 * }
+	 */
+	
+	/**
 	 * Deletes contacts with specified UUIDs.
 	 * @param array $UUIDs Array of strings - UUIDs of contacts to delete.
 	 * @return bool
@@ -456,9 +964,53 @@ class ContactsModule extends AApiModule
 	}	
 	
 	/**
+	 * @api {post} ?/Api/ CreateGroup
+	 * @apiName CreateGroup
+	 * @apiGroup Contacts
+	 * @apiDescription Creates group with specified parameters.
+	 * 
+	 * @apiParam {string=Contacts} Module Module name
+	 * @apiParam {string=CreateGroup} Method Method name
+	 * @apiParam {string} AuthToken Auth token
+	 * @apiParam {string} Parameters JSON.stringified object <br>
+	 * {<br>
+	 * &emsp; **Group** *object* Parameters of group to create.<br>
+	 * }
+	 * 
+	 * @apiParamExample {json} Request-Example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'CreateGroup',
+	 *	AuthToken: 'token_value',
+	 *	Parameters: '{"Group": {"UUID": "", "Name": "new_group_name", "IsOrganization": "0", "Email": "", "Country": "", "City": "", "Company": "", "Fax": "", "Phone": "", "State": "", "Street": "", "Web": "", "Zip": "", "Contacts": []}}'
+	 * }
+	 * 
+	 * @apiSuccess {object[]} Result Array of response objects.
+	 * @apiSuccess {string} Result.Module Module name
+	 * @apiSuccess {string} Result.Method Method name
+	 * @apiSuccess {mixed} Result.Result New group UUID in case of success, otherwise **false**.
+	 * @apiSuccess {int} [Result.ErrorCode] Error code
+	 * 
+	 * @apiSuccessExample {json} Success response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'CreateGroup',
+	 *	Result: 'new_group_uuid'
+	 * }
+	 * 
+	 * @apiSuccessExample {json} Error response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'CreateGroup',
+	 *	Result: false,
+	 *	ErrorCode: 102
+	 * }
+	 */
+	
+	/**
 	 * Creates group with specified parameters.
 	 * @param array $Group Parameters of group to create.
-	 * @return array
+	 * @return string|bool
 	 */
 	public function CreateGroup($Group)
 	{
@@ -474,7 +1026,50 @@ class ContactsModule extends AApiModule
 	}	
 	
 	/**
+	 * @api {post} ?/Api/ UpdateGroup
+	 * @apiName UpdateGroup
+	 * @apiGroup Contacts
+	 * @apiDescription Updates group with specified parameters.
 	 * 
+	 * @apiParam {string=Contacts} Module Module name
+	 * @apiParam {string=UpdateGroup} Method Method name
+	 * @apiParam {string} AuthToken Auth token
+	 * @apiParam {string} Parameters JSON.stringified object <br>
+	 * {<br>
+	 * &emsp; **Group** *object* Parameters of group to update.<br>
+	 * }
+	 * 
+	 * @apiParamExample {json} Request-Example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'UpdateGroup',
+	 *	AuthToken: 'token_value',
+	 *	Parameters: '{"Group": {"UUID": "group_uuid", "Name": "group_name", "IsOrganization": "0", "Email": "", "Country": "", "City": "", "Company": "", "Fax": "", "Phone": "", "State": "", "Street": "", "Web": "", "Zip": "", "Contacts": []}}'
+	 * }
+	 * 
+	 * @apiSuccess {object[]} Result Array of response objects.
+	 * @apiSuccess {string} Result.Module Module name
+	 * @apiSuccess {string} Result.Method Method name
+	 * @apiSuccess {bool} Result.Result Indicates if group was updated successfully.
+	 * @apiSuccess {int} [Result.ErrorCode] Error code
+	 * 
+	 * @apiSuccessExample {json} Success response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'UpdateGroup',
+	 *	Result: true
+	 * }
+	 * 
+	 * @apiSuccessExample {json} Error response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'UpdateGroup',
+	 *	Result: false,
+	 *	ErrorCode: 102
+	 * }
+	 */
+	
+	/**
 	 * Updates group with specified parameters.
 	 * @param array $Group Parameters of group to update.
 	 * @return boolean
@@ -494,6 +1089,50 @@ class ContactsModule extends AApiModule
 	}	
 	
 	/**
+	 * @api {post} ?/Api/ DeleteGroup
+	 * @apiName DeleteGroup
+	 * @apiGroup Contacts
+	 * @apiDescription Deletes group with specified UUID.
+	 * 
+	 * @apiParam {string=Contacts} Module Module name
+	 * @apiParam {string=DeleteGroup} Method Method name
+	 * @apiParam {string} AuthToken Auth token
+	 * @apiParam {string} Parameters JSON.stringified object <br>
+	 * {<br>
+	 * &emsp; **UUID** *string* UUID of group to delete.<br>
+	 * }
+	 * 
+	 * @apiParamExample {json} Request-Example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'DeleteGroup',
+	 *	AuthToken: 'token_value',
+	 *	Parameters: '{ UUID: "group_uuid" }'
+	 * }
+	 * 
+	 * @apiSuccess {object[]} Result Array of response objects.
+	 * @apiSuccess {string} Result.Module Module name
+	 * @apiSuccess {string} Result.Method Method name
+	 * @apiSuccess {bool} Result.Result Indicates if group was deleted successfully.
+	 * @apiSuccess {int} [Result.ErrorCode] Error code
+	 * 
+	 * @apiSuccessExample {json} Success response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'DeleteGroup',
+	 *	Result: true
+	 * }
+	 * 
+	 * @apiSuccessExample {json} Error response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'DeleteGroup',
+	 *	Result: false,
+	 *	ErrorCode: 102
+	 * }
+	 */
+	
+	/**
 	 * Deletes group with specified UUID.
 	 * @param string $UUID UUID of group to delete.
 	 * @return bool
@@ -504,6 +1143,51 @@ class ContactsModule extends AApiModule
 		
 		return $this->oApiContactsManager->deleteGroups([$UUID]);
 	}
+	
+	/**
+	 * @api {post} ?/Api/ AddContactsToGroup
+	 * @apiName AddContactsToGroup
+	 * @apiGroup Contacts
+	 * @apiDescription Adds specified contacts to specified group.
+	 * 
+	 * @apiParam {string=Contacts} Module Module name
+	 * @apiParam {string=AddContactsToGroup} Method Method name
+	 * @apiParam {string} AuthToken Auth token
+	 * @apiParam {string} Parameters JSON.stringified object <br>
+	 * {<br>
+	 * &emsp; **GroupUUID** *string* UUID of group.<br>
+	 * &emsp; **ContactUUIDs** *array* Array of strings - UUIDs of contacts to add to group.<br>
+	 * }
+	 * 
+	 * @apiParamExample {json} Request-Example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'AddContactsToGroup',
+	 *	AuthToken: 'token_value',
+	 *	Parameters: '{ GroupUUID: "group_uuid", ContactUUIDs: ["contact1_uuid", "contact2_uuid"] }'
+	 * }
+	 * 
+	 * @apiSuccess {object[]} Result Array of response objects.
+	 * @apiSuccess {string} Result.Module Module name
+	 * @apiSuccess {string} Result.Method Method name
+	 * @apiSuccess {bool} Result.Result Indicates if contacts were successfully added to group.
+	 * @apiSuccess {int} [Result.ErrorCode] Error code
+	 * 
+	 * @apiSuccessExample {json} Success response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'AddContactsToGroup',
+	 *	Result: true
+	 * }
+	 * 
+	 * @apiSuccessExample {json} Error response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'AddContactsToGroup',
+	 *	Result: false,
+	 *	ErrorCode: 102
+	 * }
+	 */
 	
 	/**
 	 * Adds specified contacts to specified group.
@@ -524,6 +1208,51 @@ class ContactsModule extends AApiModule
 	}
 	
 	/**
+	 * @api {post} ?/Api/ RemoveContactsFromGroup
+	 * @apiName RemoveContactsFromGroup
+	 * @apiGroup Contacts
+	 * @apiDescription Removes specified contacts from specified group.
+	 * 
+	 * @apiParam {string=Contacts} Module Module name
+	 * @apiParam {string=RemoveContactsFromGroup} Method Method name
+	 * @apiParam {string} AuthToken Auth token
+	 * @apiParam {string} Parameters JSON.stringified object <br>
+	 * {<br>
+	 * &emsp; **GroupUUID** *string* UUID of group.<br>
+	 * &emsp; **ContactUUIDs** *array* Array of strings - UUIDs of contacts to remove from group.<br>
+	 * }
+	 * 
+	 * @apiParamExample {json} Request-Example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'RemoveContactsFromGroup',
+	 *	AuthToken: 'token_value',
+	 *	Parameters: '{ GroupUUID: "group_uuid", ContactUUIDs: ["contact1_uuid", "contact2_uuid"] }'
+	 * }
+	 * 
+	 * @apiSuccess {object[]} Result Array of response objects.
+	 * @apiSuccess {string} Result.Module Module name
+	 * @apiSuccess {string} Result.Method Method name
+	 * @apiSuccess {bool} Result.Result Indicates if contacts were successfully removed from group.
+	 * @apiSuccess {int} [Result.ErrorCode] Error code
+	 * 
+	 * @apiSuccessExample {json} Success response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'RemoveContactsFromGroup',
+	 *	Result: true
+	 * }
+	 * 
+	 * @apiSuccessExample {json} Error response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'RemoveContactsFromGroup',
+	 *	Result: false,
+	 *	ErrorCode: 102
+	 * }
+	 */
+	
+	/**
 	 * Removes specified contacts from specified group.
 	 * @param string $GroupUUID UUID of group.
 	 * @param array $ContactUUIDs Array of strings - UUIDs of contacts to remove from group.
@@ -542,11 +1271,57 @@ class ContactsModule extends AApiModule
 	}	
 	
 	/**
+	 * @api {post} ?/Api/ Import
+	 * @apiName Import
+	 * @apiGroup Contacts
+	 * @apiDescription Imports contacts from file with specified format.
+	 * 
+	 * @apiParam {string=Contacts} Module Module name
+	 * @apiParam {string=Import} Method Method name
+	 * @apiParam {string} AuthToken Auth token
+	 * @apiParam {string} Parameters JSON.stringified object <br>
+	 * {<br>
+	 * &emsp; **UploadData** *array* Array of uploaded file data.<br>
+	 * &emsp; **Storage** *string* Storage name.<br>
+	 * &emsp; **GroupUUID** *array* Group UUID.<br>
+	 * }
+	 * 
+	 * @apiParamExample {json} Request-Example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'Import',
+	 *	AuthToken: 'token_value',
+	 *	Parameters: '{ "UploadData": {"tmp_name": "tmp_name_value", "name": "name_value"}, "Storage": "personal", "GroupUUID": ""}'
+	 * }
+	 * 
+	 * @apiSuccess {object[]} Result Array of response objects.
+	 * @apiSuccess {string} Result.Module Module name
+	 * @apiSuccess {string} Result.Method Method name
+	 * @apiSuccess {mixed} Result.Result Object with counts of imported and parsed contacts in case of success, otherwise **false**.
+	 * @apiSuccess {int} [Result.ErrorCode] Error code
+	 * 
+	 * @apiSuccessExample {json} Success response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'Import',
+	 *	Result: { "ImportedCount" : 2, "ParsedCount": 3}
+	 * }
+	 * 
+	 * @apiSuccessExample {json} Error response example:
+	 * {
+	 *	Module: 'Contacts',
+	 *	Method: 'Import',
+	 *	Result: false,
+	 *	ErrorCode: 102
+	 * }
+	 */
+	
+	/**
 	 * Imports contacts from file with specified format.
 	 * @param array $UploadData Array of uploaded file data.
 	 * @param string $Storage Storage name.
 	 * @param array $GroupUUID Group UUID.
-	 * @return string
+	 * @return array
 	 * @throws \System\Exceptions\AuroraApiException
 	 */
 	public function Import($UploadData, $Storage, $GroupUUID)
