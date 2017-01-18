@@ -21,12 +21,7 @@
 class ContactsModule extends AApiModule
 {
 	public $oApiContactsManager = null;
-	
-	protected $aSettingsMap = array(
-		'ContactsPerPage' => array(20, 'int'),
-		'ImportContactsLink' => array('', 'string'),
-	);
-	
+
 	protected $aImportExportFormats = ['csv'];
 	
 	/**

@@ -1,6 +1,5 @@
 {
-	"Disabled": false,
-	"ContactsPerPage": 20,
-	"ShowGlobalContactsInAddressBook": true,
-	"GlobalAddressBookVisibility": 1
+    "ContactsPerPage": 20,
+    "ImportContactsLink": "",
+	"Disabled": false
 }
