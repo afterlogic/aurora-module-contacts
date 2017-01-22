@@ -44,7 +44,7 @@ class ContactsModule extends AApiModule
 		$this->subscribeEvent('AdminPanelWebclient::DeleteEntity::before', array($this, 'onBeforeDeleteEntity'));
 		$this->subscribeEvent('Contacts::Import', array($this, 'onImportCsv'));
 		
-		$this->setObjectMap('CUser', array(
+		$this->extendObject('CUser', array(
 				'ContactsPerPage' => array('int', $this->getConfig('ContactsPerPage', 20)),
 			)
 		);
