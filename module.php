@@ -541,7 +541,7 @@ class ContactsModule extends AApiModule
 			foreach ($aContacts as $oContact)
 			{
 				$aList[] = array(
-					'UUID' => $oContact->sUUID,
+					'UUID' => $oContact->UUID,
 					'IdUser' => $oContact->IdUser,
 					'Name' => $oContact->FullName,
 					'Email' => $oContact->ViewEmail,
@@ -748,10 +748,15 @@ class ContactsModule extends AApiModule
 		}
 		
 		$oContact = \CContact::createInstance();
-		$oContact->Populate($Contact, $oUser);
+		$oContact->populate($Contact);
+		if ($oUser instanceof \CUser)
+		{
+			$oContact->IdUser = $oUser->IdUser;
+			$oContact->IdTenant = $oUser->IdTenant;
+		}
 
 		$mResult = $this->oApiContactsManager->createContact($oContact);
-		return $mResult && $oContact ? $oContact->sUUID : false;
+		return $mResult && $oContact ? $oContact->UUID : false;
 	}	
 	
 	/**
@@ -808,7 +813,7 @@ class ContactsModule extends AApiModule
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		$oContact = $this->oApiContactsManager->getContact($Contact['UUID']);
-		$oContact->Populate($Contact);
+		$oContact->populate($Contact);
 		
 		return $this->oApiContactsManager->updateContact($oContact);
 	}
@@ -928,7 +933,7 @@ class ContactsModule extends AApiModule
 		$oGroup->populate($Group);
 
 		$this->oApiContactsManager->createGroup($oGroup);
-		return $oGroup ? $oGroup->sUUID : false;
+		return $oGroup ? $oGroup->UUID : false;
 	}	
 	
 	/**
@@ -1248,12 +1253,12 @@ class ContactsModule extends AApiModule
 
 			$oApiFileCacheManager = \CApi::GetSystemManager('filecache');
 			$sSavedName = 'import-post-' . md5($UploadData['name'] . $UploadData['tmp_name']);
-			if ($oApiFileCacheManager->moveUploadedFile($oUser->sUUID, $sSavedName, $UploadData['tmp_name']))
+			if ($oApiFileCacheManager->moveUploadedFile($oUser->UUID, $sSavedName, $UploadData['tmp_name']))
 			{
 				$aArgs = [
 					'Format' => $sFileType,
 					'User' => $oUser,
-					'TempFileName' => $oApiFileCacheManager->generateFullFilePath($oUser->sUUID, $sSavedName),
+					'TempFileName' => $oApiFileCacheManager->generateFullFilePath($oUser->UUID, $sSavedName),
 					'Storage' => $Storage,
 					'GroupUUID' => $GroupUUID,
 				];
@@ -1271,7 +1276,7 @@ class ContactsModule extends AApiModule
 					throw new \System\Exceptions\AuroraApiException(\System\Notifications::IncorrectFileExtension);
 				}
 
-				$oApiFileCacheManager->clear($oUser->sUUID, $sSavedName);
+				$oApiFileCacheManager->clear($oUser->UUID, $sSavedName);
 			}
 			else
 			{
@@ -1410,7 +1415,7 @@ class ContactsModule extends AApiModule
 					$oContact = \CContact::createInstance();
 					$oContact->InitFromVCardStr($oAccount->IdUser, $sData);
 
-					$oContact->sUUID = '';
+					$oContact->UUID = '';
 
 					$bContactExists = false;
 					if (0 < strlen($oContact->ViewEmail))
@@ -1419,7 +1424,7 @@ class ContactsModule extends AApiModule
 						$oLocalContact = count($aLocalContacts) > 0 ? $aLocalContacts[0] : null;
 						if ($oLocalContact)
 						{
-							$oContact->sUUID = $oLocalContact->sUUID;
+							$oContact->UUID = $oLocalContact->UUID;
 							$bContactExists = true;
 						}
 					}
@@ -1429,7 +1434,7 @@ class ContactsModule extends AApiModule
 						
 						$oVcard = CApiMailVcard::createInstance();
 
-						$oVcard->Uid = $oContact->sUUID;
+						$oVcard->Uid = $oContact->UUID;
 						$oVcard->File = $sTemptFile;
 						$oVcard->Exists = !!$bContactExists;
 						$oVcard->Name = $oContact->FullName;
@@ -1490,7 +1495,7 @@ class ContactsModule extends AApiModule
 				$aGroupUUIDs = [];
 				foreach ($aGroups as $oGroup)
 				{
-					$aGroupUUIDs[] = $oGroup->sUUID;
+					$aGroupUUIDs[] = $oGroup->UUID;
 				}
 				$this->oApiContactsManager->deleteGroups($aGroupUUIDs);
 			}

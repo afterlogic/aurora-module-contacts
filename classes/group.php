@@ -77,54 +77,7 @@ class CGroup extends AEntity
 
 	public function populate($aGroup)
 	{
-		if (isset($aGroup['IsOrganization']))
-		{
-			$this->IsOrganization = $aGroup['IsOrganization'];
-		}
-		if (isset($aGroup['Name']))
-		{
-			$this->Name = $aGroup['Name'];
-		}
-		if (isset($aGroup['Email']))
-		{
-			$this->Email = $aGroup['Email'];
-		}
-		if (isset($aGroup['Country']))
-		{
-			$this->Country = $aGroup['Country'];
-		}
-		if (isset($aGroup['City']))
-		{
-			$this->City = $aGroup['City'];
-		}
-		if (isset($aGroup['Company']))
-		{
-			$this->Company = $aGroup['Company'];
-		}
-		if (isset($aGroup['Fax']))
-		{
-			$this->Fax = $aGroup['Fax'];
-		}
-		if (isset($aGroup['Phone']))
-		{
-			$this->Phone = $aGroup['Phone'];
-		}
-		if (isset($aGroup['State']))
-		{
-			$this->State = $aGroup['State'];
-		}
-		if (isset($aGroup['Street']))
-		{
-			$this->Street = $aGroup['Street'];
-		}
-		if (isset($aGroup['Web']))
-		{
-			$this->Web = $aGroup['Web'];
-		}
-		if (isset($aGroup['Zip']))
-		{
-			$this->Zip = $aGroup['Zip'];
-		}
+		parent::populate($aGroup);
 		
 		$this->GroupContacts = array();
 		if (isset($aGroup['Contacts']) && is_array($aGroup['Contacts']))
@@ -145,11 +98,13 @@ class CGroup extends AEntity
 		$oContactsModule = \CApi::GetModule('Contacts');
 		 if ($oContactsModule)
 		 {
-			$aContacts = $oContactsModule->oApiContactsManager->getContacts(\EContactSortField::Name, \ESortOrder::ASC, 0, 299, [], $this->sUUID);
+			$aContacts = $oContactsModule->oApiContactsManager->getContacts(
+				\EContactSortField::Name, \ESortOrder::ASC, 0, 299, [], $this->UUID
+			);
 
 			$mResult = array(
 				'IdUser' => $this->IdUser,
-				'UUID' => $this->sUUID,
+				'UUID' => $this->UUID,
 				'Name' => $this->Name,
 
 				'IsOrganization' => $this->IsOrganization,

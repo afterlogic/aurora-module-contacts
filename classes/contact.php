@@ -185,17 +185,16 @@ class CContact extends AEntity
 					$aGroups = $oApiContactsManager->getGroups($this->IdUser, ['Name' => [$sGroupName, '=']]);
 					if (is_array($aGroups) && count($aGroups) > 0)
 					{
-						$this->addGroup($aGroups[0]->sUUID);
+						$this->addGroup($aGroups[0]->UUID);
 					}
 					elseif (!empty($sGroupName))
 					{
 						$oGroup = \CGroup::createInstance();
 						$oGroup->IdUser = $this->IdUser;
-
-						$oGroup->populate(['Name' => $sGroupName]);
+						$oGroup->Name = $sGroupName;
 
 						$oApiContactsManager->createGroup($oGroup);
-						$this->addGroup($oGroup->sUUID);
+						$this->addGroup($oGroup->UUID);
 					}
 				}
 			}
@@ -211,7 +210,7 @@ class CContact extends AEntity
 		if (!empty($sGroupUUID))
 		{
 			$oGroupContact = \CGroupContact::createInstance();
-			$oGroupContact->ContactUUID = $this->sUUID;
+			$oGroupContact->ContactUUID = $this->UUID;
 			$oGroupContact->GroupUUID = $sGroupUUID;
 			$this->GroupsContacts[] = $oGroupContact;
 		}
@@ -253,198 +252,33 @@ class CContact extends AEntity
 	{
 		$oVCard = \Sabre\VObject\Reader::read($sData, \Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES);
 		$aContactData = CApiContactsVCardHelper::GetContactDataFromVcard($oVCard);
+		$this->populate($aContactData);
 		
 		$oUser = null;
 		$oCoreDecorator = \CApi::GetModuleDecorator('Core');
 		if ($oCoreDecorator)
 		{
 			$oUser = $oCoreDecorator->GetUser($iUserId);
+			if ($oUser instanceof \CUser)
+			{
+				$this->IdUser = $oUser->IdUser;
+				$this->IdTenant = $oUser->IdTenant;
+			}
 		}
-		
-		$this->Populate($aContactData, $oUser);
 		
 		if (!empty($sUid))
 		{
-			$this->sUUID = $sUid;
+			$this->UUID = $sUid;
 		}
 	}
 	
 	/**
 	 * Populate contact with specified data.
 	 * @param array $aContact List of contact data.
-	 * @param \CUser $oUser User.
 	 */
-	public function Populate($aContact, $oUser = null)
+	public function populate($aContact)
 	{
-		if (isset($oUser))
-		{
-			$this->IdUser = $oUser->iId;
-			$this->IdTenant = $oUser->IdTenant;
-		}
-		
-		if (isset($aContact['UUID']))
-		{
-			$this->sUUID = $aContact['UUID'];
-		}
-		if (empty($this->sUUID))
-		{
-			$this->sUUID = $this->generateUUID();
-		}
-		if (isset($aContact['Storage']))
-		{
-			$this->Storage = $aContact['Storage'];
-		}
-		if (isset($aContact['FullName']))
-		{
-			$this->FullName = $aContact['FullName'];
-		}
-		if (isset($aContact['PrimaryEmail']))
-		{
-			$this->PrimaryEmail = $aContact['PrimaryEmail'];
-		}
-		if (isset($aContact['PrimaryPhone']))
-		{
-			$this->PrimaryPhone = $aContact['PrimaryPhone'];
-		}
-		if (isset($aContact['PrimaryAddress']))
-		{
-			$this->PrimaryAddress = $aContact['PrimaryAddress'];
-		}
-		if (isset($aContact['FirstName']))
-		{
-			$this->FirstName = $aContact['FirstName'];
-		}
-		if (isset($aContact['LastName']))
-		{
-			$this->LastName = $aContact['LastName'];
-		}
-		if (isset($aContact['NickName']))
-		{
-			$this->NickName = $aContact['NickName'];
-		}
-		if (isset($aContact['Skype']))
-		{
-			$this->Skype = $aContact['Skype'];
-		}
-		if (isset($aContact['Facebook']))
-		{
-			$this->Facebook = $aContact['Facebook'];
-		}
-		
-		if (isset($aContact['PersonalEmail']))
-		{
-			$this->PersonalEmail = $aContact['PersonalEmail'];
-		}
-		if (isset($aContact['PersonalAddress']))
-		{
-			$this->PersonalAddress = $aContact['PersonalAddress'];
-		}
-		if (isset($aContact['PersonalCity']))
-		{
-			$this->PersonalCity = $aContact['PersonalCity'];
-		}
-		if (isset($aContact['PersonalState']))
-		{
-			$this->PersonalState = $aContact['PersonalState'];
-		}
-		if (isset($aContact['PersonalZip']))
-		{
-			$this->PersonalZip = $aContact['PersonalZip'];
-		}
-		if (isset($aContact['PersonalCountry']))
-		{
-			$this->PersonalCountry = $aContact['PersonalCountry'];
-		}
-		if (isset($aContact['PersonalWeb']))
-		{
-			$this->PersonalWeb = $aContact['PersonalWeb'];
-		}
-		if (isset($aContact['PersonalFax']))
-		{
-			$this->PersonalFax = $aContact['PersonalFax'];
-		}
-		if (isset($aContact['PersonalPhone']))
-		{
-			$this->PersonalPhone = $aContact['PersonalPhone'];
-		}
-		if (isset($aContact['PersonalMobile']))
-		{
-			$this->PersonalMobile = $aContact['PersonalMobile'];
-		}
-		
-		if (isset($aContact['BusinessCompany']))
-		{
-			$this->BusinessCompany = $aContact['BusinessCompany'];
-		}
-		if (isset($aContact['BusinessJobTitle']))
-		{
-			$this->BusinessJobTitle = $aContact['BusinessJobTitle'];
-		}
-		if (isset($aContact['BusinessDepartment']))
-		{
-			$this->BusinessDepartment = $aContact['BusinessDepartment'];
-		}
-		if (isset($aContact['BusinessOffice']))
-		{
-			$this->BusinessOffice = $aContact['BusinessOffice'];
-		}
-		if (isset($aContact['BusinessAddress']))
-		{
-			$this->BusinessAddress = $aContact['BusinessAddress'];
-		}
-		if (isset($aContact['BusinessCity']))
-		{
-			$this->BusinessCity = $aContact['BusinessCity'];
-		}
-		if (isset($aContact['BusinessState']))
-		{
-			$this->BusinessState = $aContact['BusinessState'];
-		}
-		if (isset($aContact['BusinessZip']))
-		{
-			$this->BusinessZip = $aContact['BusinessZip'];
-		}
-		if (isset($aContact['BusinessCountry']))
-		{
-			$this->BusinessCountry = $aContact['BusinessCountry'];
-		}
-		if (isset($aContact['BusinessFax']))
-		{
-			$this->BusinessFax = $aContact['BusinessFax'];
-		}
-		if (isset($aContact['BusinessPhone']))
-		{
-			$this->BusinessPhone = $aContact['BusinessPhone'];
-		}
-		if (isset($aContact['BusinessWeb']))
-		{
-			$this->BusinessWeb = $aContact['BusinessWeb'];
-		}
-		
-		if (isset($aContact['OtherEmail']))
-		{
-			$this->OtherEmail = $aContact['OtherEmail'];
-		}
-		if (isset($aContact['Notes']))
-		{
-			$this->Notes = $aContact['Notes'];
-		}
-		if (isset($aContact['BusinessEmail']))
-		{
-			$this->BusinessEmail = $aContact['BusinessEmail'];
-		}
-		if (isset($aContact['BirthDay']))
-		{
-			$this->BirthDay = $aContact['BirthDay'];
-		}
-		if (isset($aContact['BirthMonth']))
-		{
-			$this->BirthMonth = $aContact['BirthMonth'];
-		}
-		if (isset($aContact['BirthYear']))
-		{
-			$this->BirthYear = $aContact['BirthYear'];
-		}
+		parent::populate($aContact);
 
 		$this->GroupsContacts = array();
 		if (isset($aContact['GroupUUIDs']) && is_array($aContact['GroupUUIDs']))
@@ -477,7 +311,7 @@ class CContact extends AEntity
 		
 		$aRes = array(
 			'IdUser' => $this->IdUser,
-			'UUID' => $this->sUUID,
+			'UUID' => $this->UUID,
 			'Storage' => $this->Storage,
 			'FullName' => $this->FullName,
 			'PrimaryEmail' => $this->PrimaryEmail,

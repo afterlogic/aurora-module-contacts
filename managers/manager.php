@@ -80,7 +80,7 @@ class CApiContactsManager extends AApiManager
 		$res = $this->oEavManager->saveEntity($oContact);
 		if ($res)
 		{
-			$aGroupContact = $this->getGroupContacts(null, $oContact->sUUID);
+			$aGroupContact = $this->getGroupContacts(null, $oContact->UUID);
 			
 			function compare_func($oGroupContact1, $oGroupContact2)
 			{
@@ -98,7 +98,7 @@ class CApiContactsManager extends AApiManager
 			$aGroupContactToDelete = array_udiff($aGroupContact, $oContact->GroupsContacts, 'compare_func');
 			$aGroupContactUUIDsToDelete = array_map(
 				function($oGroupContact) { 
-					return $oGroupContact->sUUID; 
+					return $oGroupContact->UUID; 
 				}, 
 				$aGroupContactToDelete
 			);
@@ -254,7 +254,7 @@ class CApiContactsManager extends AApiManager
 		{
 			foreach ($oContact->GroupsContacts as $oGroupContact)
 			{
-				$oGroupContact->ContactUUID = $oContact->sUUID;
+				$oGroupContact->ContactUUID = $oContact->UUID;
 				$this->oEavManager->saveEntity($oGroupContact);
 			}
 		}
@@ -277,7 +277,7 @@ class CApiContactsManager extends AApiManager
 		{
 			foreach ($oGroup->GroupContacts as $oGroupContact)
 			{
-				$oGroupContact->GroupUUID = $oGroup->sUUID;
+				$oGroupContact->GroupUUID = $oGroup->UUID;
 				$res = $this->oEavManager->saveEntity($oGroupContact);
 			}
 		}
@@ -302,7 +302,7 @@ class CApiContactsManager extends AApiManager
 			$aGroupContact = $this->getGroupContacts(null, $sContactUUID);
 			foreach ($aGroupContact as $oGroupContact)
 			{
-				$aEntitiesUUIDs[] = $oGroupContact->sUUID;
+				$aEntitiesUUIDs[] = $oGroupContact->UUID;
 			}
 		}
 		
@@ -404,7 +404,7 @@ class CApiContactsManager extends AApiManager
 		{
 			if (in_array($oGroupContact->ContactUUID, $aContactUUIDs))
 			{
-				$aIdEntitiesToDelete[] = $oGroupContact->sUUID;
+				$aIdEntitiesToDelete[] = $oGroupContact->UUID;
 			}
 		}
 		
