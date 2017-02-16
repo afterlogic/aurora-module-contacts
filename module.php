@@ -669,7 +669,7 @@ class ContactsModule extends AApiModule
 		
 		$aFilters = [
 			'$AND' => [
-				'IdUser' => [$oUser->iId, '='],
+				'IdUser' => [$oUser->EntityId, '='],
 				'ViewEmail' => [$Emails, 'IN']
 			]
 		];
@@ -736,7 +736,7 @@ class ContactsModule extends AApiModule
 		
 		$oUser = \CApi::getAuthenticatedUser();
 		
-		if ($iUserId > 0 && $iUserId !== $oUser->iId)
+		if ($iUserId > 0 && $iUserId !== $oUser->EntityId)
 		{
 			\CApi::checkUserRoleIsAtLeast(\EUserRole::SuperAdmin);
 			

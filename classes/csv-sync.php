@@ -137,7 +137,7 @@ class CApiContactsSyncCsv
 					$iParsedCount++;
 					
 					$oContactsDecorator = \CApi::GetModuleDecorator('Contacts');
-					if ($oContactsDecorator && $oContactsDecorator->CreateContact($aContactData, $aArgs['User']->iId))
+					if ($oContactsDecorator && $oContactsDecorator->CreateContact($aContactData, $aArgs['User']->EntityId))
 					{
 						$iCount++;
 					}
