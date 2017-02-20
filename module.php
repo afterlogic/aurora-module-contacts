@@ -751,7 +751,7 @@ class ContactsModule extends AApiModule
 		$oContact->populate($Contact);
 		if ($oUser instanceof \CUser)
 		{
-			$oContact->IdUser = $oUser->IdUser;
+			$oContact->IdUser = $oUser->EntityId;
 			$oContact->IdTenant = $oUser->IdTenant;
 		}
 

@@ -48,8 +48,6 @@ class CGroup extends AEntity
 	{
 		parent::__construct(get_class($this), $sModule);
 
-		$this->__USE_TRIM_IN_STRINGS__ = true;
-		
 		$this->setStaticMap(array(
 			'IdUser'			=> array('int', 0),
 			
