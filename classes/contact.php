@@ -72,7 +72,7 @@
  * @package Contactsmain
  * @subpackage Classes
  */
-class CContact extends AEntity
+class CContact extends CEntity
 {
 	protected $aStaticMap = array(
 		'IdUser'			=> array('int', 0),

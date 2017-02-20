@@ -38,7 +38,7 @@
  * @package Contactsmain
  * @subpackage Classes
  */
-class CGroup extends AEntity
+class CGroup extends CEntity
 {
 	public $Events = array();
 	

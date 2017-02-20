@@ -24,7 +24,7 @@
  * @property string $GroupUUID
  * @property string $ContactUUID
  */
-class CGroupContact extends AEntity
+class CGroupContact extends CEntity
 {
 	protected $aStaticMap = array(
 		'GroupUUID'	=> array('string', ''),
