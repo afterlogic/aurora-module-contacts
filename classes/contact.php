@@ -74,83 +74,64 @@
  */
 class CContact extends AEntity
 {
+	protected $aStaticMap = array(
+		'IdUser'			=> array('int', 0),
+		'IdTenant'			=> array('int', 0),
+		'Storage'			=> array('string', ''),
+		'FullName'			=> array('string', ''),
+		'UseFriendlyName'	=> array('bool', true),
+		'PrimaryEmail'		=> array('int', EContactsPrimaryEmail::Personal),
+		'PrimaryPhone'		=> array('int', EContactsPrimaryPhone::Personal),
+		'PrimaryAddress'	=> array('int', EContactsPrimaryAddress::Personal),
+		'ViewEmail'			=> array('string', ''),
+
+		'Title'				=> array('string', ''),
+		'FirstName'			=> array('string', ''),
+		'LastName'			=> array('string', ''),
+		'NickName'			=> array('string', ''),
+		'Skype'				=> array('string', ''),
+		'Facebook'			=> array('string', ''),
+
+		'PersonalEmail'		=> array('string', ''),
+		'PersonalAddress'	=> array('string', ''),
+		'PersonalCity'		=> array('string', ''),
+		'PersonalState'		=> array('string', ''),
+		'PersonalZip'		=> array('string', ''),
+		'PersonalCountry'	=> array('string', ''),
+		'PersonalWeb'		=> array('string', ''),
+		'PersonalFax'		=> array('string', ''),
+		'PersonalPhone'		=> array('string', ''),
+		'PersonalMobile'	=> array('string', ''),
+
+		'BusinessEmail'		=> array('string', ''),
+		'BusinessCompany'	=> array('string', ''),
+		'BusinessAddress'	=> array('string', ''),
+		'BusinessCity'		=> array('string', ''),
+		'BusinessState'		=> array('string', ''),
+		'BusinessZip'		=> array('string', ''),
+		'BusinessCountry'	=> array('string', ''),
+		'BusinessJobTitle'	=> array('string', ''),
+		'BusinessDepartment'=> array('string', ''),
+		'BusinessOffice'	=> array('string', ''),
+		'BusinessPhone'		=> array('string', ''),
+		'BusinessFax'		=> array('string', ''),
+		'BusinessWeb'		=> array('string', ''),
+
+		'OtherEmail'		=> array('string', ''),
+		'Notes'				=> array('string', ''),
+
+		'BirthDay'			=> array('int', 0),
+		'BirthMonth'		=> array('int', 0),
+		'BirthYear'			=> array('int', 0),
+
+		'ETag'				=> array('string', ''),
+
+		'Auto'				=> array('bool', false),
+	);
+	
 	public $GroupsContacts = array();
 	
 	public $ExtendedInformation = array();
-	
-	/**
-	 * 
-	 * @param string $sModule
-	 */
-	public function __construct($sModule)
-	{
-		parent::__construct(get_class($this), $sModule);
-
-		$this->setStaticMap(array(
-			'IdUser'			=> array('int', 0),
-			'IdTenant'			=> array('int', 0),
-			'Storage'			=> array('string', ''),
-			'FullName'			=> array('string', ''),
-			'UseFriendlyName'	=> array('bool', true),
-			'PrimaryEmail'		=> array('int', EContactsPrimaryEmail::Personal),
-			'PrimaryPhone'		=> array('int', EContactsPrimaryPhone::Personal),
-			'PrimaryAddress'	=> array('int', EContactsPrimaryAddress::Personal),
-			'ViewEmail'			=> array('string', ''),
-
-			'Title'				=> array('string', ''),
-			'FirstName'			=> array('string', ''),
-			'LastName'			=> array('string', ''),
-			'NickName'			=> array('string', ''),
-			'Skype'				=> array('string', ''),
-			'Facebook'			=> array('string', ''),
-
-			'PersonalEmail'		=> array('string', ''),
-			'PersonalAddress'	=> array('string', ''),
-			'PersonalCity'		=> array('string', ''),
-			'PersonalState'		=> array('string', ''),
-			'PersonalZip'		=> array('string', ''),
-			'PersonalCountry'	=> array('string', ''),
-			'PersonalWeb'		=> array('string', ''),
-			'PersonalFax'		=> array('string', ''),
-			'PersonalPhone'		=> array('string', ''),
-			'PersonalMobile'	=> array('string', ''),
-
-			'BusinessEmail'		=> array('string', ''),
-			'BusinessCompany'	=> array('string', ''),
-			'BusinessAddress'	=> array('string', ''),
-			'BusinessCity'		=> array('string', ''),
-			'BusinessState'		=> array('string', ''),
-			'BusinessZip'		=> array('string', ''),
-			'BusinessCountry'	=> array('string', ''),
-			'BusinessJobTitle'	=> array('string', ''),
-			'BusinessDepartment'=> array('string', ''),
-			'BusinessOffice'	=> array('string', ''),
-			'BusinessPhone'		=> array('string', ''),
-			'BusinessFax'		=> array('string', ''),
-			'BusinessWeb'		=> array('string', ''),
-
-			'OtherEmail'		=> array('string', ''),
-			'Notes'				=> array('string', ''),
-
-			'BirthDay'			=> array('int', 0),
-			'BirthMonth'		=> array('int', 0),
-			'BirthYear'			=> array('int', 0),
-
-			'ETag'				=> array('string', ''),
-			
-			'Auto'				=> array('bool', false),
-		));
-	}
-	
-	/**
-	 * Creates instance of CContact
-	 * @param string $sModule Module name
-	 * @return \CContact
-	 */
-	public static function createInstance($sModule = 'Contacts')
-	{
-		return new CContact($sModule);
-	}
 
 	/**
 	 * @param string $sKey

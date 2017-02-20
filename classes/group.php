@@ -44,34 +44,24 @@ class CGroup extends AEntity
 	
 	public $GroupContacts = array();
 	
-	public function __construct($sModule, $oParams)
-	{
-		parent::__construct(get_class($this), $sModule);
+	protected $aStaticMap = array(
+		'IdUser'			=> array('int', 0),
 
-		$this->setStaticMap(array(
-			'IdUser'			=> array('int', 0),
-			
-			'Name'				=> array('string', ''),
-			'IsOrganization'	=> array('bool', false),
+		'Name'				=> array('string', ''),
+		'IsOrganization'	=> array('bool', false),
 
-			'Email'				=> array('string', ''),
-			'Company'			=> array('string', ''),
-			'Street'			=> array('string', ''),
-			'City'				=> array('string', ''),
-			'State'				=> array('string', ''),
-			'Zip'				=> array('string', ''),
-			'Country'			=> array('string', ''),
-			'Phone'				=> array('string', ''),
-			'Fax'				=> array('string', ''),
-			'Web'				=> array('string', ''),
-			'Events'			=> array('string', ''),
-		));
-	}
-
-	public static function createInstance($sModule = 'Contacts', $oParams = array())
-	{
-		return new CGroup($sModule, $oParams);
-	}
+		'Email'				=> array('string', ''),
+		'Company'			=> array('string', ''),
+		'Street'			=> array('string', ''),
+		'City'				=> array('string', ''),
+		'State'				=> array('string', ''),
+		'Zip'				=> array('string', ''),
+		'Country'			=> array('string', ''),
+		'Phone'				=> array('string', ''),
+		'Fax'				=> array('string', ''),
+		'Web'				=> array('string', ''),
+		'Events'			=> array('string', ''),
+	);
 
 	public function populate($aGroup)
 	{

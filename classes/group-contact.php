@@ -26,18 +26,8 @@
  */
 class CGroupContact extends AEntity
 {
-	public function __construct($sModule)
-	{
-		parent::__construct(get_class($this), $sModule);
-
-		$this->setStaticMap(array(
-			'GroupUUID'	=> array('string', ''),
-			'ContactUUID'	=> array('string', 0),
-		));
-	}
-
-	public static function createInstance($sModule = 'Contacts')
-	{
-		return new CGroupContact($sModule);
-	}
+	protected $aStaticMap = array(
+		'GroupUUID'	=> array('string', ''),
+		'ContactUUID'	=> array('string', 0),
+	);
 }
