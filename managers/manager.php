@@ -377,7 +377,7 @@ class CApiContactsManager extends AApiManager
 		{
 			if (!in_array($sContactUUID, $aCurrContactUUIDs))
 			{
-				$oGroupContact = \CGroupContact::createInstance();
+				$oGroupContact = new CGroupContact();
 				$oGroupContact->GroupUUID = $sGroupUUID;
 				$oGroupContact->ContactUUID = $sContactUUID;
 				$res = $this->oEavManager->saveEntity($oGroupContact) || $res;

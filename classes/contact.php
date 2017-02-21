@@ -168,7 +168,7 @@ class CContact extends CEntity
 					}
 					elseif (!empty($sGroupName))
 					{
-						$oGroup = \CGroup::createInstance();
+						$oGroup = new CGroup();
 						$oGroup->IdUser = $this->IdUser;
 						$oGroup->Name = $sGroupName;
 
@@ -188,7 +188,7 @@ class CContact extends CEntity
 	{
 		if (!empty($sGroupUUID))
 		{
-			$oGroupContact = \CGroupContact::createInstance();
+			$oGroupContact = new CGroupContact();
 			$oGroupContact->ContactUUID = $this->UUID;
 			$oGroupContact->GroupUUID = $sGroupUUID;
 			$this->GroupsContacts[] = $oGroupContact;

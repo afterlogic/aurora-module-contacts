@@ -747,7 +747,7 @@ class ContactsModule extends AApiModule
 			}
 		}
 		
-		$oContact = \CContact::createInstance();
+		$oContact = new CContact();
 		$oContact->populate($Contact);
 		if ($oUser instanceof \CUser)
 		{
@@ -927,7 +927,7 @@ class ContactsModule extends AApiModule
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oGroup = \CGroup::createInstance();
+		$oGroup = new CGroup();
 		$oGroup->IdUser = \CApi::getAuthenticatedUserId();
 
 		$oGroup->populate($Group);
@@ -1412,7 +1412,7 @@ class ContactsModule extends AApiModule
 				$sData = $aDataItem['Data'];
 				if (!empty($sData) && $oApiCapa->isContactsSupported($oAccount)) {
 					
-					$oContact = \CContact::createInstance();
+					$oContact = new CContact();
 					$oContact->InitFromVCardStr($oAccount->IdUser, $sData);
 
 					$oContact->UUID = '';

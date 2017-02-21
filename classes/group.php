@@ -73,7 +73,7 @@ class CGroup extends CEntity
 			$aContactUUIDs = $aGroup['Contacts'];
 			foreach ($aContactUUIDs as $sContactUUID)
 			{
-				$oGroupContact = \CGroupContact::createInstance();
+				$oGroupContact = new CGroupContact();
 				$oGroupContact->ContactUUID = $sContactUUID;
 				$this->GroupContacts[] = $oGroupContact;
 			}
