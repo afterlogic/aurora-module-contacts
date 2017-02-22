@@ -18,7 +18,9 @@
  * @package Modules
  */
 
-class ContactsModule extends AApiModule
+namespace Aurora\Modules;
+
+class ContactsModule extends \AApiModule
 {
 	public $oApiContactsManager = null;
 
@@ -211,7 +213,7 @@ class ContactsModule extends AApiModule
 			}
 			if ($oUser->Role === \EUserRole::SuperAdmin)
 			{
-				$oSettings =& CApi::GetSettings();
+				$oSettings =&\CApi::GetSettings();
 				$oSettings->SetConf('ContactsPerPage', $ContactsPerPage);
 				return $oSettings->Save();
 			}
@@ -276,7 +278,7 @@ class ContactsModule extends AApiModule
 		
 		$aFilters = $this->prepareFilters($Filters);
 		
-		$aContacts = $this->oApiContactsManager->getContacts(EContactSortField::Name, ESortOrder::ASC, 0, 0, $aFilters, $GroupUUID, $ContactUUIDs);
+		$aContacts = $this->oApiContactsManager->getContacts(\EContactSortField::Name, \ESortOrder::ASC, 0, 0, $aFilters, $GroupUUID, $ContactUUIDs);
 		
 		$sOutput = '';
 		
@@ -497,7 +499,7 @@ class ContactsModule extends AApiModule
 	 * @param array $Filters Other conditions for obtaining contacts list.
 	 * @return array
 	 */
-	public function GetContacts($Offset = 0, $Limit = 20, $SortField = EContactSortField::Name, $SortOrder = ESortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array())
+	public function GetContacts($Offset = 0, $Limit = 20, $SortField = \EContactSortField::Name, $SortOrder = \ESortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array())
 	{
 		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 
@@ -674,7 +676,7 @@ class ContactsModule extends AApiModule
 			]
 		];
 		
-		$aContacts = $this->oApiContactsManager->getContacts(EContactSortField::Name, ESortOrder::ASC, 0, 0, $aFilters, 0);
+		$aContacts = $this->oApiContactsManager->getContacts(\EContactSortField::Name, \ESortOrder::ASC, 0, 0, $aFilters, 0);
 		
 		return $aContacts;
 	}	
@@ -1402,7 +1404,7 @@ class ContactsModule extends AApiModule
 	public function onExtendMessageData($oAccount, &$oMessage, $aData)
 	{
 		$oApiCapa = /* @var CApiCapabilityManager */ $this->oApiCapabilityManager;
-		$oApiFileCache = /* @var CApiFilecacheManager */ CApi::GetSystemManager('filecache');
+		$oApiFileCache = /* @var CApiFilecacheManager */\CApi::GetSystemManager('filecache');
 
 		foreach ($aData as $aDataItem) {
 			

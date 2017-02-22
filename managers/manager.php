@@ -36,7 +36,7 @@ class CApiContactsManager extends AApiManager
 
 		if ($oModule instanceof AApiModule)
 		{
-			$this->oEavManager = \CApi::GetSystemManager('eav', 'db');
+			$this->oEavManager = \CApi::GetSystemManager('eav', $sForcedStorage);
 		}
 	}
 	
@@ -236,7 +236,7 @@ class CApiContactsManager extends AApiManager
 			$aFilters = ['IdUser' => [$iUserId, '=']];
 		}
 		
-		return $this->oEavManager->getEntities('CGroup', [], 0, 0, $aFilters, 'Name', ESortOrder::ASC);
+		return $this->oEavManager->getEntities('CGroup', [], 0, 0, $aFilters, 'Name', \ESortOrder::ASC);
 	}
 
 	/**
