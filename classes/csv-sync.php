@@ -38,8 +38,8 @@ class CApiContactsSyncCsv
 
 	public function __construct()
 	{
-		$this->oFormatter = new CApiContactsCsvFormatter();
-		$this->oParser = new CApiContactsCsvParser();
+		$this->oFormatter = new \CApiContactsCsvFormatter();
+		$this->oParser = new \CApiContactsCsvParser();
 	}
 
 	/**
@@ -136,7 +136,7 @@ class CApiContactsSyncCsv
 
 					$iParsedCount++;
 					
-					$oContactsDecorator = \CApi::GetModuleDecorator('Contacts');
+					$oContactsDecorator = \Aurora\System\Api::GetModuleDecorator('Contacts');
 					if ($oContactsDecorator && $oContactsDecorator->CreateContact($aContactData, $aArgs['User']->EntityId))
 					{
 						$iCount++;
@@ -191,8 +191,8 @@ class CApiContactsSyncCsv
 				{
 					if (3 >= count($mRow))
 					{
-						CApi::Log('Invalid csv headers');
-						CApi::LogObject($mRow);
+						\Aurora\System\Api::Log('Invalid csv headers');
+						\Aurora\System\Api::LogObject($mRow);
 						fclose($rHandle);
 						return $aData;
 					}

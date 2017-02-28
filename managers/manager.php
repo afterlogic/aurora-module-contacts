@@ -23,20 +23,20 @@
  * 
  * @package ContactsMain
  */
-class CApiContactsManager extends AApiManager
+class CApiContactsManager extends \Aurora\System\AbstractManager
 {
 	private $oEavManager = null;
 
 	/**
-	 * @param CApiGlobalManager &$oManager
+	 * @param \Aurora\System\GlobalManager &$oManager
 	 */
-	public function __construct(CApiGlobalManager &$oManager, $sForcedStorage = 'db', AApiModule $oModule = null)
+	public function __construct(\Aurora\System\GlobalManager &$oManager, $sForcedStorage = 'db', \Aurora\System\AbstractModule $oModule = null)
 	{
 		parent::__construct('', $oManager, $oModule);
 
-		if ($oModule instanceof AApiModule)
+		if ($oModule instanceof \Aurora\System\AbstractModule)
 		{
-			$this->oEavManager = \CApi::GetSystemManager('eav', $sForcedStorage);
+			$this->oEavManager = \Aurora\System\Api::GetSystemManager('eav', $sForcedStorage);
 		}
 	}
 	

@@ -83,7 +83,7 @@ class CGroup extends CEntity
 	public function toResponseArray()
 	{
 		$mResult = null; 
-		$oContactsModule = \CApi::GetModule('Contacts');
+		$oContactsModule = \Aurora\System\Api::GetModule('Contacts');
 		 if ($oContactsModule)
 		 {
 			$aContacts = $oContactsModule->oApiContactsManager->getContacts(

@@ -155,7 +155,7 @@ class CContact extends CEntity
 	{
 		if (is_array($aGroupNames) && count($aGroupNames) > 0)
 		{
-			$oContactsDecorator = \CApi::GetModuleDecorator('Contacts');
+			$oContactsDecorator = \Aurora\System\Api::GetModuleDecorator('Contacts');
 			$oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
 			if ($oApiContactsManager)
 			{
@@ -234,7 +234,7 @@ class CContact extends CEntity
 		$this->populate($aContactData);
 		
 		$oUser = null;
-		$oCoreDecorator = \CApi::GetModuleDecorator('Core');
+		$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
 		if ($oCoreDecorator)
 		{
 			$oUser = $oCoreDecorator->GetUser($iUserId);

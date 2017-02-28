@@ -20,7 +20,7 @@
 
 namespace Aurora\Modules;
 
-class ContactsModule extends \AApiModule
+class ContactsModule extends \Aurora\System\AbstractModule
 {
 	public $oApiContactsManager = null;
 
@@ -122,7 +122,7 @@ class ContactsModule extends \AApiModule
 	 */
 	public function GetSettings()
 	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::Anonymous);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::Anonymous);
 		
 		$aStorages = array();
 		$this->broadcastEvent('GetStorage', $aStorages);
@@ -130,7 +130,7 @@ class ContactsModule extends \AApiModule
 		$aFormats = [];
 		$this->broadcastEvent('GetImportExportFormats', $aFormats);
 		
-		$oUser = \CApi::getAuthenticatedUser();
+		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		$ContactsPerPage = $this->getConfig('ContactsPerPage', 20);
 		if ($oUser && $oUser->Role === \EUserRole::NormalUser && isset($oUser->{$this->GetName().'::ContactsPerPage'}))
 		{
@@ -200,20 +200,20 @@ class ContactsModule extends \AApiModule
 	 */
 	public function UpdateSettings($ContactsPerPage)
 	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oUser = \CApi::getAuthenticatedUser();
+		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		if ($oUser)
 		{
 			if ($oUser->Role === \EUserRole::NormalUser)
 			{
-				$oCoreDecorator = \CApi::GetModuleDecorator('Core');
+				$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
 				$oUser->{$this->GetName().'::ContactsPerPage'} = $ContactsPerPage;
 				return $oCoreDecorator->UpdateUserObject($oUser);
 			}
 			if ($oUser->Role === \EUserRole::SuperAdmin)
 			{
-				$oSettings =&\CApi::GetSettings();
+				$oSettings =&\Aurora\System\Api::GetSettings();
 				$oSettings->SetConf('ContactsPerPage', $ContactsPerPage);
 				return $oSettings->Save();
 			}
@@ -274,7 +274,7 @@ class ContactsModule extends \AApiModule
 	 */
 	public function Export($Format, $Filters = [], $GroupUUID = '', $ContactUUIDs = [])
 	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		$aFilters = $this->prepareFilters($Filters);
 		
@@ -290,7 +290,7 @@ class ContactsModule extends \AApiModule
 
 			if (class_exists('CApiContactsSyncCsv'))
 			{
-				$oSync = new CApiContactsSyncCsv();
+				$oSync = new \CApiContactsSyncCsv();
 				$sOutput = $oSync->Export($aContacts);
 			}
 		}
@@ -359,9 +359,9 @@ class ContactsModule extends \AApiModule
 	 */
 	public function GetGroups()
 	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$iUserId = \CApi::getAuthenticatedUserId();
+		$iUserId = \Aurora\System\Api::getAuthenticatedUserId();
 		
 		return $this->oApiContactsManager->getGroups($iUserId);
 	}
@@ -430,7 +430,7 @@ class ContactsModule extends \AApiModule
 	 */
 	public function GetGroup($UUID)
 	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		return $this->oApiContactsManager->getGroup($UUID);
 	}
@@ -501,7 +501,7 @@ class ContactsModule extends \AApiModule
 	 */
 	public function GetContacts($Offset = 0, $Limit = 20, $SortField = \EContactSortField::Name, $SortOrder = \ESortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array())
 	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 
 		$aFilters = $this->prepareFilters($Filters);
 		
@@ -609,7 +609,7 @@ class ContactsModule extends \AApiModule
 	 */
 	public function GetContact($UUID)
 	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		return $this->oApiContactsManager->getContact($UUID);
 	}
@@ -665,9 +665,9 @@ class ContactsModule extends \AApiModule
 	 */
 	public function GetContactsByEmails($Emails)
 	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oUser = \CApi::getAuthenticatedUser();
+		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		
 		$aFilters = [
 			'$AND' => [
@@ -734,15 +734,15 @@ class ContactsModule extends \AApiModule
 	 */
 	public function CreateContact($Contact, $iUserId = 0)
 	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oUser = \CApi::getAuthenticatedUser();
+		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		
 		if ($iUserId > 0 && $iUserId !== $oUser->EntityId)
 		{
-			\CApi::checkUserRoleIsAtLeast(\EUserRole::SuperAdmin);
+			\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::SuperAdmin);
 			
-			$oCoreDecorator = \CApi::GetModuleDecorator('Core');
+			$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
 			if ($oCoreDecorator)
 			{
 				$oUser = $oCoreDecorator->GetUser($iUserId);
@@ -812,7 +812,7 @@ class ContactsModule extends \AApiModule
 	 */
 	public function UpdateContact($Contact)
 	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		$oContact = $this->oApiContactsManager->getContact($Contact['UUID']);
 		$oContact->populate($Contact);
@@ -871,7 +871,7 @@ class ContactsModule extends \AApiModule
 	 */
 	public function DeleteContacts($UUIDs)
 	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		return $this->oApiContactsManager->deleteContacts($UUIDs);
 	}	
@@ -927,10 +927,10 @@ class ContactsModule extends \AApiModule
 	 */
 	public function CreateGroup($Group)
 	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		$oGroup = new CGroup();
-		$oGroup->IdUser = \CApi::getAuthenticatedUserId();
+		$oGroup->IdUser = \Aurora\System\Api::getAuthenticatedUserId();
 
 		$oGroup->populate($Group);
 
@@ -989,7 +989,7 @@ class ContactsModule extends \AApiModule
 	 */
 	public function UpdateGroup($Group)
 	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		$oGroup = $this->oApiContactsManager->getGroup($Group['UUID']);
 		if ($oGroup)
@@ -1052,7 +1052,7 @@ class ContactsModule extends \AApiModule
 	 */
 	public function DeleteGroup($UUID)
 	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		return $this->oApiContactsManager->deleteGroups([$UUID]);
 	}
@@ -1110,7 +1110,7 @@ class ContactsModule extends \AApiModule
 	 */
 	public function AddContactsToGroup($GroupUUID, $ContactUUIDs)
 	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		if (is_array($ContactUUIDs) && !empty($ContactUUIDs))
 		{
@@ -1173,7 +1173,7 @@ class ContactsModule extends \AApiModule
 	 */
 	public function RemoveContactsFromGroup($GroupUUID, $ContactUUIDs)
 	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		if (is_array($ContactUUIDs) && !empty($ContactUUIDs))
 		{
@@ -1239,7 +1239,7 @@ class ContactsModule extends \AApiModule
 	 */
 	public function Import($UploadData, $Storage, $GroupUUID)
 	{
-		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		$sError = '';
 		$aResponse = array(
@@ -1247,13 +1247,13 @@ class ContactsModule extends \AApiModule
 			'ParsedCount' => 0
 		);
 		
-		$oUser = \CApi::getAuthenticatedUser();
+		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 
 		if (is_array($UploadData))
 		{
-			$sFileType = strtolower(\api_Utils::GetFileExtension($UploadData['name']));
+			$sFileType = strtolower(\Aurora\System\Utils::GetFileExtension($UploadData['name']));
 
-			$oApiFileCacheManager = \CApi::GetSystemManager('filecache');
+			$oApiFileCacheManager = \Aurora\System\Api::GetSystemManager('filecache');
 			$sSavedName = 'import-post-' . md5($UploadData['name'] . $UploadData['tmp_name']);
 			if ($oApiFileCacheManager->moveUploadedFile($oUser->UUID, $sSavedName, $UploadData['tmp_name']))
 			{
@@ -1300,34 +1300,34 @@ class ContactsModule extends \AApiModule
 	
 //	public function GetGroupEvents($UUID)
 //	{
-//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 //		
 //		return [];
 //	}	
 	
 //	public function GetSuggestions($Search, $Storage = '', $PhoneOnly = false)
 //	{
-//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 //		
 //		return $this->GetContacts(0, 20, EContactSortField::Frequency, ESortOrder::ASC, $Search);
 //	}	
 	
 //	public function DeleteSuggestion($ContactUUID)
 //	{
-//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 //		
 //		return true;
 //	}	
 	
 //	public function UpdateSharedContacts($UUIDs)
 //	{
-//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 //		return true;
 //	}	
 	
 //	public function AddContactsFromFile($File)
 //	{
-//		\CApi::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 //		return true;
 //	}	
 	/***** public functions might be called with web API *****/
@@ -1395,7 +1395,7 @@ class ContactsModule extends \AApiModule
 
 			if (class_exists('CApiContactsSyncCsv'))
 			{
-				$oSync = new CApiContactsSyncCsv();
+				$oSync = new \CApiContactsSyncCsv();
 				$oSync->Import($aArgs, $mImportResult);
 			}
 		}
@@ -1404,7 +1404,7 @@ class ContactsModule extends \AApiModule
 	public function onExtendMessageData($oAccount, &$oMessage, $aData)
 	{
 		$oApiCapa = /* @var CApiCapabilityManager */ $this->oApiCapabilityManager;
-		$oApiFileCache = /* @var CApiFilecacheManager */\CApi::GetSystemManager('filecache');
+		$oApiFileCache = /* @var CApiFilecacheManager */\Aurora\System\Api::GetSystemManager('filecache');
 
 		foreach ($aData as $aDataItem) {
 			
@@ -1445,7 +1445,7 @@ class ContactsModule extends \AApiModule
 						$oMessage->addExtend('VCARD', $oVcard);
 					} else {
 						
-						CApi::Log('Can\'t save temp file "'.$sTemptFile.'"', ELogLevel::Error);
+						\Aurora\System\Api::Log('Can\'t save temp file "'.$sTemptFile.'"', ELogLevel::Error);
 					}					
 				}
 			}
@@ -1454,8 +1454,8 @@ class ContactsModule extends \AApiModule
 	
     public function onGetMobileSyncInfo($aArgs, &$mResult)
 	{
-		$iUserId = \CApi::getAuthenticatedUserId();
-		$oDavModule = \CApi::GetModuleDecorator('Dav');
+		$iUserId = \Aurora\System\Api::getAuthenticatedUserId();
+		$oDavModule = \Aurora\System\Api::GetModuleDecorator('Dav');
 
 		$sDavLogin = $oDavModule->GetLogin();
 		$sDavServer = $oDavModule->GetServerUrl();
