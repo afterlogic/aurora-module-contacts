@@ -749,7 +749,7 @@ class ContactsModule extends \Aurora\System\AbstractModule
 			}
 		}
 		
-		$oContact = new CContact();
+		$oContact = new \CContact();
 		$oContact->populate($Contact);
 		if ($oUser instanceof \CUser)
 		{
