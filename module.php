@@ -929,7 +929,7 @@ class ContactsModule extends \Aurora\System\AbstractModule
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oGroup = new CGroup();
+		$oGroup = new \CGroup();
 		$oGroup->IdUser = \Aurora\System\Api::getAuthenticatedUserId();
 
 		$oGroup->populate($Group);
