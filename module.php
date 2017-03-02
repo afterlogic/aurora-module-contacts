@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (c) 2016, Afterlogic Corp.
+ * @copyright Copyright (c) 2017, Afterlogic Corp.
  * @license AGPL-3.0
  *
  * This code is free software: you can redistribute it and/or modify
@@ -554,7 +554,7 @@ class ContactsModule extends \Aurora\System\AbstractModule
 
 		return array(
 			'ContactCount' => $iCount,
-			'List' => \CApiResponseManager::GetResponseObject($aList)
+			'List' => \Aurora\System\ResponseManager::GetResponseObject($aList)
 		);		
 	}	
 	
@@ -730,7 +730,7 @@ class ContactsModule extends \Aurora\System\AbstractModule
 	 * @param array $Contact Parameters of contact to create.
 	 * @param int $iUserId Identifier of user that should own a new contact.
 	 * @return bool|string
-	 * @throws \System\Exceptions\AuroraApiException
+	 * @throws \System\Exceptions\ApiException
 	 */
 	public function CreateContact($Contact, $iUserId = 0)
 	{
@@ -1235,7 +1235,7 @@ class ContactsModule extends \Aurora\System\AbstractModule
 	 * @param string $Storage Storage name.
 	 * @param array $GroupUUID Group UUID.
 	 * @return array
-	 * @throws \System\Exceptions\AuroraApiException
+	 * @throws \System\Exceptions\ApiException
 	 */
 	public function Import($UploadData, $Storage, $GroupUUID)
 	{
@@ -1275,7 +1275,7 @@ class ContactsModule extends \Aurora\System\AbstractModule
 				}
 				else
 				{
-					throw new \System\Exceptions\AuroraApiException(\System\Notifications::IncorrectFileExtension);
+					throw new \System\Exceptions\ApiException(\System\Notifications::IncorrectFileExtension);
 				}
 
 				$oApiFileCacheManager->clear($oUser->UUID, $sSavedName);

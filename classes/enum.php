@@ -1,6 +1,6 @@
 <?php
 /*
- * @copyright Copyright (c) 2016, Afterlogic Corp.
+ * @copyright Copyright (c) 2017, Afterlogic Corp.
  * @license AGPL-3.0
  *
  * This code is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@
  * @package Api
  * @subpackage Enum
  */
-class EContactsPrimaryEmail extends AEnumeration
+class EContactsPrimaryEmail extends AbstractEnumeration
 {
 	const Personal = 0;
 	const Business = 1;
@@ -41,7 +41,7 @@ class EContactsPrimaryEmail extends AEnumeration
  * @package Api
  * @subpackage Enum
  */
-class EContactsPrimaryPhone extends AEnumeration
+class EContactsPrimaryPhone extends AbstractEnumeration
 {
 	const Mobile = 0;
 	const Personal = 1;
@@ -61,7 +61,7 @@ class EContactsPrimaryPhone extends AEnumeration
  * @package Api
  * @subpackage Enum
  */
-class EContactsPrimaryAddress extends AEnumeration
+class EContactsPrimaryAddress extends AbstractEnumeration
 {
 	const Personal = 0;
 	const Business = 1;
@@ -79,7 +79,7 @@ class EContactsPrimaryAddress extends AEnumeration
  * @package Api
  * @subpackage Enum
  */
-class EContactFileType extends AEnumeration
+class EContactFileType extends AbstractEnumeration
 {
 	const CSV = 'csv';
 	const VCF = 'vcf';
@@ -89,7 +89,7 @@ class EContactFileType extends AEnumeration
  * @package Api
  * @subpackage Enum
  */
-class EContactSortField extends AEnumeration
+class EContactSortField extends AbstractEnumeration
 {
 	const Name = 1;
 	const Email = 2;
