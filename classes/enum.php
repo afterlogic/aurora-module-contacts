@@ -21,7 +21,7 @@
  * @package Api
  * @subpackage Enum
  */
-class EContactsPrimaryEmail extends AbstractEnumeration
+class EContactsPrimaryEmail extends \AbstractEnumeration
 {
 	const Personal = 0;
 	const Business = 1;
@@ -41,7 +41,7 @@ class EContactsPrimaryEmail extends AbstractEnumeration
  * @package Api
  * @subpackage Enum
  */
-class EContactsPrimaryPhone extends AbstractEnumeration
+class EContactsPrimaryPhone extends \AbstractEnumeration
 {
 	const Mobile = 0;
 	const Personal = 1;
@@ -61,7 +61,7 @@ class EContactsPrimaryPhone extends AbstractEnumeration
  * @package Api
  * @subpackage Enum
  */
-class EContactsPrimaryAddress extends AbstractEnumeration
+class EContactsPrimaryAddress extends \AbstractEnumeration
 {
 	const Personal = 0;
 	const Business = 1;
@@ -79,7 +79,7 @@ class EContactsPrimaryAddress extends AbstractEnumeration
  * @package Api
  * @subpackage Enum
  */
-class EContactFileType extends AbstractEnumeration
+class EContactFileType extends \AbstractEnumeration
 {
 	const CSV = 'csv';
 	const VCF = 'vcf';
@@ -89,7 +89,7 @@ class EContactFileType extends AbstractEnumeration
  * @package Api
  * @subpackage Enum
  */
-class EContactSortField extends AbstractEnumeration
+class EContactSortField extends \AbstractEnumeration
 {
 	const Name = 1;
 	const Email = 2;

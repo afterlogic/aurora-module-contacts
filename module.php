@@ -20,7 +20,7 @@
 
 namespace Aurora\Modules;
 
-class ContactsModule extends \Aurora\System\AbstractModule
+class ContactsModule extends \Aurora\System\Module\AbstractModule
 {
 	public $oApiContactsManager = null;
 
@@ -730,7 +730,7 @@ class ContactsModule extends \Aurora\System\AbstractModule
 	 * @param array $Contact Parameters of contact to create.
 	 * @param int $iUserId Identifier of user that should own a new contact.
 	 * @return bool|string
-	 * @throws \System\Exceptions\ApiException
+	 * @throws \Aurora\System\Exceptions\ApiException
 	 */
 	public function CreateContact($Contact, $iUserId = 0)
 	{
@@ -1235,7 +1235,7 @@ class ContactsModule extends \Aurora\System\AbstractModule
 	 * @param string $Storage Storage name.
 	 * @param array $GroupUUID Group UUID.
 	 * @return array
-	 * @throws \System\Exceptions\ApiException
+	 * @throws \Aurora\System\Exceptions\ApiException
 	 */
 	public function Import($UploadData, $Storage, $GroupUUID)
 	{
@@ -1275,7 +1275,7 @@ class ContactsModule extends \Aurora\System\AbstractModule
 				}
 				else
 				{
-					throw new \System\Exceptions\ApiException(\System\Notifications::IncorrectFileExtension);
+					throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::IncorrectFileExtension);
 				}
 
 				$oApiFileCacheManager->clear($oUser->UUID, $sSavedName);
