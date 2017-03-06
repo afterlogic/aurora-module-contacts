@@ -1253,7 +1253,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$sFileType = strtolower(\Aurora\System\Utils::GetFileExtension($UploadData['name']));
 
-			$oApiFileCacheManager = \Aurora\System\Api::GetSystemManager('filecache');
+			$oApiFileCacheManager = \Aurora\System\Api::GetSystemManager('Filecache');
 			$sSavedName = 'import-post-' . md5($UploadData['name'] . $UploadData['tmp_name']);
 			if ($oApiFileCacheManager->moveUploadedFile($oUser->UUID, $sSavedName, $UploadData['tmp_name']))
 			{
@@ -1404,7 +1404,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function onExtendMessageData($oAccount, &$oMessage, $aData)
 	{
 		$oApiCapa = /* @var CApiCapabilityManager */ $this->oApiCapabilityManager;
-		$oApiFileCache = /* @var CApiFilecacheManager */\Aurora\System\Api::GetSystemManager('filecache');
+		$oApiFileCache = /* @var CApiFilecacheManager */\Aurora\System\Api::GetSystemManager('Filecache');
 
 		foreach ($aData as $aDataItem) {
 			
