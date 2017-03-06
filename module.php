@@ -18,9 +18,9 @@
  * @package Modules
  */
 
-namespace Aurora\Modules;
+namespace Aurora\Modules\Contacts;
 
-class ContactsModule extends \Aurora\System\Module\AbstractModule
+class Module extends \Aurora\System\Module\AbstractModule
 {
 	public $oApiContactsManager = null;
 
