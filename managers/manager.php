@@ -377,7 +377,7 @@ class CApiContactsManager extends \Aurora\System\AbstractManager
 		{
 			if (!in_array($sContactUUID, $aCurrContactUUIDs))
 			{
-				$oGroupContact = new CGroupContact();
+				$oGroupContact = \CGroupContact::createInstance('CGroupContact', $this->GetModule()->GetName());
 				$oGroupContact->GroupUUID = $sGroupUUID;
 				$oGroupContact->ContactUUID = $sContactUUID;
 				$res = $this->oEavManager->saveEntity($oGroupContact) || $res;

@@ -749,7 +749,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 		}
 		
-		$oContact = \CContact::createInstance($this->GetName());;
+		$oContact = \CContact::createInstance('CContact', $this->GetName());
 		$oContact->populate($Contact);
 		if ($oUser instanceof \CUser)
 		{
@@ -929,7 +929,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$oGroup = \CGroup::createInstance($this->GetName());;
+		$oGroup = \CGroup::createInstance('CGroup', $this->GetName());
 		$oGroup->IdUser = \Aurora\System\Api::getAuthenticatedUserId();
 
 		$oGroup->populate($Group);
