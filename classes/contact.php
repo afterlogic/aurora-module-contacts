@@ -188,7 +188,7 @@ class CContact extends \Aurora\System\EAV\Entity
 	{
 		if (!empty($sGroupUUID))
 		{
-			$oGroupContact = new CGroupContact();
+			$oGroupContact = \CGroupContact::createInstance('CGroupContact', $this->getModule());
 			$oGroupContact->ContactUUID = $this->UUID;
 			$oGroupContact->GroupUUID = $sGroupUUID;
 			$this->GroupsContacts[] = $oGroupContact;

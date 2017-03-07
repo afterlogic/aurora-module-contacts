@@ -73,7 +73,7 @@ class CGroup extends \Aurora\System\EAV\Entity
 			$aContactUUIDs = $aGroup['Contacts'];
 			foreach ($aContactUUIDs as $sContactUUID)
 			{
-				$oGroupContact = new CGroupContact();
+				$oGroupContact = \CGroupContact::createInstance('CGroupContact', $this->getModule());
 				$oGroupContact->ContactUUID = $sContactUUID;
 				$this->GroupContacts[] = $oGroupContact;
 			}
