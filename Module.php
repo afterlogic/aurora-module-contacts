@@ -1403,8 +1403,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 	
 	public function onExtendMessageData($oAccount, &$oMessage, $aData)
 	{
-		$oApiCapa = /* @var CApiCapabilityManager */ $this->oApiCapabilityManager;
-		$oApiFileCache = /* @var CApiFilecacheManager */\Aurora\System\Api::GetSystemManager('Filecache');
+		$oApiCapa = /* @var \Aurora\System\Managers\Capability\Manager */ $this->oApiCapabilityManager;
+		$oApiFileCache = /* @var \Aurora\System\Managers\Filecache\Manager */\Aurora\System\Api::GetSystemManager('Filecache');
 
 		foreach ($aData as $aDataItem) {
 			
