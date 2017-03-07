@@ -554,7 +554,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		return array(
 			'ContactCount' => $iCount,
-			'List' => \Aurora\System\ResponseManager::GetResponseObject($aList)
+			'List' => \Aurora\System\Managers\Response::GetResponseObject($aList)
 		);		
 	}	
 	

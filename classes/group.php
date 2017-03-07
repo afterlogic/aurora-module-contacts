@@ -107,7 +107,7 @@ class CGroup extends \Aurora\System\EAV\Entity
 				'Fax'		=> $this->Fax,
 				'Web'		=> $this->Web,
 
-				'Contacts' => \Aurora\System\ResponseManager::GetResponseObject($aContacts)
+				'Contacts' => \Aurora\System\Managers\Response::GetResponseObject($aContacts)
 			);
 		 }
 		 

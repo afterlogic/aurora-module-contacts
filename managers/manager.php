@@ -23,14 +23,14 @@
  * 
  * @package ContactsMain
  */
-class CApiContactsManager extends \Aurora\System\AbstractManager
+class CApiContactsManager extends \Aurora\System\Managers\AbstractManager
 {
 	private $oEavManager = null;
 
 	/**
-	 * @param \Aurora\System\GlobalManager &$oManager
+	 * @param \Aurora\System\Managers\GlobalManager &$oManager
 	 */
-	public function __construct(\Aurora\System\GlobalManager &$oManager, $sForcedStorage = 'db', \Aurora\System\Module\AbstractModule $oModule = null)
+	public function __construct(\Aurora\System\Managers\GlobalManager &$oManager, $sForcedStorage = 'db', \Aurora\System\Module\AbstractModule $oModule = null)
 	{
 		parent::__construct('', $oManager, $oModule);
 
