@@ -56,6 +56,24 @@ class CApiContactsManager extends \Aurora\System\Managers\AbstractManager
 	}
 	
 	/**
+	 * 
+	 * @param string $sEmail
+	 * @return \CContact
+	 */
+	public function getContactByEmail($sEmail)
+	{
+		$aFilters = ['ViewEmail' => $sEmail];
+		$aContacts = $this->oEavManager->getEntities('CContact', array(), 0, 0, $aFilters,
+				EContactSortField::Name, ESortOrder::ASC, []);
+		if (count($aContacts) === 1)
+		{
+			$oContact = $aContacts[0];
+			$oContact->GroupsContacts = $this->getGroupContacts(null, $oContact->UUID);
+		}
+		return $oContact;
+	}
+	
+	/**
 	 * Returns group item identified by its ID.
 	 * 
 	 * @param string $sUUID Group ID 
@@ -203,13 +221,24 @@ class CApiContactsManager extends \Aurora\System\Managers\AbstractManager
 			}
 		}
 		
+		$sSortField = 'FullName';
+		switch ($iSortField)
+		{
+			case EContactSortField::Email:
+				$sSortField = 'ViewEmail';
+				break;
+			case EContactSortField::Frequency:
+				$sSortField = 'Frequency';
+				break;
+		}
+		
 		return $this->oEavManager->getEntities(
 			'CContact', 
 			array(),
 			$iOffset,
 			$iRequestLimit,
 			$aFilters,
-			$iSortField === EContactSortField::Name ? 'FullName' : 'ViewEmail',
+			$sSortField,
 			$iSortOrder,
 			$aContactUUIDs
 		);

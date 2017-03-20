@@ -40,6 +40,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$this->oApiContactsManager = $this->GetManager();
 		
+		$this->subscribeEvent('Mail::AfterUseEmails', array($this, 'onAfterUseEmails'));
 		$this->subscribeEvent('Mail::GetBodyStructureParts', array($this, 'onGetBodyStructureParts'));
 		$this->subscribeEvent('Mail::ExtendMessageData', array($this, 'onExtendMessageData'));
 		$this->subscribeEvent('MobileSync::GetInfo', array($this, 'onGetMobileSyncInfo'));
@@ -815,9 +816,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		$oContact = $this->oApiContactsManager->getContact($Contact['UUID']);
-		$oContact->populate($Contact);
+		if ($oContact)
+		{
+			$oContact->populate($Contact);
+			return $this->oApiContactsManager->updateContact($oContact);
+		}
 		
-		return $this->oApiContactsManager->updateContact($oContact);
+		return false;
 	}
 	
 	/**
@@ -1305,20 +1310,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 //		return [];
 //	}	
 	
-//	public function GetSuggestions($Search, $Storage = '', $PhoneOnly = false)
-//	{
-//		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-//		
-//		return $this->GetContacts(0, 20, EContactSortField::Frequency, ESortOrder::ASC, $Search);
-//	}	
-	
-//	public function DeleteSuggestion($ContactUUID)
-//	{
-//		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-//		
-//		return true;
-//	}	
-	
 //	public function UpdateSharedContacts($UUIDs)
 //	{
 //		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
@@ -1368,6 +1359,35 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 		
 		return $aFilters;
+	}
+	
+	public function onAfterUseEmails($Args, &$Result)
+	{
+		$aAddresses = $Args['Emails'];
+		foreach ($aAddresses as $sEmail => $sName)
+		{
+			$oContact = $this->oApiContactsManager->getContactByEmail($sEmail);
+			if ($oContact)
+			{
+				if ($oContact->Frequency !== -1)
+				{
+					$oContact->Frequency = $oContact->Frequency + 1;
+					$this->oApiContactsManager->updateContact($oContact);
+				}
+			}
+			else
+			{
+				$oContactsDecorator = \Aurora\System\Api::GetModuleDecorator('Contacts');
+				if ($oContactsDecorator)
+				{
+					$oContactsDecorator->CreateContact([
+						'FullName' => $sName,
+						'PersonalEmail' => $sEmail,
+						'Auto' => true,
+					]);
+				}
+			}
+		}
 	}
 	
 	public function onGetBodyStructureParts($aParts, &$aResultParts)

@@ -67,6 +67,7 @@
  * 
  * @property string $ETag
  * @property bool $Auto
+ * @property int $Frequency
  *
  * @ignore
  * @package Contactsmain
@@ -125,8 +126,8 @@ class CContact extends \Aurora\System\EAV\Entity
 		'BirthYear'			=> array('int', 0),
 
 		'ETag'				=> array('string', ''),
-
 		'Auto'				=> array('bool', false),
+		'Frequency'			=> array('int', 0),
 	);
 	
 	public $GroupsContacts = array();
@@ -282,61 +283,14 @@ class CContact extends \Aurora\System\EAV\Entity
 	 */
 	public function toResponseArray()
 	{
+		$aRes = parent::toResponseArray();
+		
 		$aGroupUUIDs = array();
 		foreach ($this->GroupsContacts as $oGroupContact)
 		{
 			$aGroupUUIDs[] = $oGroupContact->GroupUUID;
 		}
-		
-		$aRes = array(
-			'IdUser' => $this->IdUser,
-			'UUID' => $this->UUID,
-			'Storage' => $this->Storage,
-			'FullName' => $this->FullName,
-			'PrimaryEmail' => $this->PrimaryEmail,
-			'PrimaryPhone' => $this->PrimaryPhone,
-			'PrimaryAddress' => $this->PrimaryAddress,
-			'FirstName' => $this->FirstName,
-			'LastName' => $this->LastName,
-			'NickName' => $this->NickName,
-			'Skype' => $this->Skype,
-			'Facebook' => $this->Facebook,
-
-			'PersonalEmail' => $this->PersonalEmail,
-			'PersonalAddress' => $this->PersonalAddress,
-			'PersonalCity' => $this->PersonalCity,
-			'PersonalState' => $this->PersonalState,
-			'PersonalZip' => $this->PersonalZip,
-			'PersonalCountry' => $this->PersonalCountry,
-			'PersonalWeb' => $this->PersonalWeb,
-			'PersonalFax' => $this->PersonalFax,
-			'PersonalPhone' => $this->PersonalPhone,
-			'PersonalMobile' => $this->PersonalMobile,
-
-			'BusinessEmail' => $this->BusinessEmail,
-			'BusinessCompany' => $this->BusinessCompany,
-			'BusinessAddress' => $this->BusinessAddress,
-			'BusinessCity' => $this->BusinessCity,
-			'BusinessState' => $this->BusinessState,
-			'BusinessZip' => $this->BusinessZip,
-			'BusinessCountry' => $this->BusinessCountry,
-			'BusinessJobTitle' => $this->BusinessJobTitle,
-			'BusinessDepartment' => $this->BusinessDepartment,
-			'BusinessOffice' => $this->BusinessOffice,
-			'BusinessPhone' => $this->BusinessPhone,
-			'BusinessFax' => $this->BusinessFax,
-			'BusinessWeb' => $this->BusinessWeb,
-
-			'OtherEmail' => $this->OtherEmail,
-			'Notes' => $this->Notes,
-
-			'BirthDay' => $this->BirthDay,
-			'BirthMonth' => $this->BirthMonth,
-			'BirthYear' => $this->BirthYear,
-			'ETag' => $this->ETag,
-			
-			'GroupUUIDs' => $aGroupUUIDs
-		);
+		$aRes['GroupUUIDs'] = $aGroupUUIDs;
 		
 		foreach ($this->ExtendedInformation as $sKey => $mValue)
 		{
