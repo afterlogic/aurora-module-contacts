@@ -148,6 +148,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			'EContactsPrimaryAddress' => (new \EContactsPrimaryAddress)->getMap(),
 			'EContactSortField' => (new \EContactSortField)->getMap(),
 			'ImportExportFormats' => array_merge($this->aImportExportFormats, $aFormats),
+			'SaveVcfServerModuleName' => \Aurora\System\Api::GetModuleManager()->ModuleExists('DavContacts') ? 'DavContacts' : ''
 		);
 	}
 	
