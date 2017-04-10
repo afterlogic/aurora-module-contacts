@@ -536,6 +536,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$aFilters = ['$OR' => $aFilters];
 		}
+		
+		if ($SortField === \EContactSortField::Frequency)
+		{
+			$aFilters['Frequency'] = ['-1', '!='];
+			$aFilters = [
+				'$AND' => $aFilters
+			];
+		}
 
 		$iCount = $this->oApiContactsManager->getContactsCount($aFilters, $GroupUUID);
 		$aContacts = $this->oApiContactsManager->getContacts($SortField, $SortOrder, $Offset, $Limit, $aFilters, $GroupUUID);
@@ -548,9 +556,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$aList[] = array(
 					'UUID' => $oContact->UUID,
 					'IdUser' => $oContact->IdUser,
-					'Name' => $oContact->FullName,
-					'Email' => $oContact->ViewEmail,
+					'FullName' => $oContact->FullName,
+					'ViewEmail' => $oContact->ViewEmail,
 					'Storage' => $oContact->Storage,
+					'Frequency' => $oContact->Frequency,
 				);
 			}
 		}

@@ -60,10 +60,11 @@ class CApiContactsManager extends \Aurora\System\Managers\AbstractManager
 	 */
 	public function getContactByEmail($sEmail)
 	{
+		$oContact = null;
 		$aFilters = ['ViewEmail' => $sEmail];
 		$aContacts = $this->oEavManager->getEntities('CContact', array(), 0, 0, $aFilters,
 				EContactSortField::Name, ESortOrder::ASC, []);
-		if (count($aContacts) === 1)
+		if (count($aContacts) > 0)
 		{
 			$oContact = $aContacts[0];
 			$oContact->GroupsContacts = $this->getGroupContacts(null, $oContact->UUID);
@@ -232,7 +233,7 @@ class CApiContactsManager extends \Aurora\System\Managers\AbstractManager
 		
 		return $this->oEavManager->getEntities(
 			'CContact', 
-			array(),
+			array('IdUser', 'FullName', 'ViewEmail', 'Storage', 'Frequency'),
 			$iOffset,
 			$iRequestLimit,
 			$aFilters,
