@@ -58,10 +58,15 @@ class CApiContactsManager extends \Aurora\System\Managers\AbstractManager
 	 * @param string $sEmail
 	 * @return \CContact
 	 */
-	public function getContactByEmail($sEmail)
+	public function getContactByEmail($iUserId, $sEmail)
 	{
 		$oContact = null;
-		$aFilters = ['ViewEmail' => $sEmail];
+		$aFilters = [
+			'$AND' => [
+				'ViewEmail' => [$sEmail, '='],
+				'IdUser' => [$iUserId, '='],
+			]
+		];
 		$aContacts = $this->oEavManager->getEntities('CContact', array(), 0, 0, $aFilters,
 				EContactSortField::Name, ESortOrder::ASC, []);
 		if (count($aContacts) > 0)
