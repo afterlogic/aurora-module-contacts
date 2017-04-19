@@ -1327,11 +1327,29 @@ class Module extends \Aurora\System\Module\AbstractModule
 //		return true;
 //	}	
 	
-//	public function AddContactsFromFile($File)
-//	{
-//		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
-//		return true;
-//	}	
+	public function AddContactsFromFile($File)
+	{
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+
+		if (empty($File))
+		{
+			throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::InvalidInputParameter);
+		}
+
+		$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		$oApiFileCache = \Aurora\System\Api::GetSystemManager('Filecache');
+		
+		$aArgs = [
+			'Format' => 'vcf',
+			'User' => $oUser,
+			'TempFileName' => $oApiFileCache->generateFullFilePath($oUser->UUID, $File)
+		];
+
+		$mImportResult = [];
+		$this->broadcastEvent('Import', $aArgs, $mImportResult);
+
+		return is_array($mImportResult) && $mImportResult['ImportedCount'] > 0;
+	}	
 	/***** public functions might be called with web API *****/
 	
 	/***** private functions *****/
@@ -1433,53 +1451,54 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 	}
 	
-	public function onExtendMessageData($oAccount, &$oMessage, $aData)
+	public function onExtendMessageData($aData, &$oMessage)
 	{
-		$oApiCapa = /* @var \Aurora\System\Managers\Capability\Manager */ $this->oApiCapabilityManager;
-		$oApiFileCache = /* @var \Aurora\System\Managers\Filecache\Manager */\Aurora\System\Api::GetSystemManager('Filecache');
+		$oApiFileCache = \Aurora\System\Api::GetSystemManager('Filecache');
+		
+		$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		
+		foreach ($aData as $aDataItem)
+		{
+			$oPart = $aDataItem['Part'];
+			$bVcard = $oPart instanceof \MailSo\Imap\BodyStructure && 
+					($oPart->ContentType() === 'text/vcard' || $oPart->ContentType() === 'text/x-vcard');
+			$sData = $aDataItem['Data'];
+			if ($bVcard && !empty($sData))
+			{
+				$oContact = \CContact::createInstance('CContact', $this->GetName());
+				$oContact->InitFromVCardStr($oUser->EntityId, $sData);
 
-		foreach ($aData as $aDataItem) {
-			
-			if ($aDataItem['Part'] instanceof \MailSo\Imap\BodyStructure && 
-					($aDataItem['Part']->ContentType() === 'text/vcard' || 
-					$aDataItem['Part']->ContentType() === 'text/x-vcard')) {
-				$sData = $aDataItem['Data'];
-				if (!empty($sData) && $oApiCapa->isContactsSupported($oAccount)) {
-					
-					$oContact = new CContact();
-					$oContact->InitFromVCardStr($oAccount->IdUser, $sData);
+				$oContact->UUID = '';
 
-					$oContact->UUID = '';
-
-					$bContactExists = false;
-					if (0 < strlen($oContact->ViewEmail))
+				$bContactExists = false;
+				if (0 < strlen($oContact->ViewEmail))
+				{
+					$aLocalContacts = $this->GetContactsByEmails([$oContact->ViewEmail]);
+					$oLocalContact = count($aLocalContacts) > 0 ? $aLocalContacts[0] : null;
+					if ($oLocalContact)
 					{
-						$aLocalContacts = $this->GetContactsByEmails([$oContact->ViewEmail]);
-						$oLocalContact = count($aLocalContacts) > 0 ? $aLocalContacts[0] : null;
-						if ($oLocalContact)
-						{
-							$oContact->UUID = $oLocalContact->UUID;
-							$bContactExists = true;
-						}
+						$oContact->UUID = $oLocalContact->UUID;
+						$bContactExists = true;
 					}
-
-					$sTemptFile = md5($sData).'.vcf';
-					if ($oApiFileCache && $oApiFileCache->put($oAccount, $sTemptFile, $sData)) {
-						
-						$oVcard = CApiMailVcard::createInstance();
-
-						$oVcard->Uid = $oContact->UUID;
-						$oVcard->File = $sTemptFile;
-						$oVcard->Exists = !!$bContactExists;
-						$oVcard->Name = $oContact->FullName;
-						$oVcard->Email = $oContact->ViewEmail;
-
-						$oMessage->addExtend('VCARD', $oVcard);
-					} else {
-						
-						\Aurora\System\Api::Log('Can\'t save temp file "'.$sTemptFile.'"', ELogLevel::Error);
-					}					
 				}
+
+				$sTemptFile = md5($sData).'.vcf';
+				if ($oApiFileCache && $oApiFileCache->put($oUser->UUID, $sTemptFile, $sData))
+				{
+					$oVcard = \CApiMailVcard::createInstance('CApiMailVcard', $this->GetName());
+
+					$oVcard->Uid = $oContact->UUID;
+					$oVcard->File = $sTemptFile;
+					$oVcard->Exists = !!$bContactExists;
+					$oVcard->Name = $oContact->FullName;
+					$oVcard->Email = $oContact->ViewEmail;
+
+					$oMessage->addExtend('VCARD', $oVcard);
+				}
+				else
+				{
+					\Aurora\System\Api::Log('Can\'t save temp file "'.$sTemptFile.'"', ELogLevel::Error);
+				}					
 			}
 		}
 	}	
