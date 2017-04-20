@@ -61,14 +61,15 @@ class CApiContactsManager extends \Aurora\System\Managers\AbstractManager
 	public function getContactByEmail($iUserId, $sEmail)
 	{
 		$oContact = null;
-		$aFilters = [
-			'$AND' => [
-				'ViewEmail' => [$sEmail, '='],
-				'IdUser' => [$iUserId, '='],
-			]
-		];
-		$aContacts = $this->oEavManager->getEntities('CContact', array(), 0, 0, $aFilters,
-				EContactSortField::Name, ESortOrder::ASC, []);
+		$aViewAttrs = array();
+		$aFilters = array(
+			'$AND' => array(
+				'ViewEmail' => array($sEmail, '='),
+				'IdUser' => array($iUserId, '='),
+			)
+		);
+		$aOrderBy = array('FullName');
+		$aContacts = $this->oEavManager->getEntities('CContact', $aViewAttrs, 0, 0, $aFilters, $aOrderBy);
 		if (count($aContacts) > 0)
 		{
 			$oContact = $aContacts[0];
@@ -201,7 +202,7 @@ class CApiContactsManager extends \Aurora\System\Managers\AbstractManager
 	 *
 	 * for ascending and descending respectively. Default value is **ESortOrder::ASC**.
 	 * @param int $iOffset Ordinal number of the contact item the list stars with. Default value is **0**.
-	 * @param int $iRequestLimit The upper limit for total number of contacts returned. Default value is **20**.
+	 * @param int $iLimit The upper limit for total number of contacts returned. Default value is **20**.
 	 * @param array $aFilters
 	 * @param string $sGroupUUID
 	 * @param array $aContactUUIDs
@@ -209,7 +210,7 @@ class CApiContactsManager extends \Aurora\System\Managers\AbstractManager
 	 * @return array|bool
 	 */
 	public function getContacts($iSortField = EContactSortField::Name, $iSortOrder = ESortOrder::ASC,
-		$iOffset = 0, $iRequestLimit = 20, $aFilters = [], $sGroupUUID = '', $aContactUUIDs = [])
+		$iOffset = 0, $iLimit = 20, $aFilters = array(), $sGroupUUID = '', $aContactUUIDs = array())
 	{
 		if (empty($aContactUUIDs) && !empty($sGroupUUID))
 		{
@@ -236,16 +237,10 @@ class CApiContactsManager extends \Aurora\System\Managers\AbstractManager
 				break;
 		}
 		
-		return $this->oEavManager->getEntities(
-			'CContact', 
-			array('IdUser', 'FullName', 'ViewEmail', 'Storage', 'Frequency'),
-			$iOffset,
-			$iRequestLimit,
-			$aFilters,
-			$sSortField,
-			$iSortOrder,
-			$aContactUUIDs
-		);
+		$aViewAttrs = array('IdUser', 'FullName', 'ViewEmail', 'Storage', 'Frequency');
+		$aOrderBy = array($sSortField);
+		return $this->oEavManager->getEntities('CContact', $aViewAttrs, $iOffset, $iLimit, 
+				$aFilters, $aOrderBy, $iSortOrder, $aContactUUIDs);
 	}
 
 	/**
@@ -257,19 +252,18 @@ class CApiContactsManager extends \Aurora\System\Managers\AbstractManager
 	 */
 	public function getGroups($iUserId, $aFilters = [])
 	{
+		$aViewAttrs = array();
 		if (count($aFilters) > 0)
 		{
-			$aFilters['IdUser'] = [$iUserId, '='];
-			$aFilters = [
-				'$AND' => $aFilters
-			];
+			$aFilters['IdUser'] = array($iUserId, '=');
+			$aFilters = array('$AND' => $aFilters);
 		}
 		else
 		{
-			$aFilters = ['IdUser' => [$iUserId, '=']];
+			$aFilters = array('IdUser' => array($iUserId, '='));
 		}
-		
-		return $this->oEavManager->getEntities('CGroup', [], 0, 0, $aFilters, 'Name', \ESortOrder::ASC);
+		$aOrderBy = array('Name');
+		return $this->oEavManager->getEntities('CGroup', $aViewAttrs, 0, 0, $aFilters, $aOrderBy);
 	}
 
 	/**
@@ -344,22 +338,17 @@ class CApiContactsManager extends \Aurora\System\Managers\AbstractManager
 
 	public function getGroupContacts($sGroupUUID = null, $sContactUUID = null)
 	{
-		$aFilters = [];
+		$aViewAttrs = array('GroupUUID', 'ContactUUID');
+		$aFilters = array();
 		if (is_string($sGroupUUID) && $sGroupUUID !== '')
 		{
-			$aFilters = ['GroupUUID' => $sGroupUUID];
+			$aFilters = array('GroupUUID' => $sGroupUUID);
 		}
 		if (is_string($sContactUUID) && $sContactUUID !== '')
 		{
-			$aFilters = ['ContactUUID' => $sContactUUID];
+			$aFilters = array('ContactUUID' => $sContactUUID);
 		}
-		return $this->oEavManager->getEntities(
-			'CGroupContact', 
-			['GroupUUID', 'ContactUUID'],
-			0,
-			0,
-			$aFilters
-		);
+		return $this->oEavManager->getEntities('CGroupContact', $aViewAttrs, 0, 0, $aFilters);
 	}
 	
 	/**
