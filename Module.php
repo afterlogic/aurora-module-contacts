@@ -25,7 +25,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 {
 	public $oApiContactsManager = null;
 
-	protected $aImportExportFormats = ['csv'];
+	protected $aImportExportFormats = ['csv', 'vcf'];
 	
 	/**
 	 * Initializes Contacts Module.
@@ -38,6 +38,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->incClass('group-contact');
 		$this->incClass('group');
 		$this->incClass('enum');
+		$this->incClass('vcard-helper');
 
 		$this->oApiContactsManager = $this->GetManager();
 		
@@ -46,7 +47,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Mail::ExtendMessageData', array($this, 'onExtendMessageData'));
 		$this->subscribeEvent('MobileSync::GetInfo', array($this, 'onGetMobileSyncInfo'));
 		$this->subscribeEvent('AdminPanelWebclient::DeleteEntity::before', array($this, 'onBeforeDeleteEntity'));
-		$this->subscribeEvent('Contacts::Import', array($this, 'onImportCsv'));
 		
 		$this->extendObject('CUser', array(
 				'ContactsPerPage' => array('int', $this->getConfig('ContactsPerPage', 20)),
@@ -129,9 +129,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$aStorages = array();
 		$this->broadcastEvent('GetStorage', $aStorages);
 		
-		$aFormats = [];
-		$this->broadcastEvent('GetImportExportFormats', $aFormats);
-		
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		$ContactsPerPage = $this->getConfig('ContactsPerPage', 20);
 		if ($oUser && $oUser->Role === \EUserRole::NormalUser && isset($oUser->{$this->GetName().'::ContactsPerPage'}))
@@ -147,7 +144,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			'EContactsPrimaryPhone' => (new \EContactsPrimaryPhone)->getMap(),
 			'EContactsPrimaryAddress' => (new \EContactsPrimaryAddress)->getMap(),
 			'EContactSortField' => (new \EContactSortField)->getMap(),
-			'ImportExportFormats' => array_merge($this->aImportExportFormats, $aFormats),
+			'ImportExportFormats' => $this->aImportExportFormats,
 			'SaveVcfServerModuleName' => \Aurora\System\Api::GetModuleManager()->ModuleExists('DavContacts') ? 'DavContacts' : ''
 		);
 	}
@@ -280,30 +277,36 @@ class Module extends \Aurora\System\Module\AbstractModule
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
 		$aFilters = $this->prepareFilters($Filters);
+		$aFilters = ['$OR' => $aFilters];
 		
 		$aContacts = $this->oApiContactsManager->getContacts(\EContactSortField::Name, \ESortOrder::ASC, 0, 0, $aFilters, $GroupUUID, $ContactUUIDs);
 		
 		$sOutput = '';
 		
-		if ($Format === 'csv')
+		if (is_array($aContacts))
 		{
-			$this->incClass('csv-formatter');
-			$this->incClass('csv-parser');
-			$this->incClass('csv-sync');
-
-			if (class_exists('CApiContactsSyncCsv'))
+			switch ($Format)
 			{
-				$oSync = new \CApiContactsSyncCsv();
-				$sOutput = $oSync->Export($aContacts);
+				case 'csv':
+					$this->incClass('csv-formatter');
+					$this->incClass('csv-parser');
+					$this->incClass('csv-sync');
+
+					if (class_exists('CApiContactsSyncCsv'))
+					{
+						$oSync = new \CApiContactsSyncCsv();
+						$sOutput = $oSync->Export($aContacts);
+					}
+					break;
+				case 'vcf':
+					foreach ($aContacts as $oContact)
+					{
+						$oVCard = new \Sabre\VObject\Component\VCard();
+						\CApiContactsVCardHelper::UpdateVCardFromContact($oContact, $oVCard);
+						$sOutput .= $oVCard->serialize();
+					}
+					break;
 			}
-		}
-		else
-		{
-			$aArgs = [
-				'Format' => $Format,
-				'Contacts' => $aContacts,
-			];
-			$this->broadcastEvent('GetExportOutput', $aArgs, $sOutput);
 		}
 		
 		if (is_string($sOutput) && !empty($sOutput))
@@ -684,7 +687,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$aFilters = [
 			'$AND' => [
 				'IdUser' => [$oUser->EntityId, '='],
-				'ViewEmail' => [$Emails, 'IN']
+				'ViewEmail' => [$Emails, 'IN'],
+				'Auto' => [false, '=']
 			]
 		];
 		
@@ -1248,16 +1252,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	/**
 	 * Imports contacts from file with specified format.
 	 * @param array $UploadData Array of uploaded file data.
-	 * @param string $Storage Storage name.
 	 * @param array $GroupUUID Group UUID.
 	 * @return array
 	 * @throws \Aurora\System\Exceptions\ApiException
 	 */
-	public function Import($UploadData, $Storage, $GroupUUID)
+	public function Import($UploadData, $GroupUUID)
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
 		
-		$sError = '';
 		$aResponse = array(
 			'ImportedCount' => 0,
 			'ParsedCount' => 0
@@ -1267,51 +1269,86 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		if (is_array($UploadData))
 		{
-			$sFileType = strtolower(\Aurora\System\Utils::GetFileExtension($UploadData['name']));
-
 			$oApiFileCacheManager = \Aurora\System\Api::GetSystemManager('Filecache');
-			$sSavedName = 'import-post-' . md5($UploadData['name'] . $UploadData['tmp_name']);
-			if ($oApiFileCacheManager->moveUploadedFile($oUser->UUID, $sSavedName, $UploadData['tmp_name']))
+			$sTempFileName = 'import-post-' . md5($UploadData['name'] . $UploadData['tmp_name']);
+			if ($oApiFileCacheManager->moveUploadedFile($oUser->UUID, $sTempFileName, $UploadData['tmp_name']))
 			{
-				$aArgs = [
-					'Format' => $sFileType,
-					'User' => $oUser,
-					'TempFileName' => $oApiFileCacheManager->generateFullFilePath($oUser->UUID, $sSavedName),
-					'Storage' => $Storage,
-					'GroupUUID' => $GroupUUID,
-				];
+				$sTempFilePath = $oApiFileCacheManager->generateFullFilePath($oUser->UUID, $sTempFileName);
 
-				$mImportResult = [];
-				$this->broadcastEvent('Import', $aArgs, $mImportResult);
-
-				if (is_array($mImportResult) && count($mImportResult) === 2)
+				$aImportResult = array();
+				
+				$sFileExtension = strtolower(\Aurora\System\Utils::GetFileExtension($UploadData['name']));
+				switch ($sFileExtension)
 				{
-					$aResponse['ImportedCount'] = $mImportResult['ImportedCount'];
-					$aResponse['ParsedCount'] = $mImportResult['ParsedCount'];
+					case 'csv':
+						$this->incClass('csv-formatter');
+						$this->incClass('csv-parser');
+						$this->incClass('csv-sync');
+
+						if (class_exists('CApiContactsSyncCsv'))
+						{
+							$oSync = new \CApiContactsSyncCsv();
+							$aImportResult = $oSync->Import($oUser->EntityId, $sTempFilePath, $GroupUUID);
+						}
+						break;
+					case 'vcf':
+						$aImportResult = $this->importVcf($oUser->EntityId, $sTempFilePath);
+						break;
+				}
+
+				if (is_array($aImportResult) && isset($aImportResult['ImportedCount']) && isset($aImportResult['ParsedCount']))
+				{
+					$aResponse['ImportedCount'] = $aImportResult['ImportedCount'];
+					$aResponse['ParsedCount'] = $aImportResult['ParsedCount'];
 				}
 				else
 				{
 					throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::IncorrectFileExtension);
 				}
 
-				$oApiFileCacheManager->clear($oUser->UUID, $sSavedName);
+				$oApiFileCacheManager->clear($oUser->UUID, $sTempFileName);
 			}
 			else
 			{
-				$sError = 'unknown';
+				throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::UnknownError);
 			}
 		}
 		else
 		{
-			$sError = 'unknown';
-		}
-
-		if (0 < strlen($sError))
-		{
-			$aResponse['Error'] = $sError;
+			throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::UnknownError);
 		}
 
 		return $aResponse;
+	}
+	
+	private function importVcf($iUserId, $sTempFilePath)
+	{
+		$aImportResult = array(
+			'ParsedCount' => 0,
+			'ImportedCount' => 0,
+		);
+		// You can either pass a readable stream, or a string.
+		$oHandler = fopen($sTempFilePath, 'r');
+		$oSplitter = new \Sabre\VObject\Splitter\VCard($oHandler);
+		$oContactsDecorator = \Aurora\System\Api::GetModuleDecorator('Contacts');
+		$oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
+		if ($oApiContactsManager)
+		{
+			while ($oVCard = $oSplitter->getNext())
+			{
+				$aContactData = \CApiContactsVCardHelper::GetContactDataFromVcard($oVCard);
+				$oContact = isset($aContactData['UUID']) ? $oApiContactsManager->getContact($aContactData['UUID']) : null;
+				$aImportResult['ParsedCount']++;
+				if (!isset($oContact) || empty($oContact))
+				{
+					if ($oContactsDecorator->CreateContact($aContactData, $iUserId))
+					{
+						$aImportResult['ImportedCount']++;
+					}
+				}
+			}
+		}
+		return $aImportResult;
 	}
 	
 //	public function GetGroupEvents($UUID)
@@ -1339,16 +1376,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		$oApiFileCache = \Aurora\System\Api::GetSystemManager('Filecache');
 		
-		$aArgs = [
-			'Format' => 'vcf',
-			'User' => $oUser,
-			'TempFileName' => $oApiFileCache->generateFullFilePath($oUser->UUID, $File)
-		];
+		$sTempFilePath = $oApiFileCache->generateFullFilePath($oUser->UUID, $File);
+		$aImportResult = $this->importVcf($oUser->EntityId, $sTempFilePath);
 
-		$mImportResult = [];
-		$this->broadcastEvent('Import', $aArgs, $mImportResult);
-
-		return is_array($mImportResult) && $mImportResult['ImportedCount'] > 0;
+		return is_array($aImportResult) && isset($aImportResult['ImportedCount']) && $aImportResult['ImportedCount'] > 0;
 	}	
 	/***** public functions might be called with web API *****/
 	
@@ -1428,25 +1459,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 					($oPart->ContentType() === 'text/vcard' || $oPart->ContentType() === 'text/x-vcard'))
 			{
 				$aResultParts[] = $oPart;
-			}
-		}
-	}
-	
-	public function onImportCsv($aArgs, &$mImportResult)
-	{
-		if ($aArgs['Format'] === 'csv')
-		{
-			$mImportResult['ParsedCount'] = 0;
-			$mImportResult['ImportedCount'] = 0;
-			
-			$this->incClass('csv-formatter');
-			$this->incClass('csv-parser');
-			$this->incClass('csv-sync');
-
-			if (class_exists('CApiContactsSyncCsv'))
-			{
-				$oSync = new \CApiContactsSyncCsv();
-				$oSync->Import($aArgs, $mImportResult);
 			}
 		}
 	}

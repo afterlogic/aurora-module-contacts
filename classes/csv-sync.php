@@ -66,16 +66,19 @@ class CApiContactsSyncCsv
 	}
 
 	/**
-	 * @param array $aArgs
-	 * @param array $mImportResult
+	 * 
+	 * @param type $iUserId
+	 * @param type $sTempFilePath
+	 * @param type $sGroupUUID
+	 * @return boolean
 	 */
-	public function Import($aArgs, &$mImportResult)
+	public function Import($iUserId, $sTempFilePath, $sGroupUUID)
 	{
 		$iCount = -1;
 		$iParsedCount = 0;
-		if (file_exists($aArgs['TempFileName']))
+		if (file_exists($sTempFilePath))
 		{
-			$aCsv = $this->csvToArray($aArgs['TempFileName']);
+			$aCsv = $this->csvToArray($sTempFilePath);
 			if (is_array($aCsv))
 			{
 				$iCount = 0;
@@ -127,15 +130,15 @@ class CApiContactsSyncCsv
 						$aContactData['BirthYear'] = (int) $aContactData['BirthYear'];
 					}
 
-					if (!empty($aArgs['GroupUUID']))
+					if (!empty($sGroupUUID))
 					{
-						$aContactData['GroupUUIDs'] = [$aArgs['GroupUUID']];
+						$aContactData['GroupUUIDs'] = [$sGroupUUID];
 					}
 
 					$iParsedCount++;
 					
 					$oContactsDecorator = \Aurora\System\Api::GetModuleDecorator('Contacts');
-					if ($oContactsDecorator && $oContactsDecorator->CreateContact($aContactData, $aArgs['User']->EntityId))
+					if ($oContactsDecorator && $oContactsDecorator->CreateContact($aContactData, $iUserId))
 					{
 						$iCount++;
 					}
@@ -147,9 +150,12 @@ class CApiContactsSyncCsv
 		
 		if ($iCount > -1)
 		{
-			$mImportResult['ParsedCount'] = $iParsedCount;
-			$mImportResult['ImportedCount'] = $iCount;
+			return array(
+				'ParsedCount' => $iParsedCount,
+				'ImportedCount' => $iCount,
+			);
 		}
+		return false;
 	}
 	
 	/**

@@ -237,7 +237,7 @@ class CApiContactsManager extends \Aurora\System\Managers\AbstractManager
 				break;
 		}
 		
-		$aViewAttrs = array('IdUser', 'FullName', 'ViewEmail', 'Storage', 'Frequency');
+		$aViewAttrs = array();
 		$aOrderBy = array($sSortField);
 		return $this->oEavManager->getEntities('CContact', $aViewAttrs, $iOffset, $iLimit, 
 				$aFilters, $aOrderBy, $iSortOrder, $aContactUUIDs);
@@ -263,7 +263,7 @@ class CApiContactsManager extends \Aurora\System\Managers\AbstractManager
 			$aFilters = array('IdUser' => array($iUserId, '='));
 		}
 		$aOrderBy = array('Name');
-		return $this->oEavManager->getEntities('CGroup', $aViewAttrs, 0, 0, $aFilters, $aOrderBy);
+		return $this->oEavManager->getEntities('CGroup', $aViewAttrs, 0, 0, $aFilters, 'Name');
 	}
 
 	/**

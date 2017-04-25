@@ -80,35 +80,18 @@ class CGroup extends \Aurora\System\EAV\Entity
 
 	public function toResponseArray()
 	{
-		$mResult = null; 
+		$aRes = parent::toResponseArray();
+
 		$oContactsModule = \Aurora\System\Api::GetModule('Contacts');
-		 if ($oContactsModule)
-		 {
+		if ($oContactsModule)
+		{
 			$aContacts = $oContactsModule->oApiContactsManager->getContacts(
 				\EContactSortField::Name, \ESortOrder::ASC, 0, 299, [], $this->UUID
 			);
 
-			$mResult = array(
-				'IdUser' => $this->IdUser,
-				'UUID' => $this->UUID,
-				'Name' => $this->Name,
+			$aRes['Contacts'] = \Aurora\System\Managers\Response::GetResponseObject($aContacts);
+		}
 
-				'IsOrganization' => $this->IsOrganization,
-				'Email'		=> $this->Email,
-				'Company'	=> $this->Company,
-				'Street'	=> $this->Street,
-				'City'		=> $this->City,
-				'State'		=> $this->State,
-				'Zip'		=> $this->Zip,
-				'Country'	=> $this->Country,
-				'Phone'		=> $this->Phone,
-				'Fax'		=> $this->Fax,
-				'Web'		=> $this->Web,
-
-				'Contacts' => \Aurora\System\Managers\Response::GetResponseObject($aContacts)
-			);
-		 }
-		 
-		return $mResult;
+		return $aRes;
 	}
 }

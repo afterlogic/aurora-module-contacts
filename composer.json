@@ -3,7 +3,8 @@
 	"type": "aurora-module",
 	"require":{
 		"php":">=5.4.0",
-		"afterlogic/aurora-framework": "~0.3"
+		"afterlogic/aurora-framework": "~0.3",
+		"sabre/dav": "3.0.*"
 	},
 	"extra": {
 		"installer-name": "Contacts"
