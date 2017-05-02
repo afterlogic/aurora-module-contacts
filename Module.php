@@ -77,15 +77,19 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiGroup Contacts
 	 * @apiDescription Obtains list of module settings for authenticated user.
 	 * 
+	 * @apiHeader {string} [Authorization] "Bearer " + Authentication token which was received as the result of Core.Login method.
+	 * @apiHeaderExample {json} Header-Example:
+	 *	{
+	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
+	 *	}
+	 * 
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=GetSettings} Method Method name
-	 * @apiParam {string} [AuthToken] Auth token
 	 * 
 	 * @apiParamExample {json} Request-Example:
 	 * {
 	 *	Module: 'Contacts',
-	 *	Method: 'GetSettings',
-	 *	AuthToken: 'token_value'
+	 *	Method: 'GetSettings'
 	 * }
 	 * 
 	 * @apiSuccess {object[]} Result Array of response objects.
@@ -155,9 +159,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiGroup Contacts
 	 * @apiDescription Updates module's settings - saves them to config.json file.
 	 * 
+	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
+	 * @apiHeaderExample {json} Header-Example:
+	 *	{
+	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
+	 *	}
+	 * 
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=UpdateSettings} Method Method name
-	 * @apiParam {string} AuthToken Auth token
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **ContactsPerPage** *int* Count of contacts per page.<br>
@@ -167,7 +176,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'UpdateSettings',
-	 *	AuthToken: 'token_value',
 	 *	Parameters: '{ ContactsPerPage: 10 }'
 	 * }
 	 * 
@@ -228,9 +236,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiGroup Contacts
 	 * @apiDescription Exports specified contacts to a file with specified format.
 	 * 
+	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
+	 * @apiHeaderExample {json} Header-Example:
+	 *	{
+	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
+	 *	}
+	 * 
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=Export} Method Method name
-	 * @apiParam {string} AuthToken Auth token
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **Format** *string* File format that should be used for export.<br>
@@ -243,7 +256,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'Export',
-	 *	AuthToken: 'token_value',
 	 *	Parameters: '{ Format: "csv", Filters: [], GroupUUID: "", ContactUUIDs: [] }'
 	 * }
 	 * 
@@ -326,15 +338,19 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiGroup Contacts
 	 * @apiDescription Returns all groups for authenticated user.
 	 * 
+	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
+	 * @apiHeaderExample {json} Header-Example:
+	 *	{
+	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
+	 *	}
+	 * 
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=GetGroups} Method Method name
-	 * @apiParam {string} AuthToken Auth token
 	 * 
 	 * @apiParamExample {json} Request-Example:
 	 * {
 	 *	Module: 'Contacts',
-	 *	Method: 'GetGroups',
-	 *	AuthToken: 'token_value'
+	 *	Method: 'GetGroups'
 	 * }
 	 * 
 	 * @apiSuccess {object[]} Result Array of response objects.
@@ -378,9 +394,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiGroup Contacts
 	 * @apiDescription Returns group with specified UUID.
 	 * 
+	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
+	 * @apiHeaderExample {json} Header-Example:
+	 *	{
+	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
+	 *	}
+	 * 
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=GetGroup} Method Method name
-	 * @apiParam {string} AuthToken Auth token
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **$UUID** *string* UUID of group to return.<br>
@@ -390,7 +411,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'GetGroup',
-	 *	AuthToken: 'token_value',
 	 *	Parameters: '{ UUID: "group_uuid" }'
 	 * }
 	 * 
@@ -447,9 +467,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiGroup Contacts
 	 * @apiDescription Returns list of contacts for specified parameters.
 	 * 
+	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
+	 * @apiHeaderExample {json} Header-Example:
+	 *	{
+	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
+	 *	}
+	 * 
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=GetContacts} Method Method name
-	 * @apiParam {string} AuthToken Auth token
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **Offset** *int* Offset of contacts list.<br>
@@ -466,7 +491,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'GetContacts',
-	 *	AuthToken: 'token_value',
 	 *	Parameters: '{ Offset: 0, Limit: 20, SortField: 1, SortOrder: 0, Storage: "personal", Search: "", GroupUUID: "", Filters: [] }'
 	 * }
 	 * 
@@ -579,9 +603,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiGroup Contacts
 	 * @apiDescription Returns contact with specified UUID.
 	 * 
+	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
+	 * @apiHeaderExample {json} Header-Example:
+	 *	{
+	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
+	 *	}
+	 * 
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=GetContact} Method Method name
-	 * @apiParam {string} AuthToken Auth token
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **UUID** *string* UUID of contact to return.<br>
@@ -591,7 +620,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'GetContact',
-	 *	AuthToken: 'token_value',
 	 *	Parameters: '{ UUID: "contact_uuid" }'
 	 * }
 	 * 
@@ -635,9 +663,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiGroup Contacts
 	 * @apiDescription Returns list of contacts with specified emails.
 	 * 
+	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
+	 * @apiHeaderExample {json} Header-Example:
+	 *	{
+	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
+	 *	}
+	 * 
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=GetContactsByEmails} Method Method name
-	 * @apiParam {string} AuthToken Auth token
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **Emails** *array* List of emails of contacts to return.<br>
@@ -647,7 +680,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'GetContactsByEmails',
-	 *	AuthToken: 'token_value',
 	 *	Parameters: '{ Emails: ["contact@email.com"] }'
 	 * }
 	 * 
@@ -703,9 +735,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiGroup Contacts
 	 * @apiDescription Creates contact with specified parameters.
 	 * 
+	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
+	 * @apiHeaderExample {json} Header-Example:
+	 *	{
+	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
+	 *	}
+	 * 
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=CreateContact} Method Method name
-	 * @apiParam {string} AuthToken Auth token
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **Contact** *object* Parameters of contact to create.<br>
@@ -715,7 +752,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'CreateContact',
-	 *	AuthToken: 'token_value',
 	 *	Parameters: '{"Contact": {"UUID": "", "PrimaryEmail": 0, "PrimaryPhone": 0, "PrimaryAddress": 0, "FullName": "second", "FirstName": "", "LastName": "", "NickName": "", "Storage": "personal", "ItsMe": false, "Skype": "", "Facebook": "", "PersonalEmail": "contact2@email.com", "PersonalAddress": "", "PersonalCity": "", "PersonalState": "", "PersonalZip": "", "PersonalCountry": "", "PersonalWeb": "", "PersonalFax": "", "PersonalPhone": "", "PersonalMobile": "", "BusinessEmail": "", "BusinessCompany": "", "BusinessJobTitle": "", "BusinessDepartment": "", "BusinessOffice": "", "BusinessAddress": "", "BusinessCity": "", "BusinessState": "", "BusinessZip": "", "BusinessCountry": "", "BusinessFax": "", "BusinessPhone": "", "BusinessWeb": "", "OtherEmail": "", "Notes": "", "ETag": "", "BirthDay": 0, "BirthMonth": 0, "BirthYear": 0, "GroupUUIDs": []}}'
 	 * }
 	 * 
@@ -783,9 +819,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiGroup Contacts
 	 * @apiDescription Updates contact with specified parameters.
 	 * 
+	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
+	 * @apiHeaderExample {json} Header-Example:
+	 *	{
+	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
+	 *	}
+	 * 
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=UpdateContact} Method Method name
-	 * @apiParam {string} AuthToken Auth token
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **Contact** *array* Parameters of contact to update.<br>
@@ -795,7 +836,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'UpdateContact',
-	 *	AuthToken: 'token_value',
 	 *	Parameters: '{"Contact": {"UUID": "contact2_uuid", "PrimaryEmail": 0, "PrimaryPhone": 0, "PrimaryAddress": 0, "FullName": "contact2", "FirstName": "", "LastName": "", "NickName": "", "Storage": "personal", "ItsMe": false, "Skype": "", "Facebook": "", "PersonalEmail": "contact2@email.com", "PersonalAddress": "", "PersonalCity": "", "PersonalState": "", "PersonalZip": "", "PersonalCountry": "", "PersonalWeb": "", "PersonalFax": "", "PersonalPhone": "", "PersonalMobile": "", "BusinessEmail": "", "BusinessCompany": "", "BusinessJobTitle": "", "BusinessDepartment": "", "BusinessOffice": "", "BusinessAddress": "", "BusinessCity": "", "BusinessState": "", "BusinessZip": "", "BusinessCountry": "", "BusinessFax": "", "BusinessPhone": "", "BusinessWeb": "", "OtherEmail": "", "Notes": "", "ETag": "", "BirthDay": 0, "BirthMonth": 0, "BirthYear": 0, "GroupUUIDs": []}}'
 	 * }
 	 * 
@@ -846,9 +886,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiGroup Contacts
 	 * @apiDescription Deletes contacts with specified UUIDs.
 	 * 
+	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
+	 * @apiHeaderExample {json} Header-Example:
+	 *	{
+	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
+	 *	}
+	 * 
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=DeleteContacts} Method Method name
-	 * @apiParam {string} AuthToken Auth token
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **UUIDs** *array* Array of strings - UUIDs of contacts to delete.<br>
@@ -858,7 +903,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'DeleteContacts',
-	 *	AuthToken: 'token_value',
 	 *	Parameters: '{ UUIDs: ["uuid1", "uuid"] }'
 	 * }
 	 * 
@@ -902,9 +946,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiGroup Contacts
 	 * @apiDescription Creates group with specified parameters.
 	 * 
+	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
+	 * @apiHeaderExample {json} Header-Example:
+	 *	{
+	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
+	 *	}
+	 * 
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=CreateGroup} Method Method name
-	 * @apiParam {string} AuthToken Auth token
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **Group** *object* Parameters of group to create.<br>
@@ -914,7 +963,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'CreateGroup',
-	 *	AuthToken: 'token_value',
 	 *	Parameters: '{"Group": {"UUID": "", "Name": "new_group_name", "IsOrganization": "0", "Email": "", "Country": "", "City": "", "Company": "", "Fax": "", "Phone": "", "State": "", "Street": "", "Web": "", "Zip": "", "Contacts": []}}'
 	 * }
 	 * 
@@ -964,9 +1012,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiGroup Contacts
 	 * @apiDescription Updates group with specified parameters.
 	 * 
+	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
+	 * @apiHeaderExample {json} Header-Example:
+	 *	{
+	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
+	 *	}
+	 * 
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=UpdateGroup} Method Method name
-	 * @apiParam {string} AuthToken Auth token
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **Group** *object* Parameters of group to update.<br>
@@ -976,7 +1029,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'UpdateGroup',
-	 *	AuthToken: 'token_value',
 	 *	Parameters: '{"Group": {"UUID": "group_uuid", "Name": "group_name", "IsOrganization": "0", "Email": "", "Country": "", "City": "", "Company": "", "Fax": "", "Phone": "", "State": "", "Street": "", "Web": "", "Zip": "", "Contacts": []}}'
 	 * }
 	 * 
@@ -1027,9 +1079,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiGroup Contacts
 	 * @apiDescription Deletes group with specified UUID.
 	 * 
+	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
+	 * @apiHeaderExample {json} Header-Example:
+	 *	{
+	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
+	 *	}
+	 * 
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=DeleteGroup} Method Method name
-	 * @apiParam {string} AuthToken Auth token
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **UUID** *string* UUID of group to delete.<br>
@@ -1039,7 +1096,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'DeleteGroup',
-	 *	AuthToken: 'token_value',
 	 *	Parameters: '{ UUID: "group_uuid" }'
 	 * }
 	 * 
@@ -1083,9 +1139,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiGroup Contacts
 	 * @apiDescription Adds specified contacts to specified group.
 	 * 
+	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
+	 * @apiHeaderExample {json} Header-Example:
+	 *	{
+	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
+	 *	}
+	 * 
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=AddContactsToGroup} Method Method name
-	 * @apiParam {string} AuthToken Auth token
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **GroupUUID** *string* UUID of group.<br>
@@ -1096,7 +1157,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'AddContactsToGroup',
-	 *	AuthToken: 'token_value',
 	 *	Parameters: '{ GroupUUID: "group_uuid", ContactUUIDs: ["contact1_uuid", "contact2_uuid"] }'
 	 * }
 	 * 
@@ -1146,9 +1206,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiGroup Contacts
 	 * @apiDescription Removes specified contacts from specified group.
 	 * 
+	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
+	 * @apiHeaderExample {json} Header-Example:
+	 *	{
+	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
+	 *	}
+	 * 
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=RemoveContactsFromGroup} Method Method name
-	 * @apiParam {string} AuthToken Auth token
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **GroupUUID** *string* UUID of group.<br>
@@ -1159,7 +1224,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'RemoveContactsFromGroup',
-	 *	AuthToken: 'token_value',
 	 *	Parameters: '{ GroupUUID: "group_uuid", ContactUUIDs: ["contact1_uuid", "contact2_uuid"] }'
 	 * }
 	 * 
@@ -1209,9 +1273,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiGroup Contacts
 	 * @apiDescription Imports contacts from file with specified format.
 	 * 
+	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
+	 * @apiHeaderExample {json} Header-Example:
+	 *	{
+	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
+	 *	}
+	 * 
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=Import} Method Method name
-	 * @apiParam {string} AuthToken Auth token
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **UploadData** *array* Array of uploaded file data.<br>
@@ -1223,7 +1292,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'Import',
-	 *	AuthToken: 'token_value',
 	 *	Parameters: '{ "UploadData": {"tmp_name": "tmp_name_value", "name": "name_value"}, "Storage": "personal", "GroupUUID": ""}'
 	 * }
 	 * 
