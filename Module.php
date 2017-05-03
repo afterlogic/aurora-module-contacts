@@ -110,7 +110,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'GetSettings',
-	 *	Result: { ContactsPerPage: 20, ImportContactsLink: '', Storages: ['personal', 'team'], ImportExportFormats: ['csv', 'vcf'], EContactsPrimaryEmail: {'Personal': 0, 'Business': 1, 'Other': 2}, EContactsPrimaryPhone: {'Mobile': 0, 'Personal': 1, 'Business': 2}, EContactsPrimaryAddress: {'Personal': 0, 'Business': 1}, EContactSortField: {'Name': 1, 'Email': 2, 'Frequency': 3} }
+	 *	Result: { ContactsPerPage: 20, ImportContactsLink: '', Storages: ['personal', 'team'],
+	 * ImportExportFormats: ['csv', 'vcf'], EContactsPrimaryEmail: {'Personal': 0, 'Business': 1, 'Other': 2},
+	 * EContactsPrimaryPhone: {'Mobile': 0, 'Personal': 1, 'Business': 2},
+	 * EContactsPrimaryAddress: {'Personal': 0, 'Business': 1},
+	 * EContactSortField: {'Name': 1, 'Email': 2, 'Frequency': 3} }
 	 * }
 	 * 
 	 * @apiSuccessExample {json} Error response example:
@@ -363,7 +367,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'GetGroups',
-	 *	Result: [{City: '', Company: '', Contacts: [], Country: '', Email: '', Fax: '', IdUser: 3, IsOrganization: false, Name: 'group_name', Phone: '', State: '', Street: '', UUID: '1ec99b23-28c2-40b5-8f70-950015a291ec', Web: '', Zip: ''}]
+	 *	Result: [{ City: '', Company: '', Contacts: [], Country: '', Email: '', Fax: '', IdUser: 3,
+	 * IsOrganization: false, Name: 'group_name', Phone: '', State: '', Street: '', UUID: 'uuid_value',
+	 * Web: '', Zip: '' }]
 	 * }
 	 * 
 	 * @apiSuccessExample {json} Error response example:
@@ -438,7 +444,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'GetGroup',
-	 *	Result: {City: '', Company: 'group_company', Contacts: [], Country: '', Email: '', Fax: '', IdUser: 3, IsOrganization: true, Name: 'group_name', Phone:'', State:'', Street:'', UUID: 'group_uuid', Web:'', Zip: ''}
+	 *	Result: { City: '', Company: 'group_company', Contacts: [], Country: '', Email: '', Fax: '',
+	 * IdUser: 3, IsOrganization: true, Name: 'group_name', Phone:'', State:'', Street:'',
+	 * UUID: 'group_uuid', Web:'', Zip: '' }
 	 * 
 	 * @apiSuccessExample {json} Error response example:
 	 * {
@@ -491,7 +499,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'GetContacts',
-	 *	Parameters: '{ Offset: 0, Limit: 20, SortField: 1, SortOrder: 0, Storage: "personal", Search: "", GroupUUID: "", Filters: [] }'
+	 *	Parameters: '{ Offset: 0, Limit: 20, SortField: 1, SortOrder: 0, Storage: "personal",
+	 *		Search: "", GroupUUID: "", Filters: [] }'
 	 * }
 	 * 
 	 * @apiSuccess {object[]} Result Array of response objects.
@@ -506,7 +515,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'GetContacts',
-	 *	Result: '{"ContactCount": 6, "List": [{"UUID": "contact_uuid", "IdUser": 3, "Name": "", "Email": "contact@email.com", "Storage": "personal"}]}'
+	 *	Result: '{ "ContactCount": 6, "List": [{ "UUID": "contact_uuid", "IdUser": 3, "Name": "",
+	 *		"Email": "contact@email.com", "Storage": "personal" }] }'
 	 * }
 	 * 
 	 * @apiSuccessExample {json} Error response example:
@@ -633,7 +643,15 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'GetContact',
-	 *	Result: '{"IdUser": 3, "UUID": "group_uuid", "Storage": "personal", "FullName": "", "PrimaryEmail": 0, "PrimaryPhone": 1, "PrimaryAddress": 0, "FirstName": "", "LastName": "", "NickName": "", "Skype": "", "Facebook": "", "PersonalEmail": "contact@email.com", "PersonalAddress": "", "PersonalCity": "", "PersonalState": "", "PersonalZip": "", "PersonalCountry": "", "PersonalWeb": "", "PersonalFax": "", "PersonalPhone": "", "PersonalMobile": "123-234-234", "BusinessEmail": "", "BusinessCompany": "", "BusinessAddress": "", "BusinessCity": "", "BusinessState": "", "BusinessZip": "", "BusinessCountry": "", "BusinessJobTitle": "", "BusinessDepartment": "", "BusinessOffice": "", "BusinessPhone": "", "BusinessFax": "", "BusinessWeb": "", "OtherEmail": "", "Notes": "", "BirthDay": 0, "BirthMonth": 0, "BirthYear": 0, "ETag": "", "GroupUUIDs": ["group1_uuid", "group2_uuid"]}'
+	 *	Result: '{ "IdUser": 3, "UUID": "group_uuid", "Storage": "personal", "FullName": "", "PrimaryEmail": 0,
+	 * "PrimaryPhone": 1, "PrimaryAddress": 0, "FirstName": "", "LastName": "", "NickName": "", "Skype": "",
+	 * "Facebook": "", "PersonalEmail": "contact@email.com", "PersonalAddress": "", "PersonalCity": "",
+	 * "PersonalState": "", "PersonalZip": "", "PersonalCountry": "", "PersonalWeb": "", "PersonalFax": "",
+	 * "PersonalPhone": "", "PersonalMobile": "123-234-234", "BusinessEmail": "", "BusinessCompany": "",
+	 * "BusinessAddress": "", "BusinessCity": "", "BusinessState": "", "BusinessZip": "", "BusinessCountry": "",
+	 * "BusinessJobTitle": "", "BusinessDepartment": "", "BusinessOffice": "", "BusinessPhone": "",
+	 * "BusinessFax": "", "BusinessWeb": "", "OtherEmail": "", "Notes": "", "BirthDay": 0, "BirthMonth": 0,
+	 * "BirthYear": 0, "ETag": "", "GroupUUIDs": ["group1_uuid", "group2_uuid"] }'
 	 * }
 	 * 
 	 * @apiSuccessExample {json} Error response example:
@@ -693,7 +711,15 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'GetContactsByEmails',
-	 *	Result: [{"IdUser": 3, "UUID": "group_uuid", "Storage": "personal", "FullName": "", "PrimaryEmail": 0, "PrimaryPhone": 1, "PrimaryAddress": 0, "FirstName": "", "LastName": "", "NickName": "", "Skype": "", "Facebook": "", "PersonalEmail": "contact@email.com", "PersonalAddress": "", "PersonalCity": "", "PersonalState": "", "PersonalZip": "", "PersonalCountry": "", "PersonalWeb": "", "PersonalFax": "", "PersonalPhone": "", "PersonalMobile": "123-234-234", "BusinessEmail": "", "BusinessCompany": "", "BusinessAddress": "", "BusinessCity": "", "BusinessState": "", "BusinessZip": "", "BusinessCountry": "", "BusinessJobTitle": "", "BusinessDepartment": "", "BusinessOffice": "", "BusinessPhone": "", "BusinessFax": "", "BusinessWeb": "", "OtherEmail": "", "Notes": "", "BirthDay": 0, "BirthMonth": 0, "BirthYear": 0, "ETag": "", "GroupUUIDs": ["group1_uuid", "group2_uuid"]}]
+	 *	Result: [{ "IdUser": 3, "UUID": "group_uuid", "Storage": "personal", "FullName": "", "PrimaryEmail": 0,
+	 * "PrimaryPhone": 1, "PrimaryAddress": 0, "FirstName": "", "LastName": "", "NickName": "", "Skype": "",
+	 * "Facebook": "", "PersonalEmail": "contact@email.com", "PersonalAddress": "", "PersonalCity": "",
+	 * "PersonalState": "", "PersonalZip": "", "PersonalCountry": "", "PersonalWeb": "", "PersonalFax": "",
+	 * "PersonalPhone": "", "PersonalMobile": "123-234-234", "BusinessEmail": "", "BusinessCompany": "",
+	 * "BusinessAddress": "", "BusinessCity": "", "BusinessState": "", "BusinessZip": "", "BusinessCountry": "",
+	 * "BusinessJobTitle": "", "BusinessDepartment": "", "BusinessOffice": "", "BusinessPhone": "",
+	 * "BusinessFax": "", "BusinessWeb": "", "OtherEmail": "", "Notes": "", "BirthDay": 0, "BirthMonth": 0,
+	 * "BirthYear": 0, "ETag": "", "GroupUUIDs": ["group1_uuid", "group2_uuid"] }]
 	 * }
 	 * 
 	 * @apiSuccessExample {json} Error response example:
@@ -752,7 +778,15 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'CreateContact',
-	 *	Parameters: '{"Contact": {"UUID": "", "PrimaryEmail": 0, "PrimaryPhone": 0, "PrimaryAddress": 0, "FullName": "second", "FirstName": "", "LastName": "", "NickName": "", "Storage": "personal", "ItsMe": false, "Skype": "", "Facebook": "", "PersonalEmail": "contact2@email.com", "PersonalAddress": "", "PersonalCity": "", "PersonalState": "", "PersonalZip": "", "PersonalCountry": "", "PersonalWeb": "", "PersonalFax": "", "PersonalPhone": "", "PersonalMobile": "", "BusinessEmail": "", "BusinessCompany": "", "BusinessJobTitle": "", "BusinessDepartment": "", "BusinessOffice": "", "BusinessAddress": "", "BusinessCity": "", "BusinessState": "", "BusinessZip": "", "BusinessCountry": "", "BusinessFax": "", "BusinessPhone": "", "BusinessWeb": "", "OtherEmail": "", "Notes": "", "ETag": "", "BirthDay": 0, "BirthMonth": 0, "BirthYear": 0, "GroupUUIDs": []}}'
+	 *	Parameters: '{ "Contact": { "UUID": "", "PrimaryEmail": 0, "PrimaryPhone": 0, "PrimaryAddress": 0,
+	 * "FullName": "second", "FirstName": "", "LastName": "", "NickName": "", "Storage": "personal",
+	 * "ItsMe": false, "Skype": "", "Facebook": "", "PersonalEmail": "contact2@email.com", "PersonalAddress": "",
+	 * "PersonalCity": "", "PersonalState": "", "PersonalZip": "", "PersonalCountry": "", "PersonalWeb": "",
+	 * "PersonalFax": "", "PersonalPhone": "", "PersonalMobile": "", "BusinessEmail": "", "BusinessCompany": "",
+	 * "BusinessJobTitle": "", "BusinessDepartment": "", "BusinessOffice": "", "BusinessAddress": "",
+	 * "BusinessCity": "", "BusinessState": "", "BusinessZip": "", "BusinessCountry": "", "BusinessFax": "",
+	 * "BusinessPhone": "", "BusinessWeb": "", "OtherEmail": "", "Notes": "", "ETag": "", "BirthDay": 0,
+	 * "BirthMonth": 0, "BirthYear": 0, "GroupUUIDs": [] } }'
 	 * }
 	 * 
 	 * @apiSuccess {object[]} Result Array of response objects.
@@ -836,7 +870,15 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'UpdateContact',
-	 *	Parameters: '{"Contact": {"UUID": "contact2_uuid", "PrimaryEmail": 0, "PrimaryPhone": 0, "PrimaryAddress": 0, "FullName": "contact2", "FirstName": "", "LastName": "", "NickName": "", "Storage": "personal", "ItsMe": false, "Skype": "", "Facebook": "", "PersonalEmail": "contact2@email.com", "PersonalAddress": "", "PersonalCity": "", "PersonalState": "", "PersonalZip": "", "PersonalCountry": "", "PersonalWeb": "", "PersonalFax": "", "PersonalPhone": "", "PersonalMobile": "", "BusinessEmail": "", "BusinessCompany": "", "BusinessJobTitle": "", "BusinessDepartment": "", "BusinessOffice": "", "BusinessAddress": "", "BusinessCity": "", "BusinessState": "", "BusinessZip": "", "BusinessCountry": "", "BusinessFax": "", "BusinessPhone": "", "BusinessWeb": "", "OtherEmail": "", "Notes": "", "ETag": "", "BirthDay": 0, "BirthMonth": 0, "BirthYear": 0, "GroupUUIDs": []}}'
+	 *	Parameters: '{ "Contact": { "UUID": "contact2_uuid", "PrimaryEmail": 0, "PrimaryPhone": 0,
+	 * "PrimaryAddress": 0, "FullName": "contact2", "FirstName": "", "LastName": "", "NickName": "",
+	 * "Storage": "personal", "ItsMe": false, "Skype": "", "Facebook": "", "PersonalEmail": "contact2@email.com",
+	 * "PersonalAddress": "", "PersonalCity": "", "PersonalState": "", "PersonalZip": "", "PersonalCountry": "",
+	 * "PersonalWeb": "", "PersonalFax": "", "PersonalPhone": "", "PersonalMobile": "", "BusinessEmail": "",
+	 * "BusinessCompany": "", "BusinessJobTitle": "", "BusinessDepartment": "", "BusinessOffice": "",
+	 * "BusinessAddress": "", "BusinessCity": "", "BusinessState": "", "BusinessZip": "", "BusinessCountry": "",
+	 * "BusinessFax": "", "BusinessPhone": "", "BusinessWeb": "", "OtherEmail": "", "Notes": "", "ETag": "",
+	 * "BirthDay": 0, "BirthMonth": 0, "BirthYear": 0, "GroupUUIDs": [] } }'
 	 * }
 	 * 
 	 * @apiSuccess {object[]} Result Array of response objects.
@@ -963,7 +1005,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'CreateGroup',
-	 *	Parameters: '{"Group": {"UUID": "", "Name": "new_group_name", "IsOrganization": "0", "Email": "", "Country": "", "City": "", "Company": "", "Fax": "", "Phone": "", "State": "", "Street": "", "Web": "", "Zip": "", "Contacts": []}}'
+	 *	Parameters: '{ "Group": { "UUID": "", "Name": "new_group_name", "IsOrganization": "0", "Email": "",
+	 * "Country": "", "City": "", "Company": "", "Fax": "", "Phone": "", "State": "", "Street": "",
+	 * "Web": "", "Zip": "", "Contacts": [] } }'
 	 * }
 	 * 
 	 * @apiSuccess {object[]} Result Array of response objects.
@@ -1029,7 +1073,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'UpdateGroup',
-	 *	Parameters: '{"Group": {"UUID": "group_uuid", "Name": "group_name", "IsOrganization": "0", "Email": "", "Country": "", "City": "", "Company": "", "Fax": "", "Phone": "", "State": "", "Street": "", "Web": "", "Zip": "", "Contacts": []}}'
+	 *	Parameters: '{ "Group": { "UUID": "group_uuid", "Name": "group_name", "IsOrganization": "0",
+	 * "Email": "", "Country": "", "City": "", "Company": "", "Fax": "", "Phone": "", "State": "",
+	 * "Street": "", "Web": "", "Zip": "", "Contacts": [] } }'
 	 * }
 	 * 
 	 * @apiSuccess {object[]} Result Array of response objects.
@@ -1292,7 +1338,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'Import',
-	 *	Parameters: '{ "UploadData": {"tmp_name": "tmp_name_value", "name": "name_value"}, "Storage": "personal", "GroupUUID": ""}'
+	 *	Parameters: '{ "UploadData": { "tmp_name": "tmp_name_value", "name": "name_value" },
+	 *		"Storage": "personal", "GroupUUID": "" }'
 	 * }
 	 * 
 	 * @apiSuccess {object[]} Result Array of response objects.
