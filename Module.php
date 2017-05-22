@@ -124,14 +124,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function GetSettings()
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::Anonymous);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::Anonymous);
 		
 		$aStorages = array();
 		$this->broadcastEvent('GetStorage', $aStorages);
 		
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		$ContactsPerPage = $this->getConfig('ContactsPerPage', 20);
-		if ($oUser && $oUser->Role === \EUserRole::NormalUser && isset($oUser->{$this->GetName().'::ContactsPerPage'}))
+		if ($oUser && $oUser->Role === \Aurora\System\Enums\UserRole::NormalUser && isset($oUser->{$this->GetName().'::ContactsPerPage'}))
 		{
 			$ContactsPerPage = $oUser->{$this->GetName().'::ContactsPerPage'};
 		}
@@ -204,18 +204,18 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function UpdateSettings($ContactsPerPage)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		if ($oUser)
 		{
-			if ($oUser->Role === \EUserRole::NormalUser)
+			if ($oUser->Role === \Aurora\System\Enums\UserRole::NormalUser)
 			{
 				$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
 				$oUser->{$this->GetName().'::ContactsPerPage'} = $ContactsPerPage;
 				return $oCoreDecorator->UpdateUserObject($oUser);
 			}
-			if ($oUser->Role === \EUserRole::SuperAdmin)
+			if ($oUser->Role === \Aurora\System\Enums\UserRole::SuperAdmin)
 			{
 				$oSettings =&\Aurora\System\Api::GetSettings();
 				$oSettings->SetConf('ContactsPerPage', $ContactsPerPage);
@@ -282,7 +282,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function Export($Format, $Filters = [], $GroupUUID = '', $ContactUUIDs = [])
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$aFilters = $this->prepareFilters($Filters);
 		$aFilters = ['$OR' => $aFilters];
@@ -379,7 +379,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function GetGroups()
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$iUserId = \Aurora\System\Api::getAuthenticatedUserId();
 		
@@ -456,7 +456,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function GetGroup($UUID)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		return $this->oApiContactsManager->getGroup($UUID);
 	}
@@ -533,7 +533,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function GetContacts($Offset = 0, $Limit = 20, $SortField = \EContactSortField::Name, $SortOrder = \ESortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array())
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		$aFilters = $this->prepareFilters($Filters);
 		
@@ -662,7 +662,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function GetContact($UUID)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		return $this->oApiContactsManager->getContact($UUID);
 	}
@@ -730,7 +730,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function GetContactsByEmails($Emails)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		
@@ -812,13 +812,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function CreateContact($Contact, $iUserId = 0)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		
 		if ($iUserId > 0 && $iUserId !== $oUser->EntityId)
 		{
-			\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::SuperAdmin);
+			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::SuperAdmin);
 			
 			$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
 			if ($oCoreDecorator)
@@ -902,7 +902,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function UpdateContact($Contact)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$oContact = $this->oApiContactsManager->getContact($Contact['UUID']);
 		if ($oContact)
@@ -969,7 +969,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function DeleteContacts($UUIDs)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		return $this->oApiContactsManager->deleteContacts($UUIDs);
 	}	
@@ -1031,7 +1031,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function CreateGroup($Group)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$oGroup = \CGroup::createInstance('CGroup', $this->GetName());
 		$oGroup->IdUser = \Aurora\System\Api::getAuthenticatedUserId();
@@ -1099,7 +1099,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function UpdateGroup($Group)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$oGroup = $this->oApiContactsManager->getGroup($Group['UUID']);
 		if ($oGroup)
@@ -1166,7 +1166,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function DeleteGroup($UUID)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		return $this->oApiContactsManager->deleteGroups([$UUID]);
 	}
@@ -1228,7 +1228,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function AddContactsToGroup($GroupUUID, $ContactUUIDs)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		if (is_array($ContactUUIDs) && !empty($ContactUUIDs))
 		{
@@ -1295,7 +1295,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function RemoveContactsFromGroup($GroupUUID, $ContactUUIDs)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		if (is_array($ContactUUIDs) && !empty($ContactUUIDs))
 		{
@@ -1365,7 +1365,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function Import($UploadData, $GroupUUID)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$aResponse = array(
 			'ImportedCount' => 0,
@@ -1460,20 +1460,20 @@ class Module extends \Aurora\System\Module\AbstractModule
 	
 //	public function GetGroupEvents($UUID)
 //	{
-//		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 //		
 //		return [];
 //	}	
 	
 //	public function UpdateSharedContacts($UUIDs)
 //	{
-//		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+//		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 //		return true;
 //	}	
 	
 	public function AddContactsFromFile($File)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\EUserRole::NormalUser);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		if (empty($File))
 		{

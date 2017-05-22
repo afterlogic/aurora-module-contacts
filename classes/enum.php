@@ -12,7 +12,7 @@
  * @package Api
  * @subpackage Enum
  */
-class EContactsPrimaryEmail extends \AbstractEnumeration
+class EContactsPrimaryEmail extends \Aurora\System\Enums\AbstractEnumeration
 {
 	const Personal = 0;
 	const Business = 1;
@@ -32,7 +32,7 @@ class EContactsPrimaryEmail extends \AbstractEnumeration
  * @package Api
  * @subpackage Enum
  */
-class EContactsPrimaryPhone extends \AbstractEnumeration
+class EContactsPrimaryPhone extends \Aurora\System\Enums\AbstractEnumeration
 {
 	const Mobile = 0;
 	const Personal = 1;
@@ -52,7 +52,7 @@ class EContactsPrimaryPhone extends \AbstractEnumeration
  * @package Api
  * @subpackage Enum
  */
-class EContactsPrimaryAddress extends \AbstractEnumeration
+class EContactsPrimaryAddress extends \Aurora\System\Enums\AbstractEnumeration
 {
 	const Personal = 0;
 	const Business = 1;
@@ -70,7 +70,7 @@ class EContactsPrimaryAddress extends \AbstractEnumeration
  * @package Api
  * @subpackage Enum
  */
-class EContactFileType extends \AbstractEnumeration
+class EContactFileType extends \Aurora\System\Enums\AbstractEnumeration
 {
 	const CSV = 'csv';
 	const VCF = 'vcf';
@@ -80,7 +80,7 @@ class EContactFileType extends \AbstractEnumeration
  * @package Api
  * @subpackage Enum
  */
-class EContactSortField extends \AbstractEnumeration
+class EContactSortField extends \Aurora\System\Enums\AbstractEnumeration
 {
 	const Name = 1;
 	const Email = 2;
