@@ -32,7 +32,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->incClass('enum');
 		$this->incClass('vcard-helper');
 
-		$this->oApiContactsManager = $this->GetManager();
+		$this->oApiContactsManager = new Manager('', $this);
 		
 		$this->subscribeEvent('Mail::AfterUseEmails', array($this, 'onAfterUseEmails'));
 		$this->subscribeEvent('Mail::GetBodyStructureParts', array($this, 'onGetBodyStructureParts'));

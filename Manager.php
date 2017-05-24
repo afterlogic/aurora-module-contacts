@@ -8,12 +8,9 @@
  * For full statements of the licenses see LICENSE-AFTERLOGIC and LICENSE-AGPL3 files.
  */
 
-/**
- * CApiContactsManager class summary
- * 
- * @package ContactsMain
- */
-class CApiContactsManager extends \Aurora\System\Managers\AbstractManager
+namespace Aurora\Modules\Contacts;
+
+class Manager extends \Aurora\System\Managers\AbstractManager
 {
 	private $oEavManager = null;
 
