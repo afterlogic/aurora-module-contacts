@@ -287,7 +287,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$aFilters = $this->prepareFilters($Filters);
 		$aFilters = ['$OR' => $aFilters];
 		
-		$aContacts = $this->oApiContactsManager->getContacts(\EContactSortField::Name, \ESortOrder::ASC, 0, 0, $aFilters, $GroupUUID, $ContactUUIDs);
+		$aContacts = $this->oApiContactsManager->getContacts(\EContactSortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters, $GroupUUID, $ContactUUIDs);
 		
 		$sOutput = '';
 		
@@ -531,7 +531,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $Filters Other conditions for obtaining contacts list.
 	 * @return array
 	 */
-	public function GetContacts($Offset = 0, $Limit = 20, $SortField = \EContactSortField::Name, $SortOrder = \ESortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array())
+	public function GetContacts($Offset = 0, $Limit = 20, $SortField = \EContactSortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array())
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
@@ -742,7 +742,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			]
 		];
 		
-		$aContacts = $this->oApiContactsManager->getContacts(\EContactSortField::Name, \ESortOrder::ASC, 0, 0, $aFilters, 0);
+		$aContacts = $this->oApiContactsManager->getContacts(\EContactSortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters, 0);
 		
 		return $aContacts;
 	}	
@@ -1616,7 +1616,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				}
 				else
 				{
-					\Aurora\System\Api::Log('Can\'t save temp file "'.$sTemptFile.'"', ELogLevel::Error);
+					\Aurora\System\Api::Log('Can\'t save temp file "'.$sTemptFile.'"', \Aurora\System\Enums\LogLevel::Error);
 				}					
 			}
 		}

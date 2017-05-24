@@ -20,13 +20,13 @@ class CApiContactsManager extends \Aurora\System\Managers\AbstractManager
 	/**
 	 * @param \Aurora\System\Managers\GlobalManager &$oManager
 	 */
-	public function __construct(\Aurora\System\Managers\GlobalManager &$oManager, $sForcedStorage = 'db', \Aurora\System\Module\AbstractModule $oModule = null)
+	public function __construct($sForcedStorage = 'db', \Aurora\System\Module\AbstractModule $oModule = null)
 	{
-		parent::__construct('', $oManager, $oModule);
+		parent::__construct('', $oModule);
 
 		if ($oModule instanceof \Aurora\System\Module\AbstractModule)
 		{
-			$this->oEavManager = \Aurora\System\Api::GetSystemManager('eav', $sForcedStorage);
+			$this->oEavManager = new \Aurora\System\Managers\Eav\Manager();
 		}
 	}
 	
@@ -189,10 +189,10 @@ class CApiContactsManager extends \Aurora\System\Managers\AbstractManager
 	 * Default value is **EContactSortField::Email**.
 	 * @param int $iSortOrder Sorting order. Accepted values:
 	 *
-	 *		ESortOrder::ASC
-	 *		ESortOrder::DESC,
+	 *		\Aurora\System\Enums\SortOrder::ASC
+	 *		\Aurora\System\Enums\SortOrder::DESC,
 	 *
-	 * for ascending and descending respectively. Default value is **ESortOrder::ASC**.
+	 * for ascending and descending respectively. Default value is **\Aurora\System\Enums\SortOrder::ASC**.
 	 * @param int $iOffset Ordinal number of the contact item the list stars with. Default value is **0**.
 	 * @param int $iLimit The upper limit for total number of contacts returned. Default value is **20**.
 	 * @param array $aFilters
@@ -201,7 +201,7 @@ class CApiContactsManager extends \Aurora\System\Managers\AbstractManager
 	 * 
 	 * @return array|bool
 	 */
-	public function getContacts($iSortField = EContactSortField::Name, $iSortOrder = ESortOrder::ASC,
+	public function getContacts($iSortField = EContactSortField::Name, $iSortOrder = \Aurora\System\Enums\SortOrder::ASC,
 		$iOffset = 0, $iLimit = 20, $aFilters = array(), $sGroupUUID = '', $aContactUUIDs = array())
 	{
 		if (empty($aContactUUIDs) && !empty($sGroupUUID))

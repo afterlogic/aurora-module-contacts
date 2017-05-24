@@ -78,7 +78,7 @@ class CGroup extends \Aurora\System\EAV\Entity
 		if ($oContactsModule)
 		{
 			$aContacts = $oContactsModule->oApiContactsManager->getContacts(
-				\EContactSortField::Name, \ESortOrder::ASC, 0, 299, [], $this->UUID
+				\EContactSortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 299, [], $this->UUID
 			);
 
 			$aRes['Contacts'] = \Aurora\System\Managers\Response::GetResponseObject($aContacts);
