@@ -198,7 +198,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 * 
 	 * @return array|bool
 	 */
-	public function getContacts($iSortField = EContactSortField::Name, $iSortOrder = \Aurora\System\Enums\SortOrder::ASC,
+	public function getContacts($iSortField = \EContactSortField::Name, $iSortOrder = \Aurora\System\Enums\SortOrder::ASC,
 		$iOffset = 0, $iLimit = 20, $aFilters = array(), $sGroupUUID = '', $aContactUUIDs = array())
 	{
 		if (empty($aContactUUIDs) && !empty($sGroupUUID))
@@ -218,10 +218,10 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		$sSortField = 'FullName';
 		switch ($iSortField)
 		{
-			case EContactSortField::Email:
+			case \EContactSortField::Email:
 				$sSortField = 'ViewEmail';
 				break;
-			case EContactSortField::Frequency:
+			case \EContactSortField::Frequency:
 				$sSortField = 'Frequency';
 				break;
 		}

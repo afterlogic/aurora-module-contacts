@@ -522,6 +522,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	
 	/**
 	 * Returns list of contacts for specified parameters.
+	 * @param string $Storage Storage type of contacts.
 	 * @param int $Offset Offset of contacts list.
 	 * @param int $Limit Limit of result contacts list.
 	 * @param int $SortField Name of field order by.
@@ -531,7 +532,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $Filters Other conditions for obtaining contacts list.
 	 * @return array
 	 */
-	public function GetContacts($Offset = 0, $Limit = 20, $SortField = \EContactSortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array())
+	public function GetContacts($Storage = '', $Offset = 0, $Limit = 20, $SortField = \EContactSortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array())
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
