@@ -129,7 +129,7 @@ class CApiContactsSyncCsv
 
 					$iParsedCount++;
 					
-					$oContactsDecorator = \Aurora\System\Api::GetModuleDecorator('Contacts');
+					$oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
 					if ($oContactsDecorator && $oContactsDecorator->CreateContact($aContactData, $iUserId))
 					{
 						$iCount++;

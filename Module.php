@@ -211,7 +211,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			if ($oUser->Role === \Aurora\System\Enums\UserRole::NormalUser)
 			{
-				$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
+				$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
 				$oUser->{$this->GetName().'::ContactsPerPage'} = $ContactsPerPage;
 				return $oCoreDecorator->UpdateUserObject($oUser);
 			}
@@ -821,7 +821,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::SuperAdmin);
 			
-			$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
+			$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
 			if ($oCoreDecorator)
 			{
 				$oUser = $oCoreDecorator->GetUser($iUserId);
@@ -1438,7 +1438,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		// You can either pass a readable stream, or a string.
 		$oHandler = fopen($sTempFilePath, 'r');
 		$oSplitter = new \Sabre\VObject\Splitter\VCard($oHandler);
-		$oContactsDecorator = \Aurora\System\Api::GetModuleDecorator('Contacts');
+		$oContactsDecorator = Module::Decorator();
 		$oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
 		if ($oApiContactsManager)
 		{
@@ -1546,7 +1546,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 			else
 			{
-				$oContactsDecorator = \Aurora\System\Api::GetModuleDecorator('Contacts');
+				$oContactsDecorator = Module::Decorator();
 				if ($oContactsDecorator)
 				{
 					$oContactsDecorator->CreateContact([
@@ -1626,7 +1626,7 @@ class Module extends \Aurora\System\Module\AbstractModule
     public function onGetMobileSyncInfo($aArgs, &$mResult)
 	{
 		$iUserId = \Aurora\System\Api::getAuthenticatedUserId();
-		$oDavModule = \Aurora\System\Api::GetModuleDecorator('Dav');
+		$oDavModule = \Aurora\Modules\Dav\Module::Decorator();
 
 		$sDavLogin = $oDavModule->GetLogin();
 		$sDavServer = $oDavModule->GetServerUrl();
