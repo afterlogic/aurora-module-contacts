@@ -94,8 +94,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		{
 			$aGroupContact = $this->getGroupContacts(null, $oContact->UUID);
 			
-			function compare_func($oGroupContact1, $oGroupContact2)
-			{
+			$compare_func = function($oGroupContact1, $oGroupContact2) {
 				if ($oGroupContact1->GroupUUID === $oGroupContact2->GroupUUID)
 				{
 					return 0;
@@ -105,9 +104,9 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 					return -1;
 				}
 				return 1;
-			}
+			};
 
-			$aGroupContactToDelete = array_udiff($aGroupContact, $oContact->GroupsContacts, 'compare_func');
+			$aGroupContactToDelete = array_udiff($aGroupContact, $oContact->GroupsContacts, $compare_func);
 			$aGroupContactUUIDsToDelete = array_map(
 				function($oGroupContact) { 
 					return $oGroupContact->UUID; 
@@ -116,7 +115,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			);
 			$this->oEavManager->deleteEntities($aGroupContactUUIDsToDelete);
 			
-			$aGroupContactToAdd = array_udiff($oContact->GroupsContacts, $aGroupContact, 'compare_func');
+			$aGroupContactToAdd = array_udiff($oContact->GroupsContacts, $aGroupContact, $compare_func);
 			foreach ($aGroupContactToAdd as $oGroupContact)
 			{
 				$this->oEavManager->saveEntity($oGroupContact);
