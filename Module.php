@@ -1377,7 +1377,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		if (is_array($UploadData))
 		{
-			$oApiFileCacheManager = new \Aurora\System\Managers\Filecache\Manager();
+			$oApiFileCacheManager = new \Aurora\System\Managers\Filecache();
 			$sTempFileName = 'import-post-' . md5($UploadData['name'] . $UploadData['tmp_name']);
 			if ($oApiFileCacheManager->moveUploadedFile($oUser->UUID, $sTempFileName, $UploadData['tmp_name']))
 			{
@@ -1482,7 +1482,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
-		$oApiFileCache = new \Aurora\System\Managers\Filecache\Manager();
+		$oApiFileCache = new \Aurora\System\Managers\Filecache();
 		
 		$sTempFilePath = $oApiFileCache->generateFullFilePath($oUser->UUID, $File);
 		$aImportResult = $this->importVcf($oUser->EntityId, $sTempFilePath);
@@ -1573,7 +1573,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	
 	public function onExtendMessageData($aData, &$oMessage)
 	{
-		$oApiFileCache = new \Aurora\System\Managers\Filecache\Manager();
+		$oApiFileCache = new \Aurora\System\Managers\Filecache();
 		
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		
