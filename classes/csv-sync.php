@@ -85,11 +85,11 @@ class CApiContactsSyncCsv
 					if (!isset($aContactData['FullName']) || empty($aContactData['FullName']))
 					{
 						$aFullName = [];
-						if (isset($aContactData['FirstName']) && !empty(trim($aContactData['FirstName'])))
+						if (isset($aContactData['FirstName']) &&  trim($aContactData['FirstName']) != false)
 						{
 							$aFullName[] = trim($aContactData['FirstName']);
 						}
-						if (isset($aContactData['LastName']) && !empty(trim($aContactData['LastName'])))
+						if (isset($aContactData['LastName']) && trim($aContactData['LastName']) != false)
 						{
 							$aFullName[] = trim($aContactData['LastName']);
 						}
