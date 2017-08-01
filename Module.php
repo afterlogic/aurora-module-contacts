@@ -1625,7 +1625,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	
     public function onGetMobileSyncInfo($aArgs, &$mResult)
 	{
-		$iUserId = \Aurora\System\Api::getAuthenticatedUserId();
 		$oDavModule = \Aurora\Modules\Dav\Module::Decorator();
 
 		$sDavLogin = $oDavModule->GetLogin();
@@ -1633,19 +1632,19 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$mResult['Dav']['Contacts'] = [
 			[
-				'Name' => $this->i18N('LABEL_PERSONAL_CONTACTS', $iUserId),
+				'Name' => $this->i18N('LABEL_PERSONAL_CONTACTS'),
 				'Url' => $sDavServer.'/addressbooks/'.$sDavLogin.'/'.\Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME
 			],
 			[
-				'Name' => $this->i18N('LABEL_COLLECTED_ADDRESSES', $iUserId),
+				'Name' => $this->i18N('LABEL_COLLECTED_ADDRESSES'),
 				'Url' => $sDavServer.'/addressbooks/'.$sDavLogin.'/'.\Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_NAME
 			],
 			[
-				'Name' => $this->i18N('LABEL_SHARED_ADDRESS_BOOK', $iUserId),
+				'Name' => $this->i18N('LABEL_SHARED_ADDRESS_BOOK'),
 				'Url' => $sDavServer.'/addressbooks/'.$sDavLogin.'/'.\Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME
 			],
 			[
-				'Name' => $this->i18N('LABEL_GLOBAL_ADDRESS_BOOK', $iUserId),
+				'Name' => $this->i18N('LABEL_GLOBAL_ADDRESS_BOOK'),
 				'Url' => $sDavServer.'/gab'
 			]
 		];
