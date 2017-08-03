@@ -817,7 +817,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		
-		if ($iUserId > 0 && $iUserId !== $oUser->EntityId)
+		if ($iUserId > 0 && (!isset($oUser) || $iUserId !== $oUser->EntityId))
 		{
 			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::SuperAdmin);
 			
