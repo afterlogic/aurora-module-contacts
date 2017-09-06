@@ -8,6 +8,8 @@
  * For full statements of the licenses see LICENSE-AFTERLOGIC and LICENSE-AGPL3 files.
  */
 
+namespace Aurora\Modules\Contacts\Classes;
+
 /**
  * @property int $IdUser
  * @property int $IdTenant
@@ -63,7 +65,7 @@
  * @package Contactsmain
  * @subpackage Classes
  */
-class CContact extends \Aurora\System\EAV\Entity
+class Contact extends \Aurora\System\EAV\Entity
 {
 	protected $aStaticMap = array(
 		'IdUser'			=> array('int', 0),

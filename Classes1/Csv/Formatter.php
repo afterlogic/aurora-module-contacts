@@ -8,13 +8,15 @@
  * For full statements of the licenses see LICENSE-AFTERLOGIC and LICENSE-AGPL3 files.
  */
 
+namespace Aurora\Modules\Contacts\Classes\Csv;
+
 /**
  * @internal
  * 
  * @package Contacts
  * @subpackage Helpers
  */
-class CApiContactsCsvFormatter
+class Formatter
 {
 	const CRLF = "\r\n";
 

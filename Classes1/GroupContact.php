@@ -15,7 +15,7 @@
  * @property string $GroupUUID
  * @property string $ContactUUID
  */
-class CGroupContact extends \Aurora\System\EAV\Entity
+class GroupContact extends \Aurora\System\EAV\Entity
 {
 	protected $aStaticMap = array(
 		'GroupUUID'	=> array('string', ''),

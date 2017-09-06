@@ -8,6 +8,8 @@
  * For full statements of the licenses see LICENSE-AFTERLOGIC and LICENSE-AGPL3 files.
  */
 
+namespace Aurora\Modules\Contacts\Classes;
+
 /**
  * @property int $IdUser
  * @property string $Name
@@ -28,7 +30,7 @@
  * @package Contactsmain
  * @subpackage Classes
  */
-class CGroup extends \Aurora\System\EAV\Entity
+class Group extends \Aurora\System\EAV\Entity
 {
 	public $Events = array();
 	
@@ -63,7 +65,10 @@ class CGroup extends \Aurora\System\EAV\Entity
 			$aContactUUIDs = $aGroup['Contacts'];
 			foreach ($aContactUUIDs as $sContactUUID)
 			{
-				$oGroupContact = \CGroupContact::createInstance('CGroupContact', $this->getModule());
+				$oGroupContact = \CGroupContact::createInstance(
+						__NAMESPACE__ . '\GroupContact', 
+						$this->getModule()
+				);
 				$oGroupContact->ContactUUID = $sContactUUID;
 				$this->GroupContacts[] = $oGroupContact;
 			}
