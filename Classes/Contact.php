@@ -234,7 +234,7 @@ class Contact extends \Aurora\System\EAV\Entity
 		if ($oCoreDecorator)
 		{
 			$oUser = $oCoreDecorator->GetUser($iUserId);
-			if ($oUser instanceof \CUser)
+			if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 			{
 				$this->IdUser = $oUser->IdUser;
 				$this->IdTenant = $oUser->IdTenant;

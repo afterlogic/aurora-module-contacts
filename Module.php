@@ -34,7 +34,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('MobileSync::GetInfo', array($this, 'onGetMobileSyncInfo'));
 		$this->subscribeEvent('AdminPanelWebclient::DeleteEntity::before', array($this, 'onBeforeDeleteEntity'));
 		
-		$this->extendObject('CUser', array(
+		$this->extendObject('Aurora\Modules\Core\Classes\User', array(
 				'ContactsPerPage' => array('int', $this->getConfig('ContactsPerPage', 20)),
 			)
 		);
@@ -820,7 +820,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$this->GetName()
 		);
 		$oContact->populate($Contact);
-		if ($oUser instanceof \CUser)
+		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 		{
 			$oContact->IdUser = $oUser->EntityId;
 			$oContact->IdTenant = $oUser->IdTenant;
@@ -1594,7 +1594,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$sTemptFile = md5($sData).'.vcf';
 				if ($oApiFileCache && $oApiFileCache->put($oUser->UUID, $sTemptFile, $sData))
 				{
-					$oVcard = \CApiMailVcard::createInstance('CApiMailVcard', $this->GetName());
+					$oVcard = \Aurora\Modules\Mail\Classes\Vcard::createInstance('Aurora\Modules\Mail\Classes\Vcard', $this->GetName());
 
 					$oVcard->Uid = $oContact->UUID;
 					$oVcard->File = $sTemptFile;
