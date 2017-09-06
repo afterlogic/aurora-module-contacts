@@ -65,7 +65,7 @@ class Group extends \Aurora\System\EAV\Entity
 			$aContactUUIDs = $aGroup['Contacts'];
 			foreach ($aContactUUIDs as $sContactUUID)
 			{
-				$oGroupContact = \CGroupContact::createInstance(
+				$oGroupContact = \Aurora\Modules\Contacts\Classes\GroupContact::createInstance(
 						__NAMESPACE__ . '\GroupContact', 
 						$this->getModule()
 				);
@@ -83,7 +83,7 @@ class Group extends \Aurora\System\EAV\Entity
 		if ($oContactsModule)
 		{
 			$aContacts = $oContactsModule->oApiContactsManager->getContacts(
-				\EContactSortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 299, [], $this->UUID
+				\Aurora\Modules\Contacts\Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 299, [], $this->UUID
 			);
 
 			$aRes['Contacts'] = \Aurora\System\Managers\Response::GetResponseObject($aContacts);

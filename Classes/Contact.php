@@ -73,9 +73,9 @@ class Contact extends \Aurora\System\EAV\Entity
 		'Storage'			=> array('string', ''),
 		'FullName'			=> array('string', ''),
 		'UseFriendlyName'	=> array('bool', true),
-		'PrimaryEmail'		=> array('int', EContactsPrimaryEmail::Personal),
-		'PrimaryPhone'		=> array('int', EContactsPrimaryPhone::Personal),
-		'PrimaryAddress'	=> array('int', EContactsPrimaryAddress::Personal),
+		'PrimaryEmail'		=> array('int', \Aurora\Modules\Contacts\Enums\PrimaryEmail::Personal),
+		'PrimaryPhone'		=> array('int', \Aurora\Modules\Contacts\Enums\PrimaryPhone::Personal),
+		'PrimaryAddress'	=> array('int', \Aurora\Modules\Contacts\Enums\PrimaryAddress::Personal),
 		'ViewEmail'			=> array('string', ''),
 
 		'Title'				=> array('string', ''),
@@ -161,7 +161,7 @@ class Contact extends \Aurora\System\EAV\Entity
 					}
 					elseif (!empty($sGroupName))
 					{
-						$oGroup = new CGroup();
+						$oGroup = new \Aurora\Modules\Contacts\Classes\Group();
 						$oGroup->IdUser = $this->IdUser;
 						$oGroup->Name = $sGroupName;
 
@@ -181,7 +181,10 @@ class Contact extends \Aurora\System\EAV\Entity
 	{
 		if (!empty($sGroupUUID))
 		{
-			$oGroupContact = \CGroupContact::createInstance('CGroupContact', $this->getModule());
+			$oGroupContact = \Aurora\Modules\Contacts\Classes\GroupContact::createInstance(
+				__NAMESPACE__ . '\GroupContact', 
+				$this->getModule()
+			);
 			$oGroupContact->ContactUUID = $this->UUID;
 			$oGroupContact->GroupUUID = $sGroupUUID;
 			$this->GroupsContacts[] = $oGroupContact;
@@ -197,11 +200,11 @@ class Contact extends \Aurora\System\EAV\Entity
 		switch ((int) $this->PrimaryEmail)
 		{
 			default:
-			case EContactsPrimaryEmail::Personal:
+			case \Aurora\Modules\Contacts\Enums\PrimaryEmail::Personal:
 				return (string) $this->PersonalEmail;
-			case EContactsPrimaryEmail::Business:
+			case \Aurora\Modules\Contacts\Enums\PrimaryEmail::Business:
 				return (string) $this->BusinessEmail;
-			case EContactsPrimaryEmail::Other:
+			case \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other:
 				return (string) $this->OtherEmail;
 		}
 	}
@@ -223,7 +226,7 @@ class Contact extends \Aurora\System\EAV\Entity
 	public function InitFromVCardStr($iUserId, $sData, $sUid = '')
 	{
 		$oVCard = \Sabre\VObject\Reader::read($sData, \Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES);
-		$aContactData = CApiContactsVCardHelper::GetContactDataFromVcard($oVCard);
+		$aContactData = VCard\Helper::GetContactDataFromVcard($oVCard);
 		$this->populate($aContactData);
 		
 		$oUser = null;

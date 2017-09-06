@@ -30,7 +30,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	/**
 	 * 
 	 * @param string $sUUID
-	 * @return \CContact
+	 * @return \Aurora\Modules\Contacts\Classes\Contact
 	 */
 	public function getContact($sUUID)
 	{
@@ -45,7 +45,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	/**
 	 * 
 	 * @param string $sEmail
-	 * @return \CContact
+	 * @return \Aurora\Modules\Contacts\Classes\Contact
 	 */
 	public function getContactByEmail($iUserId, $sEmail)
 	{
@@ -58,7 +58,14 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			)
 		);
 		$aOrderBy = array('FullName');
-		$aContacts = $this->oEavManager->getEntities('CContact', $aViewAttrs, 0, 0, $aFilters, $aOrderBy);
+		$aContacts = $this->oEavManager->getEntities(
+			__NAMESPACE__ . '\Classes\Contact', 
+			$aViewAttrs, 
+			0, 
+			0, 
+			$aFilters, 
+			$aOrderBy
+		);
 		if (count($aContacts) > 0)
 		{
 			$oContact = $aContacts[0];
@@ -72,7 +79,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 * 
 	 * @param string $sUUID Group ID 
 	 * 
-	 * @return CGroup
+	 * @return \Aurora\Modules\Contacts\Classes\Group
 	 */
 	public function getGroup($sUUID)
 	{
@@ -82,7 +89,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	/**
 	 * Updates contact information. Using this method is required to finalize changes made to the contact object. 
 	 * 
-	 * @param CContact $oContact  Contact object to be updated 
+	 * @param \Aurora\Modules\Contacts\Classes\Contact $oContact  Contact object to be updated 
 	 * @param bool $bUpdateFromGlobal
 	 * 
 	 * @return bool
@@ -128,7 +135,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	/**
 	 * Updates group information. Using this method is required to finalize changes made to the group object. 
 	 * 
-	 * @param CGroup $oGroup
+	 * @param \Aurora\Modules\Contacts\Classes\Group $oGroup
 	 *
 	 * @return bool
 	 */
@@ -167,7 +174,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		}
 		
 		return $this->oEavManager->getEntitiesCount(
-			'CContact', 
+			__NAMESPACE__ . '\Classes\Contact', 
 			$aFilters,
 			$aContactUUIDs
 		);
@@ -178,11 +185,11 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 * 
 	 * @param int $iSortField Sort field. Accepted values:
 	 *
-	 *		EContactSortField::Name
-	 *		EContactSortField::Email
-	 *		EContactSortField::Frequency
+	 *		\Aurora\Modules\Contacts\Enums\SortField::Name
+	 *		\Aurora\Modules\Contacts\Enums\SortField::Email
+	 *		\Aurora\Modules\Contacts\Enums\SortField::Frequency
 	 *
-	 * Default value is **EContactSortField::Email**.
+	 * Default value is **\Aurora\Modules\Contacts\Enums\SortField::Email**.
 	 * @param int $iSortOrder Sorting order. Accepted values:
 	 *
 	 *		\Aurora\System\Enums\SortOrder::ASC
@@ -197,7 +204,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 * 
 	 * @return array|bool
 	 */
-	public function getContacts($iSortField = \EContactSortField::Name, $iSortOrder = \Aurora\System\Enums\SortOrder::ASC,
+	public function getContacts($iSortField = \Aurora\Modules\Contacts\Enums\SortField::Name, $iSortOrder = \Aurora\System\Enums\SortOrder::ASC,
 		$iOffset = 0, $iLimit = 20, $aFilters = array(), $sGroupUUID = '', $aContactUUIDs = array())
 	{
 		if (empty($aContactUUIDs) && !empty($sGroupUUID))
@@ -217,18 +224,19 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		$sSortField = 'FullName';
 		switch ($iSortField)
 		{
-			case \EContactSortField::Email:
+			case \Aurora\Modules\Contacts\Enums\SortField::Email:
 				$sSortField = 'ViewEmail';
 				break;
-			case \EContactSortField::Frequency:
+			case \Aurora\Modules\Contacts\Enums\SortField::Frequency:
 				$sSortField = 'Frequency';
 				break;
 		}
 		
 		$aViewAttrs = array();
 		$aOrderBy = array($sSortField);
-		return $this->oEavManager->getEntities('CContact', $aViewAttrs, $iOffset, $iLimit, 
-				$aFilters, $aOrderBy, $iSortOrder, $aContactUUIDs);
+		return $this->oEavManager->getEntities(
+			__NAMESPACE__ . '\Classes\Contact', 
+			$aViewAttrs, $iOffset, $iLimit, $aFilters, $aOrderBy, $iSortOrder, $aContactUUIDs);
 	}
 
 	/**
@@ -251,13 +259,15 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			$aFilters = array('IdUser' => array($iUserId, '='));
 		}
 		$aOrderBy = array('Name');
-		return $this->oEavManager->getEntities('CGroup', $aViewAttrs, 0, 0, $aFilters, 'Name');
+		return $this->oEavManager->getEntities(
+			__NAMESPACE__ . '\Classes\Group', 
+			$aViewAttrs, 0, 0, $aFilters, 'Name');
 	}
 
 	/**
 	 * The method is used for saving created contact to the database. 
 	 * 
-	 * @param CContact $oContact
+	 * @param \Aurora\Modules\Contacts\Classes\Contact $oContact
 	 * 
 	 * @return bool
 	 */
@@ -280,7 +290,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	/**
 	 * The method is used for saving created group to the database. 
 	 * 
-	 * @param CGroup $oGroup
+	 * @param \Aurora\Modules\Contacts\Classes\Group $oGroup
 	 * 
 	 * @return bool
 	 */
@@ -336,7 +346,9 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		{
 			$aFilters = array('ContactUUID' => $sContactUUID);
 		}
-		return $this->oEavManager->getEntities('CGroupContact', $aViewAttrs, 0, 0, $aFilters);
+		return $this->oEavManager->getEntities(
+			__NAMESPACE__ . '\Classes\GroupContact', 
+			$aViewAttrs, 0, 0, $aFilters);
 	}
 	
 	/**
@@ -387,7 +399,10 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		{
 			if (!in_array($sContactUUID, $aCurrContactUUIDs))
 			{
-				$oGroupContact = \CGroupContact::createInstance('CGroupContact', $this->GetModule()->GetName());
+				$oGroupContact = \Aurora\Modules\Contacts\Classes\GroupContact::createInstance(
+					__NAMESPACE__ . '\Classes\GroupContact', 
+					$this->GetModule()->GetName()
+				);
 				$oGroupContact->GroupUUID = $sGroupUUID;
 				$oGroupContact->ContactUUID = $sContactUUID;
 				$res = $this->oEavManager->saveEntity($oGroupContact) || $res;

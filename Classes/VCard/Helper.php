@@ -123,7 +123,7 @@ class Helper
 						$aContact['BusinessEmail'] = (string) $oEmail;
 						if ($oType->has('PREF'))
 						{
-							$aContact['PrimaryEmail'] = EContactsPrimaryEmail::Business;
+							$aContact['PrimaryEmail'] = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Business;
 						}
 					}
 					else if ($oType->has('HOME'))
@@ -131,7 +131,7 @@ class Helper
 						$aContact['PersonalEmail'] = (string) $oEmail;
 						if ($oType->has('PREF'))
 						{
-							$aContact['PrimaryEmail'] = EContactsPrimaryEmail::Personal;
+							$aContact['PrimaryEmail'] = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Personal;
 						}
 					}
 					else if ($oType->has('OTHER'))
@@ -139,7 +139,7 @@ class Helper
 						$aContact['OtherEmail'] = (string) $oEmail;
 						if ($oType->has('PREF'))
 						{
-							$aContact['PrimaryEmail'] = EContactsPrimaryEmail::Other;
+							$aContact['PrimaryEmail'] = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other;
 						}
 					}
 					else if ($oEmail->group && isset($oVCard->{$oEmail->group.'.X-ABLABEL'}) &&
@@ -148,7 +148,7 @@ class Helper
 						$aContact['OtherEmail'] = (string) $oEmail;
 						if ($oType->has('PREF'))
 						{
-							$aContact['PrimaryEmail'] = EContactsPrimaryEmail::Other;
+							$aContact['PrimaryEmail'] = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other;
 						}
 					}
 				}
@@ -225,7 +225,7 @@ class Helper
 	}
 	
 	/**
-	* @param CContact $oContact
+	* @param \Aurora\Modules\Contacts\Classes\Contact $oContact
 	* @param \Sabre\VObject\Component $oVCard
 	* @return void
 	*/
@@ -320,7 +320,7 @@ class Helper
 	}
 
 	/**
-	* @param CContact $oContact
+	* @param \Aurora\Modules\Contacts\Classes\Contact $oContact
 	* @param \Sabre\VObject\Component\VCard $oVCard
 	* @return void
 	*/
@@ -358,7 +358,7 @@ class Helper
 						else
 						{
 							$bFindHome = false;
-							if ($oContact->PrimaryEmail == EContactsPrimaryEmail::Personal)
+							if ($oContact->PrimaryEmail == \Aurora\Modules\Contacts\Enums\PrimaryEmail::Personal)
 							{
 								$oTypes->addValue('PREF');
 							}
@@ -374,7 +374,7 @@ class Helper
 						else
 						{
 							$bFindWork = false;
-							if ($oContact->PrimaryEmail == EContactsPrimaryEmail::Business)
+							if ($oContact->PrimaryEmail == \Aurora\Modules\Contacts\Enums\PrimaryEmail::Business)
 							{
 								$oTypes->addValue('PREF');
 							}
@@ -390,7 +390,7 @@ class Helper
 						else
 						{
 							$bFindOther = false;
-							if ($oContact->PrimaryEmail == EContactsPrimaryEmail::Other)
+							if ($oContact->PrimaryEmail == \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other)
 							{
 								$oTypes->addValue('PREF');
 							}
@@ -409,7 +409,7 @@ class Helper
 						else
 						{
 							$bFindOther = false;
-							if ($oContact->PrimaryEmail == EContactsPrimaryEmail::Other)
+							if ($oContact->PrimaryEmail == \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other)
 							{
 								$oTypes->addValue('PREF');
 							}
@@ -428,7 +428,7 @@ class Helper
 		if ($bFindHome)
 		{
 			$aTypes = array('HOME');
-			if ($oContact->PrimaryEmail == EContactsPrimaryEmail::Personal)
+			if ($oContact->PrimaryEmail == \Aurora\Modules\Contacts\Enums\PrimaryEmail::Personal)
 			{
 				$aTypes[] = 'PREF';
 			}
@@ -437,7 +437,7 @@ class Helper
 		if ($bFindWork)
 		{
 			$aTypes = array('WORK');
-			if ($oContact->PrimaryEmail == EContactsPrimaryEmail::Business)
+			if ($oContact->PrimaryEmail == \Aurora\Modules\Contacts\Enums\PrimaryEmail::Business)
 			{
 				$aTypes[] = 'PREF';
 			}
@@ -446,7 +446,7 @@ class Helper
 		if ($bFindOther)
 		{
 			$aTypes = array('OTHER');
-			if ($oContact->PrimaryEmail == EContactsPrimaryEmail::Other)
+			if ($oContact->PrimaryEmail == \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other)
 			{
 				$aTypes[] = 'PREF';
 			}			
@@ -455,7 +455,7 @@ class Helper
 	}
 
 	/**
-	* @param CContact $oContact
+	* @param \Aurora\Modules\Contacts\Classes\Contact $oContact
 	* @param \Sabre\VObject\Component $oVCard
 	* @return void
 	*/
@@ -518,7 +518,7 @@ class Helper
 	}
 
 	/**
-	* @param CContact $oContact
+	* @param \Aurora\Modules\Contacts\Classes\Contact $oContact
 	* @param \Sabre\VObject\Component\VCard $oVCard
 	* @return void
 	*/
@@ -657,7 +657,7 @@ class Helper
 	}
 
 	/**
-	* @param CContact $oContact
+	* @param \Aurora\Modules\Contacts\Classes\Contact $oContact
 	* @param \Sabre\VObject\Component $oVCard
 	* @param bool $bIsUpdate = false
 	* @return void

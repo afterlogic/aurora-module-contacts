@@ -138,7 +138,7 @@ class Formatter
 			}
 
 			$this->sValue .= implode($this->sDelimiter, $aList);
-			$this->sValue .= CApiContactsCsvFormatter::CRLF;
+			$this->sValue .= \Aurora\Modules\Contacts\Classes\Csv\Formatter::CRLF;
 
 			$this->bIsHeadersInit = true;
 		}
@@ -174,7 +174,7 @@ class Formatter
 			}
 
 			$this->sValue .= implode($this->sDelimiter, $aList);
-			$this->sValue .= CApiContactsCsvFormatter::CRLF;
+			$this->sValue .= \Aurora\Modules\Contacts\Classes\Csv\Formatter::CRLF;
 
 			$this->bIsHeadersInit = true;
 		}

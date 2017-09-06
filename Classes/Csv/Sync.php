@@ -19,19 +19,19 @@ namespace Aurora\Modules\Contacts\Classes\Csv;
 class Sync
 {
 	/**
-	 * @var CApiContactsCsvFormatter
+	 * @var \Aurora\Modules\Contacts\Classes\Csv\Formatter
 	 */
 	protected $oFormatter;
 
 	/**
-	 * @var CApiContactsCsvParser
+	 * @var \Aurora\Modules\Contacts\Classes\Csv\Parser
 	 */
 	protected $oParser;
 
 	public function __construct()
 	{
-		$this->oFormatter = new \CApiContactsCsvFormatter();
-		$this->oParser = new \CApiContactsCsvParser();
+		$this->oFormatter = new Formatter();
+		$this->oParser = new Parser();
 	}
 
 	/**
@@ -103,15 +103,15 @@ class Sync
 					
 					if (isset($aContactData['PersonalEmail']) && !empty($aContactData['PersonalEmail']))
 					{
-						$aContactData['PrimaryEmail'] = \EContactsPrimaryEmail::Personal;
+						$aContactData['PrimaryEmail'] = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Personal;
 					}
 					else if (isset($aContactData['BusinessEmail']) && !empty($aContactData['BusinessEmail']))
 					{
-						$aContactData['PrimaryEmail'] = \EContactsPrimaryEmail::Business;
+						$aContactData['PrimaryEmail'] = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Business;
 					}
 					else if (isset($aContactData['OtherEmail']) && !empty($aContactData['OtherEmail']))
 					{
-						$aContactData['PrimaryEmail'] = \EContactsPrimaryEmail::Other;
+						$aContactData['PrimaryEmail'] = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other;
 					}
 					
 					if (isset($aContactData['BirthYear']))

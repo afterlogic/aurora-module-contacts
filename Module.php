@@ -26,12 +26,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function init() 
 	{
-		$this->incClass('contact');
-		$this->incClass('group-contact');
-		$this->incClass('group');
-		$this->incClass('enum');
-		$this->incClass('vcard-helper');
-
 		$this->oApiContactsManager = new Manager('', $this);
 		
 		$this->subscribeEvent('Mail::AfterUseEmails', array($this, 'onAfterUseEmails'));
@@ -92,10 +86,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiSuccess {string} Result.Result.ImportContactsLink=&quot;&quot; Link for learning more about CSV format.
 	 * @apiSuccess {array} Result.Result.Storages='[]' List of storages wich will be shown in the interface.
 	 * @apiSuccess {array} Result.Result.ImportExportFormats='[]' List of formats that can be used for import and export contacts.
-	 * @apiSuccess {array} Result.Result.EContactsPrimaryEmail='[]' Enumeration with primary email values.
-	 * @apiSuccess {array} Result.Result.EContactsPrimaryPhone='[]' Enumeration with primary phone values.
-	 * @apiSuccess {array} Result.Result.EContactsPrimaryAddress='[]' Enumeration with primary address values.
-	 * @apiSuccess {array} Result.Result.EContactSortField='[]' Enumeration with sort field values.
+	 * @apiSuccess {array} Result.Result.\Aurora\Modules\Contacts\Enums\PrimaryEmail='[]' Enumeration with primary email values.
+	 * @apiSuccess {array} Result.Result.\Aurora\Modules\Contacts\Enums\PrimaryPhone='[]' Enumeration with primary phone values.
+	 * @apiSuccess {array} Result.Result.\Aurora\Modules\Contacts\Enums\PrimaryAddress='[]' Enumeration with primary address values.
+	 * @apiSuccess {array} Result.Result.\Aurora\Modules\Contacts\Enums\SortField='[]' Enumeration with sort field values.
 	 * @apiSuccess {int} [Result.ErrorCode] Error code
 	 * 
 	 * @apiSuccessExample {json} Success response example:
@@ -103,10 +97,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	Module: 'Contacts',
 	 *	Method: 'GetSettings',
 	 *	Result: { ContactsPerPage: 20, ImportContactsLink: '', Storages: ['personal', 'team'],
-	 * ImportExportFormats: ['csv', 'vcf'], EContactsPrimaryEmail: {'Personal': 0, 'Business': 1, 'Other': 2},
-	 * EContactsPrimaryPhone: {'Mobile': 0, 'Personal': 1, 'Business': 2},
-	 * EContactsPrimaryAddress: {'Personal': 0, 'Business': 1},
-	 * EContactSortField: {'Name': 1, 'Email': 2, 'Frequency': 3} }
+	 * ImportExportFormats: ['csv', 'vcf'], \Aurora\Modules\Contacts\Enums\PrimaryEmail: {'Personal': 0, 'Business': 1, 'Other': 2},
+	 * \Aurora\Modules\Contacts\Enums\PrimaryPhone: {'Mobile': 0, 'Personal': 1, 'Business': 2},
+	 * \Aurora\Modules\Contacts\Enums\PrimaryAddress: {'Personal': 0, 'Business': 1},
+	 * \Aurora\Modules\Contacts\Enums\SortField: {'Name': 1, 'Email': 2, 'Frequency': 3} }
 	 * }
 	 * 
 	 * @apiSuccessExample {json} Error response example:
@@ -140,10 +134,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 			'ContactsPerPage' => $ContactsPerPage,
 			'ImportContactsLink' => $this->getConfig('ImportContactsLink', ''),
 			'Storages' => $aStorages,
-			'EContactsPrimaryEmail' => (new \EContactsPrimaryEmail)->getMap(),
-			'EContactsPrimaryPhone' => (new \EContactsPrimaryPhone)->getMap(),
-			'EContactsPrimaryAddress' => (new \EContactsPrimaryAddress)->getMap(),
-			'EContactSortField' => (new \EContactSortField)->getMap(),
+			'PrimaryEmail' => (new Enums\PrimaryEmail)->getMap(),
+			'PrimaryPhone' => (new Enums\PrimaryPhone)->getMap(),
+			'PrimaryAddress' => (new Enums\PrimaryAddress)->getMap(),
+			'SortField' => (new Enums\SortField)->getMap(),
 			'ImportExportFormats' => $this->aImportExportFormats,
 			'SaveVcfServerModuleName' => \Aurora\System\Api::GetModuleManager()->ModuleExists('DavContacts') ? 'DavContacts' : ''
 		);
@@ -287,7 +281,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$aFilters = $this->prepareFilters($Filters);
 		$aFilters = ['$OR' => $aFilters];
 		
-		$aContacts = $this->oApiContactsManager->getContacts(\EContactSortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters, $GroupUUID, $ContactUUIDs);
+		$aContacts = $this->oApiContactsManager->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters, $GroupUUID, $ContactUUIDs);
 		
 		$sOutput = '';
 		
@@ -296,21 +290,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 			switch ($Format)
 			{
 				case 'csv':
-					$this->incClass('csv-formatter');
-					$this->incClass('csv-parser');
-					$this->incClass('csv-sync');
-
-					if (class_exists('CApiContactsSyncCsv'))
-					{
-						$oSync = new \CApiContactsSyncCsv();
-						$sOutput = $oSync->Export($aContacts);
-					}
+					$oSync = new Classes\Csv\Sync();
+					$sOutput = $oSync->Export($aContacts);
 					break;
 				case 'vcf':
 					foreach ($aContacts as $oContact)
 					{
 						$oVCard = new \Sabre\VObject\Component\VCard();
-						\CApiContactsVCardHelper::UpdateVCardFromContact($oContact, $oVCard);
+						Classes\VCard\Helper::UpdateVCardFromContact($oContact, $oVCard);
 						$sOutput .= $oVCard->serialize();
 					}
 					break;
@@ -452,7 +439,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	/**
 	 * Returns group with specified UUID.
 	 * @param string $UUID UUID of group to return.
-	 * @return \CGroup
+	 * @return \Aurora\Modules\Contacts\Classes\Group
 	 */
 	public function GetGroup($UUID)
 	{
@@ -532,7 +519,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $Filters Other conditions for obtaining contacts list.
 	 * @return array
 	 */
-	public function GetContacts($Storage = '', $Offset = 0, $Limit = 20, $SortField = \EContactSortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array())
+	public function GetContacts($Storage = '', $Offset = 0, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array())
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
@@ -567,7 +554,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$aFilters = ['$OR' => $aFilters];
 		}
 		
-		if ($SortField === \EContactSortField::Frequency)
+		if ($SortField === Enums\SortField::Frequency)
 		{
 			$aFilters['Frequency'] = ['-1', '!='];
 			$aFilters = [
@@ -659,7 +646,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	/**
 	 * Returns contact with specified UUID.
 	 * @param string $UUID UUID of contact to return.
-	 * @return \CContact
+	 * @return \Aurora\Modules\Contacts\Classes\Contact
 	 */
 	public function GetContact($UUID)
 	{
@@ -743,7 +730,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			]
 		];
 		
-		$aContacts = $this->oApiContactsManager->getContacts(\EContactSortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters, 0);
+		$aContacts = $this->oApiContactsManager->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters, 0);
 		
 		return $aContacts;
 	}	
@@ -828,7 +815,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 		}
 		
-		$oContact = \CContact::createInstance('CContact', $this->GetName());
+		$oContact = \Aurora\Modules\Contacts\Classes\Contact::createInstance(
+			__NAMESPACE__ . '\Classes\Contact', 
+			$this->GetName()
+		);
 		$oContact->populate($Contact);
 		if ($oUser instanceof \CUser)
 		{
@@ -1034,7 +1024,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
-		$oGroup = \CGroup::createInstance('CGroup', $this->GetName());
+		$oGroup = \Aurora\Modules\Contacts\Classes\Group::createInstance(
+			__NAMESPACE__ . '\Classes\Group', 
+			$this->GetName()
+		);
 		$oGroup->IdUser = \Aurora\System\Api::getAuthenticatedUserId();
 
 		$oGroup->populate($Group);
@@ -1389,15 +1382,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 				switch ($sFileExtension)
 				{
 					case 'csv':
-						$this->incClass('csv-formatter');
-						$this->incClass('csv-parser');
-						$this->incClass('csv-sync');
-
-						if (class_exists('CApiContactsSyncCsv'))
-						{
-							$oSync = new \CApiContactsSyncCsv();
-							$aImportResult = $oSync->Import($oUser->EntityId, $sTempFilePath, $GroupUUID);
-						}
+						$oSync = new Classes\Csv\Sync();
+						$aImportResult = $oSync->Import($oUser->EntityId, $sTempFilePath, $GroupUUID);
 						break;
 					case 'vcf':
 						$aImportResult = $this->importVcf($oUser->EntityId, $sTempFilePath);
@@ -1444,7 +1430,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			while ($oVCard = $oSplitter->getNext())
 			{
-				$aContactData = \CApiContactsVCardHelper::GetContactDataFromVcard($oVCard);
+				$aContactData = Classes\VCard\Helper::GetContactDataFromVcard($oVCard);
 				$oContact = isset($aContactData['UUID']) ? $oApiContactsManager->getContact($aContactData['UUID']) : null;
 				$aImportResult['ParsedCount']++;
 				if (!isset($oContact) || empty($oContact))
@@ -1585,7 +1571,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$sData = $aDataItem['Data'];
 			if ($bVcard && !empty($sData))
 			{
-				$oContact = \CContact::createInstance('CContact', $this->GetName());
+				$oContact = \Aurora\Modules\Contacts\Classes\Contact::createInstance(
+					__NAMESPACE__ . '\Classes\Contact', 
+					$this->GetName()
+				);
 				$oContact->InitFromVCardStr($oUser->EntityId, $sData);
 
 				$oContact->UUID = '';
