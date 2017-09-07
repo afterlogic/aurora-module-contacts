@@ -15,9 +15,9 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	private $oEavManager = null;
 
 	/**
-	 * @param \Aurora\System\Managers\GlobalManager &$oManager
+	 * @param \Aurora\System\Module\AbstractModule $oModule
 	 */
-	public function __construct($sForcedStorage = 'db', \Aurora\System\Module\AbstractModule $oModule = null)
+	public function __construct(\Aurora\System\Module\AbstractModule $oModule = null)
 	{
 		parent::__construct($oModule);
 

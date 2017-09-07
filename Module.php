@@ -26,7 +26,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function init() 
 	{
-		$this->oApiContactsManager = new Manager('', $this);
+		$this->oApiContactsManager = new Manager($this);
 		
 		$this->subscribeEvent('Mail::AfterUseEmails', array($this, 'onAfterUseEmails'));
 		$this->subscribeEvent('Mail::GetBodyStructureParts', array($this, 'onGetBodyStructureParts'));
@@ -34,7 +34,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('MobileSync::GetInfo', array($this, 'onGetMobileSyncInfo'));
 		$this->subscribeEvent('AdminPanelWebclient::DeleteEntity::before', array($this, 'onBeforeDeleteEntity'));
 		
-		$this->extendObject('Aurora\Modules\Core\Classes\User', array(
+		$this->extendObject(
+			'Aurora\Modules\Core\Classes\User', 
+			array(
 				'ContactsPerPage' => array('int', $this->getConfig('ContactsPerPage', 20)),
 			)
 		);
