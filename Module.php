@@ -818,7 +818,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 		
 		$oContact = \Aurora\Modules\Contacts\Classes\Contact::createInstance(
-			__NAMESPACE__ . '\Classes\Contact', 
+			$this->getNamespace() . '\Classes\Contact',
 			$this->GetName()
 		);
 		$oContact->populate($Contact);
@@ -1027,7 +1027,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$oGroup = \Aurora\Modules\Contacts\Classes\Group::createInstance(
-			__NAMESPACE__ . '\Classes\Group', 
+			$this->getNamespace() . '\Classes\Group',
 			$this->GetName()
 		);
 		$oGroup->IdUser = \Aurora\System\Api::getAuthenticatedUserId();
@@ -1574,7 +1574,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			if ($bVcard && !empty($sData))
 			{
 				$oContact = \Aurora\Modules\Contacts\Classes\Contact::createInstance(
-					__NAMESPACE__ . '\Classes\Contact', 
+					$this->getNamespace() . '\Classes\Contact',
 					$this->GetName()
 				);
 				$oContact->InitFromVCardStr($oUser->EntityId, $sData);
@@ -1596,7 +1596,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$sTemptFile = md5($sData).'.vcf';
 				if ($oApiFileCache && $oApiFileCache->put($oUser->UUID, $sTemptFile, $sData))
 				{
-					$oVcard = \Aurora\Modules\Mail\Classes\Vcard::createInstance('Aurora\Modules\Mail\Classes\Vcard', $this->GetName());
+					$oVcard = \Aurora\Modules\Mail\Classes\Vcard::createInstance(\Aurora\System\Api::GetModule('Mail')->getNamespace() . '\Classes\Vcard', $this->GetName());
 
 					$oVcard->Uid = $oContact->UUID;
 					$oVcard->File = $sTemptFile;

@@ -182,7 +182,7 @@ class Contact extends \Aurora\System\EAV\Entity
 		if (!empty($sGroupUUID))
 		{
 			$oGroupContact = \Aurora\Modules\Contacts\Classes\GroupContact::createInstance(
-				__NAMESPACE__ . '\GroupContact', 
+				$this->getModule()->getNamespace() . '\Classes\GroupContact',
 				$this->getModule()
 			);
 			$oGroupContact->ContactUUID = $this->UUID;
