@@ -65,10 +65,7 @@ class Group extends \Aurora\System\EAV\Entity
 			$aContactUUIDs = $aGroup['Contacts'];
 			foreach ($aContactUUIDs as $sContactUUID)
 			{
-				$oGroupContact = \Aurora\Modules\Contacts\Classes\GroupContact::createInstance(
-						$this->getModule()->getNamespace() . '\Classes\GroupContact',
-						$this->getModule()
-				);
+				$oGroupContact = new \Aurora\Modules\Contacts\Classes\GroupContact($this->getModule());
 				$oGroupContact->ContactUUID = $sContactUUID;
 				$this->GroupContacts[] = $oGroupContact;
 			}
