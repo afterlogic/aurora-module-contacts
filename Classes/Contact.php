@@ -118,7 +118,7 @@ class Contact extends \Aurora\System\EAV\Entity
 		'BirthYear'			=> array('int', 0),
 
 		'ETag'				=> array('string', ''),
-		'Auto'				=> array('bool', false),
+		'Auto'				=> array('bool', false, true),
 		'Frequency'			=> array('int', 0),
 	);
 	
