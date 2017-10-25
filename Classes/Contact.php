@@ -68,7 +68,7 @@ namespace Aurora\Modules\Contacts\Classes;
 class Contact extends \Aurora\System\EAV\Entity
 {
 	protected $aStaticMap = array(
-		'IdUser'			=> array('int', 0),
+		'IdUser'			=> array('int', 0, true),
 		'IdTenant'			=> array('int', 0),
 		'Storage'			=> array('string', ''),
 		'FullName'			=> array('string', ''),
@@ -76,7 +76,7 @@ class Contact extends \Aurora\System\EAV\Entity
 		'PrimaryEmail'		=> array('int', \Aurora\Modules\Contacts\Enums\PrimaryEmail::Personal),
 		'PrimaryPhone'		=> array('int', \Aurora\Modules\Contacts\Enums\PrimaryPhone::Personal),
 		'PrimaryAddress'	=> array('int', \Aurora\Modules\Contacts\Enums\PrimaryAddress::Personal),
-		'ViewEmail'			=> array('string', ''),
+		'ViewEmail'			=> array('string', '', true),
 
 		'Title'				=> array('string', ''),
 		'FirstName'			=> array('string', ''),

@@ -37,7 +37,7 @@ class Group extends \Aurora\System\EAV\Entity
 	public $GroupContacts = array();
 	
 	protected $aStaticMap = array(
-		'IdUser'			=> array('int', 0),
+		'IdUser'			=> array('int', 0, true),
 
 		'Name'				=> array('string', ''),
 		'IsOrganization'	=> array('bool', false),

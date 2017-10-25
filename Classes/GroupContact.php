@@ -20,7 +20,7 @@ namespace Aurora\Modules\Contacts\Classes;
 class GroupContact extends \Aurora\System\EAV\Entity
 {
 	protected $aStaticMap = array(
-		'GroupUUID'	=> array('string', ''),
-		'ContactUUID'	=> array('string', 0),
+		'GroupUUID'	=> array('string', '', true),
+		'ContactUUID'	=> array('string', 0, true),
 	);
 }
