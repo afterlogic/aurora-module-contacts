@@ -87,6 +87,36 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	}
 	
 	/**
+	 * Returns group item identified by its name.
+	 * 
+	 * @param string $sName Group name
+	 * 
+	 * @return \Aurora\Modules\Contacts\Classes\Group
+	 */
+	public function getGroupByName($sName, $iUserId)
+	{
+		$oGroup = null;
+		$aFilters = [
+			'$AND' => [
+				'Name' => [$sName, '='],
+				'IdUser' => [$iUserId, '=']
+			]
+		];
+		$aGroups = $this->oEavManager->getEntities(
+			$this->getModule()->getNamespace() . '\Classes\Group',
+			[],
+			0,
+			0,
+			$aFilters
+		);
+		if (count($aGroups) > 0)
+		{
+			$oGroup = $aGroups[0];
+		}
+		return $oGroup;
+	}
+
+	/**
 	 * Updates contact information. Using this method is required to finalize changes made to the contact object. 
 	 * 
 	 * @param \Aurora\Modules\Contacts\Classes\Contact $oContact  Contact object to be updated 

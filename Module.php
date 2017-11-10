@@ -449,7 +449,27 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		return $this->oApiContactsManager->getGroup($UUID);
 	}
-	
+
+	/**
+	 * Returns group item identified by its name.
+	 * @param string $sName Group name
+	 * @return \Aurora\Modules\Contacts\Classes\Group
+	 */
+	public function GetGroupByName($Name, $UserId = null)
+	{
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+
+		if (isset($UserId) && $UserId !==  \Aurora\System\Api::getAuthenticatedUserId())
+		{
+			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::SuperAdmin);
+		}
+		else
+		{
+			$UserId = \Aurora\System\Api::getAuthenticatedUserId();
+		}
+
+		return $this->oApiContactsManager->getGroupByName($Name, $UserId);
+	}
 	/**
 	 * @api {post} ?/Api/ GetContacts
 	 * @apiName GetContacts
@@ -1022,7 +1042,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $Group Parameters of group to create.
 	 * @return string|bool
 	 */
-	public function CreateGroup($Group)
+	public function CreateGroup($Group, $UserId = null)
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
@@ -1030,7 +1050,15 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$this->getNamespace() . '\Classes\Group',
 			$this->GetName()
 		);
-		$oGroup->IdUser = \Aurora\System\Api::getAuthenticatedUserId();
+		if (isset($UserId) && $UserId !==  \Aurora\System\Api::getAuthenticatedUserId())
+		{
+			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::SuperAdmin);
+			$oGroup->IdUser = (int) $UserId;
+		}
+		else
+		{
+			$oGroup->IdUser = \Aurora\System\Api::getAuthenticatedUserId();
+		}
 
 		$oGroup->populate($Group);
 
