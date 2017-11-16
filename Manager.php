@@ -237,20 +237,6 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	public function getContacts($iSortField = \Aurora\Modules\Contacts\Enums\SortField::Name, $iSortOrder = \Aurora\System\Enums\SortOrder::ASC,
 		$iOffset = 0, $iLimit = 20, $aFilters = array(), $sGroupUUID = '', $aContactUUIDs = array())
 	{
-		if (empty($aContactUUIDs) && !empty($sGroupUUID))
-		{
-			$aGroupContact = $this->getGroupContacts($sGroupUUID);
-			foreach ($aGroupContact as $oGroupContact)
-			{
-				$aContactUUIDs[] = $oGroupContact->ContactUUID;
-			}
-			
-			if (empty($aContactUUIDs))
-			{
-				return array();
-			}
-		}
-		
 		$sSortField = 'FullName';
 		switch ($iSortField)
 		{

@@ -546,6 +546,24 @@ class Module extends \Aurora\System\Module\AbstractModule
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		$aFilters = $this->prepareFilters($Filters);
+
+		if (!empty($GroupUUID))
+		{
+			$aGroupContact = $this->oApiContactsManager->getGroupContacts($GroupUUID);
+			foreach ($aGroupContact as $oGroupContact)
+			{
+				$aContactUUIDs[] = $oGroupContact->ContactUUID;
+			}
+			if (empty($aContactUUIDs))
+			{
+				$aContactUUIDs = array();
+			}
+			if (count($aContactUUIDs) > 0)
+			{
+				$aFilters['1$AND']['UUID'] = [$aContactUUIDs, 'IN'];
+				$aFilters['2$AND']['UUID'] = [$aContactUUIDs, 'IN'];
+			}
+		}
 		
 		if (!empty($Search))
 		{
@@ -555,6 +573,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				'BusinessEmail' => ['%'.$Search.'%', 'LIKE'],
 				'OtherEmail' => ['%'.$Search.'%', 'LIKE'],
 			];
+			
 			if (count($aFilters) > 0)
 			{
 				$aFilters = [
@@ -583,9 +602,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 				'$AND' => $aFilters
 			];
 		}
-
-		$iCount = $this->oApiContactsManager->getContactsCount($aFilters, $GroupUUID);
-		$aContacts = $this->oApiContactsManager->getContacts($SortField, $SortOrder, $Offset, $Limit, $aFilters, $GroupUUID);
+		
+		$iCount = $this->oApiContactsManager->getContactsCount($aFilters);
+		$aContacts = $this->oApiContactsManager->getContacts($SortField, $SortOrder, $Offset, $Limit, $aFilters);
 		
 		$aList = array();
 		if (is_array($aContacts))
