@@ -547,6 +547,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$aFilters = $this->prepareFilters($Filters);
 
+		$aContactUUIDs = array();
 		if (!empty($GroupUUID))
 		{
 			$aGroupContact = $this->oApiContactsManager->getGroupContacts($GroupUUID);
@@ -603,8 +604,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 			];
 		}
 		
-		$iCount = $this->oApiContactsManager->getContactsCount($aFilters);
-		$aContacts = $this->oApiContactsManager->getContacts($SortField, $SortOrder, $Offset, $Limit, $aFilters);
+		$aContacts = array();
+		$iCount = 0;
+		if ((!empty($GroupUUID) && count($aContactUUIDs) > 0) || empty($GroupUUID))
+		{
+			$iCount = $this->oApiContactsManager->getContactsCount($aFilters);
+			$aContacts = $this->oApiContactsManager->getContacts($SortField, $SortOrder, $Offset, $Limit, $aFilters);
+		}
 		
 		$aList = array();
 		if (is_array($aContacts))
