@@ -32,7 +32,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Mail::GetBodyStructureParts', array($this, 'onGetBodyStructureParts'));
 		$this->subscribeEvent('Mail::ExtendMessageData', array($this, 'onExtendMessageData'));
 		$this->subscribeEvent('MobileSync::GetInfo', array($this, 'onGetMobileSyncInfo'));
-		$this->subscribeEvent('AdminPanelWebclient::DeleteEntity::before', array($this, 'onBeforeDeleteEntity'));
+		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
 		
 		$this->extendObject(
 			'Aurora\Modules\Core\Classes\User', 
@@ -1701,20 +1701,17 @@ class Module extends \Aurora\System\Module\AbstractModule
 		);
 	}
 	
-	public function onBeforeDeleteEntity(&$aArgs, &$mResult)
+	public function onBeforeDeleteUser(&$aArgs, &$mResult)
 	{
-		if ($aArgs['Type'] === 'User')
+		$aGroups = $this->oApiContactsManager->getGroups($aArgs['UserId']);
+		if (count($aGroups) > 0)
 		{
-			$aGroups = $this->oApiContactsManager->getGroups($aArgs['Id']);
-			if (count($aGroups) > 0)
+			$aGroupUUIDs = [];
+			foreach ($aGroups as $oGroup)
 			{
-				$aGroupUUIDs = [];
-				foreach ($aGroups as $oGroup)
-				{
-					$aGroupUUIDs[] = $oGroup->UUID;
-				}
-				$this->oApiContactsManager->deleteGroups($aGroupUUIDs);
+				$aGroupUUIDs[] = $oGroup->UUID;
 			}
+			$this->oApiContactsManager->deleteGroups($aGroupUUIDs);
 		}
 	}
 	/***** private functions *****/
