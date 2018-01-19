@@ -1470,36 +1470,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 		return $aResponse;
 	}
 	
-	private function importVcf($iUserId, $sTempFilePath)
-	{
-		$aImportResult = array(
-			'ParsedCount' => 0,
-			'ImportedCount' => 0,
-		);
-		// You can either pass a readable stream, or a string.
-		$oHandler = fopen($sTempFilePath, 'r');
-		$oSplitter = new \Sabre\VObject\Splitter\VCard($oHandler);
-		$oContactsDecorator = Module::Decorator();
-		$oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
-		if ($oApiContactsManager)
-		{
-			while ($oVCard = $oSplitter->getNext())
-			{
-				$aContactData = Classes\VCard\Helper::GetContactDataFromVcard($oVCard);
-				$oContact = isset($aContactData['UUID']) ? $oApiContactsManager->getContact($aContactData['UUID']) : null;
-				$aImportResult['ParsedCount']++;
-				if (!isset($oContact) || empty($oContact))
-				{
-					if ($oContactsDecorator->CreateContact($aContactData, $iUserId))
-					{
-						$aImportResult['ImportedCount']++;
-					}
-				}
-			}
-		}
-		return $aImportResult;
-	}
-	
 //	public function GetGroupEvents($UUID)
 //	{
 //		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
@@ -1533,6 +1503,36 @@ class Module extends \Aurora\System\Module\AbstractModule
 	/***** public functions might be called with web API *****/
 	
 	/***** private functions *****/
+	private function importVcf($iUserId, $sTempFilePath)
+	{
+		$aImportResult = array(
+			'ParsedCount' => 0,
+			'ImportedCount' => 0,
+		);
+		// You can either pass a readable stream, or a string.
+		$oHandler = fopen($sTempFilePath, 'r');
+		$oSplitter = new \Sabre\VObject\Splitter\VCard($oHandler);
+		$oContactsDecorator = Module::Decorator();
+		$oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
+		if ($oApiContactsManager)
+		{
+			while ($oVCard = $oSplitter->getNext())
+			{
+				$aContactData = Classes\VCard\Helper::GetContactDataFromVcard($oVCard);
+				$oContact = isset($aContactData['UUID']) ? $oApiContactsManager->getContact($aContactData['UUID']) : null;
+				$aImportResult['ParsedCount']++;
+				if (!isset($oContact) || empty($oContact))
+				{
+					if ($oContactsDecorator->CreateContact($aContactData, $iUserId))
+					{
+						$aImportResult['ImportedCount']++;
+					}
+				}
+			}
+		}
+		return $aImportResult;
+	}
+	
 	private function prepareFilters($aRawFilters)
 	{
 		$aFilters = [];
