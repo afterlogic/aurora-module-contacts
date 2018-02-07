@@ -39,7 +39,7 @@ class Group extends \Aurora\System\EAV\Entity
 	protected $aStaticMap = array(
 		'IdUser'			=> array('int', 0, true),
 
-		'Name'				=> array('string', ''),
+		'Name'				=> array('string', '', true),
 		'IsOrganization'	=> array('bool', false),
 
 		'Email'				=> array('string', ''),

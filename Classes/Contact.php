@@ -71,7 +71,7 @@ class Contact extends \Aurora\System\EAV\Entity
 		'IdUser'			=> array('int', 0, true),
 		'IdTenant'			=> array('int', 0),
 		'Storage'			=> array('string', ''),
-		'FullName'			=> array('string', ''),
+		'FullName'			=> array('string', '', true),
 		'UseFriendlyName'	=> array('bool', true),
 		'PrimaryEmail'		=> array('int', \Aurora\Modules\Contacts\Enums\PrimaryEmail::Personal),
 		'PrimaryPhone'		=> array('int', \Aurora\Modules\Contacts\Enums\PrimaryPhone::Personal),
@@ -119,7 +119,7 @@ class Contact extends \Aurora\System\EAV\Entity
 
 		'ETag'				=> array('string', ''),
 		'Auto'				=> array('bool', false, true),
-		'Frequency'			=> array('int', 0),
+		'Frequency'			=> array('int', 0, true),
 	);
 	
 	public $GroupsContacts = array();
