@@ -1500,6 +1500,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		return is_array($aImportResult) && isset($aImportResult['ImportedCount']) && $aImportResult['ImportedCount'] > 0;
 	}	
+	
+	public function GetCTag($iUserId)
+	{
+		return $this->oApiContactsManager->getCTag($iUserId);
+	}	
 	/***** public functions might be called with web API *****/
 	
 	/***** private functions *****/
