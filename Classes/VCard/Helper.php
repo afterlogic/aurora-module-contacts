@@ -678,8 +678,8 @@ class Helper
 			'',
 			''
 		);
-		$oVCard->{'X-AFTERLOGIC-OFFICE'} = $oContact->BusinessOffice;
-		$oVCard->{'X-AFTERLOGIC-USE-FRIENDLY-NAME'} = $oContact->UseFriendlyName ? '1' : '0';
+		$oVCard->{'X-OFFICE'} = $oContact->BusinessOffice;
+		$oVCard->{'X-USE-FRIENDLY-NAME'} = $oContact->UseFriendlyName ? '1' : '0';
 		$oVCard->TITLE = $oContact->BusinessJobTitle;
 		$oVCard->NICKNAME = $oContact->NickName;
 		$oVCard->NOTE = $oContact->Notes;
