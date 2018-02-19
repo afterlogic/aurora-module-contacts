@@ -34,7 +34,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 */
 	public function getContact($sUUID)
 	{
-		$oContact = $this->oEavManager->getEntity($sUUID);
+		$oContact = $this->oEavManager->getEntity($sUUID, $this->getModule()->getNamespace() . '\Classes\Contact');
 		if ($oContact)
 		{
 			$oContact->GroupsContacts = $this->getGroupContacts(null, $sUUID);
@@ -83,7 +83,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 */
 	public function getGroup($sUUID)
 	{
-		return $this->oEavManager->getEntity($sUUID);
+		return $this->oEavManager->getEntity($sUUID, $this->getModule()->getNamespace() . '\Classes\Group');
 	}
 	
 	/**
