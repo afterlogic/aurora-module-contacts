@@ -211,14 +211,14 @@ class Helper
 			}
 		}
 
-		if (isset($oVCard->{'X-AFTERLOGIC-OFFICE'}))
+		if (isset($oVCard->{'X-OFFICE'}))
 		{
-			$aContact['BusinessOffice'] = (string) $oVCard->{'X-AFTERLOGIC-OFFICE'};
+			$aContact['BusinessOffice'] = (string) $oVCard->{'X-OFFICE'};
 		}
 
-		if (isset($oVCard->{'X-AFTERLOGIC-USE-FRIENDLY-NAME'}))
+		if (isset($oVCard->{'X-USE-FRIENDLY-NAME'}))
 		{
-			$aContact['UseFriendlyName'] = '1' === (string) $oVCard->{'X-AFTERLOGIC-USE-FRIENDLY-NAME'};
+			$aContact['UseFriendlyName'] = '1' === (string) $oVCard->{'X-USE-FRIENDLY-NAME'};
 		}
 		
 		return $aContact;
