@@ -624,6 +624,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 					'ViewEmail' => $oContact->ViewEmail,
 					'Storage' => $oContact->Storage,
 					'Frequency' => $oContact->Frequency,
+					'DateModified' => $oContact->DateModified,
 				);
 			}
 		}

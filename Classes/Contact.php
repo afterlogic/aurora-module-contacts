@@ -67,65 +67,71 @@ namespace Aurora\Modules\Contacts\Classes;
  */
 class Contact extends \Aurora\System\EAV\Entity
 {
-	protected $aStaticMap = array(
-		'IdUser'			=> array('int', 0, true),
-		'IdTenant'			=> array('int', 0),
-		'Storage'			=> array('string', ''),
-		'FullName'			=> array('string', '', true),
-		'UseFriendlyName'	=> array('bool', true),
-		'PrimaryEmail'		=> array('int', \Aurora\Modules\Contacts\Enums\PrimaryEmail::Personal),
-		'PrimaryPhone'		=> array('int', \Aurora\Modules\Contacts\Enums\PrimaryPhone::Personal),
-		'PrimaryAddress'	=> array('int', \Aurora\Modules\Contacts\Enums\PrimaryAddress::Personal),
-		'ViewEmail'			=> array('string', '', true),
-
-		'Title'				=> array('string', ''),
-		'FirstName'			=> array('string', ''),
-		'LastName'			=> array('string', ''),
-		'NickName'			=> array('string', ''),
-		'Skype'				=> array('string', ''),
-		'Facebook'			=> array('string', ''),
-
-		'PersonalEmail'		=> array('string', ''),
-		'PersonalAddress'	=> array('string', ''),
-		'PersonalCity'		=> array('string', ''),
-		'PersonalState'		=> array('string', ''),
-		'PersonalZip'		=> array('string', ''),
-		'PersonalCountry'	=> array('string', ''),
-		'PersonalWeb'		=> array('string', ''),
-		'PersonalFax'		=> array('string', ''),
-		'PersonalPhone'		=> array('string', ''),
-		'PersonalMobile'	=> array('string', ''),
-
-		'BusinessEmail'		=> array('string', ''),
-		'BusinessCompany'	=> array('string', ''),
-		'BusinessAddress'	=> array('string', ''),
-		'BusinessCity'		=> array('string', ''),
-		'BusinessState'		=> array('string', ''),
-		'BusinessZip'		=> array('string', ''),
-		'BusinessCountry'	=> array('string', ''),
-		'BusinessJobTitle'	=> array('string', ''),
-		'BusinessDepartment'=> array('string', ''),
-		'BusinessOffice'	=> array('string', ''),
-		'BusinessPhone'		=> array('string', ''),
-		'BusinessFax'		=> array('string', ''),
-		'BusinessWeb'		=> array('string', ''),
-
-		'OtherEmail'		=> array('string', ''),
-		'Notes'				=> array('string', ''),
-
-		'BirthDay'			=> array('int', 0),
-		'BirthMonth'		=> array('int', 0),
-		'BirthYear'			=> array('int', 0),
-
-		'ETag'				=> array('string', ''),
-		'Auto'				=> array('bool', false, true),
-		'Frequency'			=> array('int', 0, true),
-	);
-	
 	public $GroupsContacts = array();
 	
 	public $ExtendedInformation = array();
 
+	public function __construct($sModule)
+	{
+		parent::__construct($sModule);
+	
+		$this->aStaticMap = array(
+			'IdUser'			=> array('int', 0, true),
+			'IdTenant'			=> array('int', 0),
+			'Storage'			=> array('string', ''),
+			'FullName'			=> array('string', '', true),
+			'UseFriendlyName'	=> array('bool', true),
+			'PrimaryEmail'		=> array('int', \Aurora\Modules\Contacts\Enums\PrimaryEmail::Personal),
+			'PrimaryPhone'		=> array('int', \Aurora\Modules\Contacts\Enums\PrimaryPhone::Personal),
+			'PrimaryAddress'	=> array('int', \Aurora\Modules\Contacts\Enums\PrimaryAddress::Personal),
+			'ViewEmail'			=> array('string', '', true),
+
+			'Title'				=> array('string', ''),
+			'FirstName'			=> array('string', ''),
+			'LastName'			=> array('string', ''),
+			'NickName'			=> array('string', ''),
+			'Skype'				=> array('string', ''),
+			'Facebook'			=> array('string', ''),
+
+			'PersonalEmail'		=> array('string', ''),
+			'PersonalAddress'	=> array('string', ''),
+			'PersonalCity'		=> array('string', ''),
+			'PersonalState'		=> array('string', ''),
+			'PersonalZip'		=> array('string', ''),
+			'PersonalCountry'	=> array('string', ''),
+			'PersonalWeb'		=> array('string', ''),
+			'PersonalFax'		=> array('string', ''),
+			'PersonalPhone'		=> array('string', ''),
+			'PersonalMobile'	=> array('string', ''),
+
+			'BusinessEmail'		=> array('string', ''),
+			'BusinessCompany'	=> array('string', ''),
+			'BusinessAddress'	=> array('string', ''),
+			'BusinessCity'		=> array('string', ''),
+			'BusinessState'		=> array('string', ''),
+			'BusinessZip'		=> array('string', ''),
+			'BusinessCountry'	=> array('string', ''),
+			'BusinessJobTitle'	=> array('string', ''),
+			'BusinessDepartment'=> array('string', ''),
+			'BusinessOffice'	=> array('string', ''),
+			'BusinessPhone'		=> array('string', ''),
+			'BusinessFax'		=> array('string', ''),
+			'BusinessWeb'		=> array('string', ''),
+
+			'OtherEmail'		=> array('string', ''),
+			'Notes'				=> array('string', ''),
+
+			'BirthDay'			=> array('int', 0),
+			'BirthMonth'		=> array('int', 0),
+			'BirthYear'			=> array('int', 0),
+
+			'ETag'				=> array('string', ''),
+			'Auto'				=> array('bool', false, true),
+			'Frequency'			=> array('int', 0, true),
+			'DateModified'		=> array('datetime', null, true)
+		);
+	}
+	
 	/**
 	 * @param string $sKey
 	 * @param mixed $mValue

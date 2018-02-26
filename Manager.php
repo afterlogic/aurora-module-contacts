@@ -126,6 +126,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 */
 	public function updateContact($oContact)
 	{
+		$oContact->DateModified = date('Y-m-d H:i:s');
 		$res = $this->oEavManager->saveEntity($oContact);
 		if ($res)
 		{
