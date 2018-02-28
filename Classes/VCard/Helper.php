@@ -152,6 +152,11 @@ class Helper
 						}
 					}
 				}
+				else
+				{
+					$aContact['OtherEmail'] = (string) $oEmail;
+					$aContact['PrimaryEmail'] = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other;
+				}
 			}
 		}
 
