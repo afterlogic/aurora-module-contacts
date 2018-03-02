@@ -108,6 +108,14 @@ class Helper
 						$aContact['PersonalCountry'] = isset($aAdrs[6]) ? (string) $aAdrs[6] : '';
 					}
 				}
+				else
+				{
+					$aContact['PersonalAddress'] = isset($aAdrs[2]) ? (string) $aAdrs[2] : '';
+					$aContact['PersonalCity'] = isset($aAdrs[3]) ? (string) $aAdrs[3] : '';
+					$aContact['PersonalState'] = isset($aAdrs[4]) ? (string) $aAdrs[4] : '';
+					$aContact['PersonalZip'] = isset($aAdrs[5]) ? (string) $aAdrs[5] : '';
+					$aContact['PersonalCountry'] = isset($aAdrs[6]) ? (string) $aAdrs[6] : '';
+				}
 			}
 		}
 
@@ -176,6 +184,10 @@ class Helper
 						$aContact['BusinessWeb'] = (string) $oUrl;
 					}
 				}
+				else
+				{
+					$aContact['PersonalWeb'] = (string) $oUrl;
+				}
 			}
 		}
 
@@ -212,6 +224,10 @@ class Helper
 							$aContact['BusinessPhone'] = (string) $oTel;
 						}
 					}
+				}
+				else
+				{
+					$aContact['PersonalPhone'] = (string) $oTel;
 				}
 			}
 		}

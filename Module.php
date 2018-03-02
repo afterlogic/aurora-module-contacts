@@ -621,6 +621,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 					'UUID' => $oContact->UUID,
 					'IdUser' => $oContact->IdUser,
 					'FullName' => $oContact->FullName,
+					'FirstName' => $oContact->FirstName,
+					'LastName' => $oContact->LastName,
 					'ViewEmail' => $oContact->ViewEmail,
 					'Storage' => $oContact->Storage,
 					'Frequency' => $oContact->Frequency,
