@@ -73,8 +73,6 @@ class Contact extends \Aurora\System\EAV\Entity
 
 	public function __construct($sModule)
 	{
-		parent::__construct($sModule);
-	
 		$this->aStaticMap = array(
 			'IdUser'			=> array('int', 0, true),
 			'IdTenant'			=> array('int', 0),
@@ -130,6 +128,7 @@ class Contact extends \Aurora\System\EAV\Entity
 			'Frequency'			=> array('int', 0, true),
 			'DateModified'		=> array('datetime', null, true)
 		);
+		parent::__construct($sModule);
 	}
 	
 	/**
