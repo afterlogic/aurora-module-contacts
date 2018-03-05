@@ -1705,7 +1705,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			'PersonalContactsUrl' => $sDavServer.'/addressbooks/'.$sDavLogin.'/'.\Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME,
 			'CollectedAddressesUrl' => $sDavServer.'/addressbooks/'.$sDavLogin.'/'.\Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_NAME,
 			'SharedWithAllUrl' => $sDavServer.'/addressbooks/'.$sDavLogin.'/'.\Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME,
-			'GlobalAddressBookUrl' => $sDavServer.'/gab'
+			'TeamAddressBookUrl' => $sDavServer.'/gab'
 		);
 	}
 	
