@@ -1430,9 +1430,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$oApiFileCacheManager = new \Aurora\System\Managers\Filecache();
 			$sTempFileName = 'import-post-' . md5($UploadData['name'] . $UploadData['tmp_name']);
-			if ($oApiFileCacheManager->moveUploadedFile($oUser->UUID, $sTempFileName, $UploadData['tmp_name']))
+			if ($oApiFileCacheManager->moveUploadedFile($oUser->UUID, $sTempFileName, $UploadData['tmp_name'], '', $this->GetName()))
 			{
-				$sTempFilePath = $oApiFileCacheManager->generateFullFilePath($oUser->UUID, $sTempFileName);
+				$sTempFilePath = $oApiFileCacheManager->generateFullFilePath($oUser->UUID, $sTempFileName, '', $this->GetName());
 
 				$aImportResult = array();
 				
@@ -1458,7 +1458,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 					throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::IncorrectFileExtension);
 				}
 
-				$oApiFileCacheManager->clear($oUser->UUID, $sTempFileName);
+				$oApiFileCacheManager->clear($oUser->UUID, $sTempFileName, '', $this->GetName());
 			}
 			else
 			{
@@ -1498,7 +1498,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		$oApiFileCache = new \Aurora\System\Managers\Filecache();
 		
-		$sTempFilePath = $oApiFileCache->generateFullFilePath($oUser->UUID, $File);
+		$sTempFilePath = $oApiFileCache->generateFullFilePath($oUser->UUID, $File, '', $this->GetName());
 		$aImportResult = $this->importVcf($oUser->EntityId, $sTempFilePath);
 
 		return is_array($aImportResult) && isset($aImportResult['ImportedCount']) && $aImportResult['ImportedCount'] > 0;
@@ -1538,7 +1538,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				if ($oApiFileCache->isFileExists($sUUID, $sTempName, '', $this->GetName()))
 				{
 					$mResult = \Aurora\System\Utils::GetClientFileResponse(
-						$UserId, $FileName, $sTempName, $oApiFileCache->fileSize($sUUID, $sTempName, '', $this->GetName())
+						$this->GetName(), $UserId, $FileName, $sTempName, $oApiFileCache->fileSize($sUUID, $sTempName, '', $this->GetName())
 					);
 				}
 			}
@@ -1697,7 +1697,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				}
 
 				$sTemptFile = md5($sData).'.vcf';
-				if ($oApiFileCache && $oApiFileCache->put($oUser->UUID, $sTemptFile, $sData))
+				if ($oApiFileCache && $oApiFileCache->put($oUser->UUID, $sTemptFile, $sData, '', $this->GetName()))
 				{
 					$oVcard = \Aurora\Modules\Mail\Classes\Vcard::createInstance(\Aurora\System\Api::GetModule('Mail')->getNamespace() . '\Classes\Vcard', $this->GetName());
 
