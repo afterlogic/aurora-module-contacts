@@ -1534,11 +1534,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$sTempName = md5($sUUID.$UUID);
 				$oApiFileCache = new \Aurora\System\Managers\Filecache();
 
-				$oApiFileCache->put($sUUID, $sTempName, $sVCardData, '', $this->GetName());
-				if ($oApiFileCache->isFileExists($sUUID, $sTempName, '', $this->GetName()))
+				$oApiFileCache->put($sUUID, $sTempName, $sVCardData);
+				if ($oApiFileCache->isFileExists($sUUID, $sTempName))
 				{
 					$mResult = \Aurora\System\Utils::GetClientFileResponse(
-						$this->GetName(), $UserId, $FileName, $sTempName, $oApiFileCache->fileSize($sUUID, $sTempName, '', $this->GetName())
+						null, $UserId, $FileName, $sTempName, $oApiFileCache->fileSize($sUUID, $sTempName)
 					);
 				}
 			}
