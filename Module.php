@@ -766,17 +766,16 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $Emails List of emails of contacts to return.
 	 * @return array
 	 */
-	public function GetContactsByEmails($Emails)
+	public function GetContactsByEmails($Emails, $Filters = array())
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
-		$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		$aFilters = $this->prepareFilters($Filters);
 		
 		$aFilters = [
 			'$AND' => [
-				'IdUser' => [$oUser->EntityId, '='],
-				'ViewEmail' => [$Emails, 'IN'],
-				'Auto' => [false, '=']
+				'$OR' => $aFilters,
+				'ViewEmail' => [$Emails, 'IN']
 			]
 		];
 		
