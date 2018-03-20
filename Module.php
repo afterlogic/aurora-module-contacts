@@ -1657,6 +1657,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 					($oPart->ContentType() === 'text/vcard' || $oPart->ContentType() === 'text/x-vcard'))
 			{
 				$aResultParts[] = $oPart;
+				break;				
 			}
 		}
 	}
