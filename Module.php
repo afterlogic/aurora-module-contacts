@@ -772,12 +772,19 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		$aFilters = $this->prepareFilters($Filters);
 		
-		$aFilters = [
-			'$AND' => [
-				'$OR' => $aFilters,
-				'ViewEmail' => [$Emails, 'IN']
-			]
-		];
+		if (!empty($aFilters))
+		{
+			$aFilters = [
+				'$AND' => [
+					'$OR' => $aFilters,
+					'ViewEmail' => [$Emails, 'IN']
+				]
+			];
+		}
+		else
+		{
+			$aFilters['ViewEmail'] = [$Emails, 'IN'];
+		}
 		
 		$aContacts = $this->oApiContactsManager->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters, 0);
 		
