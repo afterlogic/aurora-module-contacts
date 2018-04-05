@@ -213,9 +213,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 			if ($oUser->Role === \Aurora\System\Enums\UserRole::SuperAdmin)
 			{
-				$oSettings =&\Aurora\System\Api::GetSettings();
-				$oSettings->SetConf('ContactsPerPage', $ContactsPerPage);
-				return $oSettings->Save();
+				$this->setConfig('ContactsPerPage', $ContactsPerPage);
+				return $this->saveModuleConfig();
 			}
 		}
 		
