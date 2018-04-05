@@ -686,7 +686,6 @@ class Helper
 	public static function UpdateVCardFromContact($oContact, &$oVCard, $bIsUpdate = false)
 	{
 		$oVCard->VERSION = '3.0';
-		$oVCard->PRODID = '-//Afterlogic//7.5.x//EN';
 
 		$oVCard->UID = $oContact->UUID;
 
