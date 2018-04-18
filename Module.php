@@ -1535,22 +1535,15 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($sVCardData)
 		{
 			$sUUID = \Aurora\System\Api::getUserUUIDById($UserId);
-			try
-			{
-				$sTempName = md5($sUUID.$UUID);
-				$oApiFileCache = new \Aurora\System\Managers\Filecache();
+			$sTempName = md5($sUUID.$UUID);
+			$oApiFileCache = new \Aurora\System\Managers\Filecache();
 
-				$oApiFileCache->put($sUUID, $sTempName, $sVCardData);
-				if ($oApiFileCache->isFileExists($sUUID, $sTempName))
-				{
-					$mResult = \Aurora\System\Utils::GetClientFileResponse(
-						null, $UserId, $FileName, $sTempName, $oApiFileCache->fileSize($sUUID, $sTempName)
-					);
-				}
-			}
-			catch (\Exception $oException)
+			$oApiFileCache->put($sUUID, $sTempName, $sVCardData);
+			if ($oApiFileCache->isFileExists($sUUID, $sTempName))
 			{
-				throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::MailServerError, $oException);
+				$mResult = \Aurora\System\Utils::GetClientFileResponse(
+					null, $UserId, $FileName, $sTempName, $oApiFileCache->fileSize($sUUID, $sTempName)
+				);
 			}
 		}
 		
