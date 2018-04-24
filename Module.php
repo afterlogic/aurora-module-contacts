@@ -1486,11 +1486,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 //		return [];
 //	}	
 	
-//	public function UpdateSharedContacts($UUIDs)
-//	{
-//		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-//		return true;
-//	}	
+	public function UpdateSharedContacts($UUIDs)
+	{
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		return true;
+	}	
 	
 	public function AddContactsFromFile($File)
 	{
