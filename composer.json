@@ -4,7 +4,7 @@
 	"require":{
 		"php":">=5.4.0",
 		"afterlogic/aurora-framework": "~0.8",
-		"sabre/dav": "3.1.*"
+		"sabre/dav": "3.2.*"
 	},
 	"extra": {
 		"installer-name": "Contacts"
