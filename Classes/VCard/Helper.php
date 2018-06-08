@@ -167,6 +167,21 @@ class Helper
 					$aContact['PrimaryEmail'] = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other;
 				}
 			}
+			if (empty($aContact['PrimaryEmail']))
+			{
+				if (!empty($aContact['BusinessEmail']))
+				{
+					$aContact['PrimaryEmail'] = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Business;
+				}
+				else if (!empty($aContact['PersonalEmail']))
+				{
+					$aContact['PrimaryEmail'] = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Personal;
+				}
+				else if (!empty($aContact['OtherEmail']))
+				{
+					$aContact['PrimaryEmail'] = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other;
+				}
+			}
 		}
 
 		if (isset($oVCard->URL))
