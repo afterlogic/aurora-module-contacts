@@ -561,8 +561,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 			if (count($aContactUUIDs) > 0)
 			{
-				$aFilters['1$AND']['UUID'] = [$aContactUUIDs, 'IN'];
-				$aFilters['2$AND']['UUID'] = [$aContactUUIDs, 'IN'];
+				foreach ($aFilters as $sKey => $mValue)
+				{
+					if (stripos($sKey, '$AND'))
+					{
+						$aFilters[$sKey]['UUID'] = [$aContactUUIDs, 'IN'];
+					}
+				}
 			}
 		}
 		
@@ -850,24 +855,24 @@ class Module extends \Aurora\System\Module\AbstractModule
 	/**
 	 * Creates contact with specified parameters.
 	 * @param array $Contact Parameters of contact to create.
-	 * @param int $iUserId Identifier of user that should own a new contact.
+	 * @param int $UserId Identifier of user that should own a new contact.
 	 * @return bool|string
 	 * @throws \Aurora\System\Exceptions\ApiException
 	 */
-	public function CreateContact($Contact, $iUserId = 0)
+	public function CreateContact($Contact, $UserId = 0)
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		
-		if ($iUserId > 0 && (!isset($oUser) || $iUserId !== $oUser->EntityId))
+		if ($UserId > 0 && (!isset($oUser) || $UserId !== $oUser->EntityId))
 		{
 			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::SuperAdmin);
 			
 			$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
 			if ($oCoreDecorator)
 			{
-				$oUser = $oCoreDecorator->GetUser($iUserId);
+				$oUser = $oCoreDecorator->GetUser($UserId);
 			}
 		}
 		
@@ -875,12 +880,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$this->getNamespace() . '\Classes\Contact',
 			$this->GetName()
 		);
-		$oContact->populate($Contact);
 		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 		{
 			$oContact->IdUser = $oUser->EntityId;
 			$oContact->IdTenant = $oUser->IdTenant;
 		}
+		$oContact->populate($Contact);
 
 		$mResult = $this->oApiContactsManager->createContact($oContact);
 		return $mResult && $oContact ? $oContact->UUID : false;

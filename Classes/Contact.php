@@ -183,7 +183,7 @@ class Contact extends \Aurora\System\EAV\Entity
 	 * Add group to contact.
 	 * @param string $sGroupUUID Group UUID.
 	 */
-	protected function addGroup($sGroupUUID)
+	public function addGroup($sGroupUUID)
 	{
 		if (!empty($sGroupUUID))
 		{
@@ -259,6 +259,15 @@ class Contact extends \Aurora\System\EAV\Entity
 	{
 		parent::populate($aContact);
 
+		if(!empty($aContact['UUID']))
+		{
+			$this->UUID = $aContact['UUID'];
+		}
+		else
+		{
+			$this->UUID = \Sabre\DAV\UUIDUtil::getUUID();
+		}
+		
 		$this->GroupsContacts = array();
 		if (isset($aContact['GroupUUIDs']) && is_array($aContact['GroupUUIDs']))
 		{

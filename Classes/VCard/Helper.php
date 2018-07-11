@@ -27,11 +27,12 @@ class Helper
 		{
 			$aContact['UUID'] = (string) $sUUID;
 		}
+/*
 		elseif (isset($oVCard->UID))
 		{
 			$aContact['UUID'] = (string) $oVCard->UID;
 		}
-
+*/
 		if (isset($oVCard->CATEGORIES))
 		{
 			$aGroupNames = $oVCard->CATEGORIES->getParts();
@@ -723,7 +724,19 @@ class Helper
 			$oContact->BusinessCompany,
 			$oContact->BusinessDepartment
 		);
-		$oVCard->CATEGORIES = $oContact->GroupUUIDs;
+		
+		$aCategories = [];
+		foreach ($oContact->GroupsContacts as $oGroupsContact)
+		{
+			$oContactsModule = \Aurora\System\Api::GetModuleDecorator('Contacts');
+			$oGroup = $oContactsModule->GetGroup($oGroupsContact->GroupUUID);
+			if ($oGroup)
+			{
+				$aCategories[] = $oGroup->Name;
+			}
+		}
+		unset($oVCard->CATEGORIES);
+		$oVCard->add('CATEGORIES')->setParts($aCategories);
 
 		self::UpdateVCardAddressesFromContact($oContact, $oVCard);
 		self::UpdateVCardEmailsFromContact($oContact, $oVCard);
