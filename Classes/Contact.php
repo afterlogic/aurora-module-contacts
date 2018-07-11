@@ -263,7 +263,7 @@ class Contact extends \Aurora\System\EAV\Entity
 		{
 			$this->UUID = $aContact['UUID'];
 		}
-		else
+		else if(empty($this->UUID))
 		{
 			$this->UUID = \Sabre\DAV\UUIDUtil::getUUID();
 		}

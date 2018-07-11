@@ -134,37 +134,46 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		$res = $this->oEavManager->saveEntity($oContact);
 		if ($res)
 		{
-			$aGroupContact = $this->getGroupContacts(null, $oContact->UUID);
-			
-			$compare_func = function($oGroupContact1, $oGroupContact2) {
-				if ($oGroupContact1->GroupUUID === $oGroupContact2->GroupUUID)
-				{
-					return 0;
-				}
-				if ($oGroupContact1->GroupUUID > $oGroupContact2->GroupUUID)
-				{
-					return -1;
-				}
-				return 1;
-			};
-
-			$aGroupContactToDelete = array_udiff($aGroupContact, $oContact->GroupsContacts, $compare_func);
-			$aGroupContactUUIDsToDelete = array_map(
-				function($oGroupContact) { 
-					return $oGroupContact->UUID; 
-				}, 
-				$aGroupContactToDelete
-			);
-			$this->oEavManager->deleteEntities($aGroupContactUUIDsToDelete);
-			
-			$aGroupContactToAdd = array_udiff($oContact->GroupsContacts, $aGroupContact, $compare_func);
-			foreach ($aGroupContactToAdd as $oGroupContact)
-			{
-				$this->oEavManager->saveEntity($oGroupContact);
-			}
+			$this->updateContactGroups($oContact);
 		}
 		
 		return $res;
+	}
+	
+	/**
+	 * 
+	 * @param type $oContact
+	 */
+	public function updateContactGroups($oContact)
+	{
+		$aGroupContact = $this->getGroupContacts(null, $oContact->UUID);
+
+		$compare_func = function($oGroupContact1, $oGroupContact2) {
+			if ($oGroupContact1->GroupUUID === $oGroupContact2->GroupUUID)
+			{
+				return 0;
+			}
+			if ($oGroupContact1->GroupUUID > $oGroupContact2->GroupUUID)
+			{
+				return -1;
+			}
+			return 1;
+		};
+
+		$aGroupContactToDelete = array_udiff($aGroupContact, $oContact->GroupsContacts, $compare_func);
+		$aGroupContactUUIDsToDelete = array_map(
+			function($oGroupContact) { 
+				return $oGroupContact->UUID; 
+			}, 
+			$aGroupContactToDelete
+		);
+		$this->oEavManager->deleteEntities($aGroupContactUUIDsToDelete);
+
+		$aGroupContactToAdd = array_udiff($oContact->GroupsContacts, $aGroupContact, $compare_func);
+		foreach ($aGroupContactToAdd as $oGroupContact)
+		{
+			$this->oEavManager->saveEntity($oGroupContact);
+		}		
 	}
 	
 	/**

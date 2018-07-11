@@ -33,14 +33,15 @@ class Helper
 			$aContact['UUID'] = (string) $oVCard->UID;
 		}
 */
+		$aGroupNames = [];
 		if (isset($oVCard->CATEGORIES))
 		{
-			$aGroupNames = $oVCard->CATEGORIES->getParts();
-			if (is_array($aGroupNames) && count($aGroupNames) > 0)
+			foreach ($oVCard->CATEGORIES as $sCategory)
 			{
-				$aContact['GroupNames'] = $aGroupNames;
+				$aGroupNames[] = (string) $sCategory;
 			}
 		}
+		$aContact['GroupNames'] = $aGroupNames;
 
 		$aContact['FullName'] = isset($oVCard->FN) ? (string) $oVCard->FN : '';
 
