@@ -283,6 +283,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$aFilters = $this->prepareFilters($Filters);
 		$aFilters = ['$OR' => $aFilters];
 		
+		
+		
 		$aContacts = $this->oApiContactsManager->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters, $GroupUUID, $ContactUUIDs);
 		
 		$sOutput = '';
@@ -298,6 +300,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 				case 'vcf':
 					foreach ($aContacts as $oContact)
 					{
+						$oContact->GroupsContacts = $this->oApiContactsManager->getGroupContacts(null, $oContact->UUID);
+					
 						$oVCard = new \Sabre\VObject\Component\VCard();
 						Classes\VCard\Helper::UpdateVCardFromContact($oContact, $oVCard);
 						$sOutput .= $oVCard->serialize();

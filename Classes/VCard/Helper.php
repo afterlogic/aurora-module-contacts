@@ -36,7 +36,8 @@ class Helper
 		$aGroupNames = [];
 		if (isset($oVCard->CATEGORIES))
 		{
-			foreach ($oVCard->CATEGORIES as $sCategory)
+			\Aurora\System\Api::LogObject($oVCard->CATEGORIES, \Aurora\System\Enums\LogLevel::Full, 'aaa-');
+			foreach ($oVCard->CATEGORIES->getParts() as $sCategory)
 			{
 				$aGroupNames[] = (string) $sCategory;
 			}
@@ -736,6 +737,7 @@ class Helper
 				$aCategories[] = $oGroup->Name;
 			}
 		}
+		
 		unset($oVCard->CATEGORIES);
 		$oVCard->add('CATEGORIES')->setParts($aCategories);
 
