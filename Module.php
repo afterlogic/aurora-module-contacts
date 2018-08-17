@@ -32,7 +32,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Mail::AfterUseEmails', array($this, 'onAfterUseEmails'));
 		$this->subscribeEvent('Mail::GetBodyStructureParts', array($this, 'onGetBodyStructureParts'));
 		$this->subscribeEvent('Mail::ExtendMessageData', array($this, 'onExtendMessageData'));
-		$this->subscribeEvent('MobileSync::GetInfo', array($this, 'onGetMobileSyncInfo'));
 		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
 		
 		$this->extendObject(
@@ -1725,40 +1724,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 		}
 	}	
-	
-    public function onGetMobileSyncInfo($aArgs, &$mResult)
-	{
-		$oDavModule = \Aurora\Modules\Dav\Module::Decorator();
-
-		$sDavLogin = $oDavModule->GetLogin();
-		$sDavServer = $oDavModule->GetServerUrl();
-
-		$mResult['Dav']['Contacts'] = [
-			[
-				'Name' => $this->i18N('LABEL_PERSONAL_CONTACTS'),
-				'Url' => $sDavServer.'/addressbooks/'.$sDavLogin.'/'.\Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME
-			],
-			[
-				'Name' => $this->i18N('LABEL_COLLECTED_ADDRESSES'),
-				'Url' => $sDavServer.'/addressbooks/'.$sDavLogin.'/'.\Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_NAME
-			],
-			[
-				'Name' => $this->i18N('LABEL_SHARED_ADDRESS_BOOK'),
-				'Url' => $sDavServer.'/addressbooks/'.$sDavLogin.'/'.\Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME
-			],
-			[
-				'Name' => $this->i18N('LABEL_GLOBAL_ADDRESS_BOOK'),
-				'Url' => $sDavServer.'/gab'
-			]
-		];
-		
-		$mResult['Dav']['Contacts'] = array(
-			'PersonalContactsUrl' => $sDavServer.'/addressbooks/'.$sDavLogin.'/'.\Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME,
-			'CollectedAddressesUrl' => $sDavServer.'/addressbooks/'.$sDavLogin.'/'.\Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_NAME,
-			'SharedWithAllUrl' => $sDavServer.'/addressbooks/'.$sDavLogin.'/'.\Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME,
-			'TeamAddressBookUrl' => $sDavServer.'/gab'
-		);
-	}
 	
 	public function onBeforeDeleteUser(&$aArgs, &$mResult)
 	{
