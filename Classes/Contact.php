@@ -165,15 +165,22 @@ class Contact extends \Aurora\System\EAV\Entity
 					{
 						$this->addGroup($aGroups[0]->UUID);
 					}
-					elseif (!empty($sGroupName))
-					{
-						$oGroup = new \Aurora\Modules\Contacts\Classes\Group();
-						$oGroup->IdUser = $this->IdUser;
-						$oGroup->Name = $sGroupName;
-
-						$oApiContactsManager->createGroup($oGroup);
-						$this->addGroup($oGroup->UUID);
-					}
+					
+					// Group shouldn't be created here.
+					// Very often after this populating contact will never be created.
+					// It can be used only for suggestion to create.
+//					elseif (!empty($sGroupName))
+//					{
+//						$oGroup = \Aurora\Modules\Contacts\Classes\Group::createInstance(
+//							'\Aurora\Modules\Contacts\Classes\Group',
+//							$this->GetModule()
+//						);
+//						$oGroup->IdUser = $this->IdUser;
+//						$oGroup->Name = $sGroupName;
+//						
+//						$oApiContactsManager->createGroup($oGroup);
+//						$this->addGroup($oGroup->UUID);
+//					}
 				}
 			}
 		}
@@ -229,10 +236,6 @@ class Contact extends \Aurora\System\EAV\Entity
 	 */
 	public function InitFromVCardStr($iUserId, $sData, $sUid = '')
 	{
-		$oVCard = \Sabre\VObject\Reader::read($sData, \Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES);
-		$aContactData = VCard\Helper::GetContactDataFromVcard($oVCard);
-		$this->populate($aContactData);
-		
 		$oUser = null;
 		$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
 		if ($oCoreDecorator)
@@ -240,7 +243,7 @@ class Contact extends \Aurora\System\EAV\Entity
 			$oUser = $oCoreDecorator->GetUser($iUserId);
 			if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 			{
-				$this->IdUser = $oUser->IdUser;
+				$this->IdUser = $oUser->EntityId;
 				$this->IdTenant = $oUser->IdTenant;
 			}
 		}
@@ -249,6 +252,11 @@ class Contact extends \Aurora\System\EAV\Entity
 		{
 			$this->UUID = $sUid;
 		}
+		
+		// IdUser shoud be filled before populating of contact.
+		$oVCard = \Sabre\VObject\Reader::read($sData, \Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES);
+		$aContactData = VCard\Helper::GetContactDataFromVcard($oVCard);
+		$this->populate($aContactData);
 	}
 	
 	/**
