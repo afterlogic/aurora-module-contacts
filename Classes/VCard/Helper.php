@@ -738,7 +738,10 @@ class Helper
 		}
 		
 		unset($oVCard->CATEGORIES);
-		$oVCard->add('CATEGORIES')->setParts($aCategories);
+		if (count($aCategories) > 0)
+		{
+			$oVCard->add('CATEGORIES')->setParts($aCategories);
+		}
 
 		self::UpdateVCardAddressesFromContact($oContact, $oVCard);
 		self::UpdateVCardEmailsFromContact($oContact, $oVCard);
