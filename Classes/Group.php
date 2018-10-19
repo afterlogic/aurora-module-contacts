@@ -73,20 +73,20 @@ class Group extends \Aurora\System\EAV\Entity
 		}
 	}
 
-	public function toResponseArray()
-	{
-		$aRes = parent::toResponseArray();
+	// public function toResponseArray()
+	// {
+	// 	$aRes = parent::toResponseArray();
 
-		$oContactsModule = \Aurora\System\Api::GetModule('Contacts');
-		if ($oContactsModule)
-		{
-			$aContacts = $oContactsModule->oApiContactsManager->getContacts(
-				\Aurora\Modules\Contacts\Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 299, [], $this->UUID
-			);
+	// 	$oContactsModule = \Aurora\System\Api::GetModule('Contacts');
+	// 	if ($oContactsModule)
+	// 	{
+	// 		$aContacts = $oContactsModule->oApiContactsManager->getContacts(
+	// 			\Aurora\Modules\Contacts\Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 299, [], $this->UUID
+	// 		);
 
-			$aRes['Contacts'] = \Aurora\System\Managers\Response::GetResponseObject($aContacts);
-		}
+	// 		$aRes['Contacts'] = \Aurora\System\Managers\Response::GetResponseObject($aContacts);
+	// 	}
 
-		return $aRes;
-	}
+	// 	return $aRes;
+	// }
 }
