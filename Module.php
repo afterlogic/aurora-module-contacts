@@ -546,6 +546,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function GetContacts($Storage = '', $Offset = 0, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array())
 	{
+		// $Storage is used by subscribers to prepare filters.
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		$aFilters = $this->prepareFilters($Filters);
@@ -1594,7 +1595,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		$aFilters = [];
 		
-		if (is_array($aRawFilters))
+		if (is_array($aRawFilters) && count($aRawFilters) > 0)
 		{
 			$iAndIndex = 1;
 			$iOrIndex = 1;
@@ -1622,6 +1623,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 					}
 				}
 			}
+		}
+		else
+		{
+			// It's forbidden to request contacts without any filters because in that case all contacts of all users will be returned.
+			// If filters are empty, there is no subscribers from modules that describe behaviour of contacts storages.
+			throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::InvalidInputParameter);
 		}
 		
 		return $aFilters;
