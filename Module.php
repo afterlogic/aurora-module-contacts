@@ -31,7 +31,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		$this->subscribeEvent('Mail::AfterUseEmails', array($this, 'onAfterUseEmails'));
 		$this->subscribeEvent('Mail::GetBodyStructureParts', array($this, 'onGetBodyStructureParts'));
-		$this->subscribeEvent('Mail::ExtendMessageData', array($this, 'onExtendMessageData'));
 		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
 		
 		$this->extendObject(
@@ -772,10 +771,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 	
 	/**
 	 * Returns list of contacts with specified emails.
+	 * @param string $Storage storage of contacts.
 	 * @param array $Emails List of emails of contacts to return.
 	 * @return array
 	 */
-	public function GetContactsByEmails($Emails, $Filters = array())
+	public function GetContactsByEmails($Storage, $Emails, $Filters = array())
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
@@ -889,7 +889,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$oContact->IdUser = $oUser->EntityId;
 			$oContact->IdTenant = $oUser->IdTenant;
 		}
-		$oContact->populate($Contact);
+		$oContact->populate($Contact, true);
 
 		$mResult = $this->oApiContactsManager->createContact($oContact);
 		return $mResult && $oContact ? $oContact->UUID : false;
@@ -963,7 +963,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oContact = $this->oApiContactsManager->getContact($Contact['UUID']);
 		if ($oContact)
 		{
-			$oContact->populate($Contact);
+			$oContact->populate($Contact, true);
 			return $this->oApiContactsManager->updateContact($oContact);
 		}
 		
@@ -1676,61 +1676,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 		}
 	}
-	
-	public function onExtendMessageData($aData, &$oMessage)
-	{
-		$oApiFileCache = new \Aurora\System\Managers\Filecache();
-		
-		$oUser = \Aurora\System\Api::getAuthenticatedUser();
-		
-		foreach ($aData as $aDataItem)
-		{
-			$oPart = $aDataItem['Part'];
-			$bVcard = $oPart instanceof \MailSo\Imap\BodyStructure && 
-					($oPart->ContentType() === 'text/vcard' || $oPart->ContentType() === 'text/x-vcard');
-			$sData = $aDataItem['Data'];
-			if ($bVcard && !empty($sData))
-			{
-				$oContact = \Aurora\Modules\Contacts\Classes\Contact::createInstance(
-					$this->getNamespace() . '\Classes\Contact',
-					$this->GetName()
-				);
-				$oContact->InitFromVCardStr($oUser->EntityId, $sData);
-
-				$oContact->UUID = '';
-
-				$bContactExists = false;
-				if (0 < strlen($oContact->ViewEmail))
-				{
-					$aLocalContacts = $this->GetContactsByEmails([$oContact->ViewEmail]);
-					$oLocalContact = count($aLocalContacts) > 0 ? $aLocalContacts[0] : null;
-					if ($oLocalContact)
-					{
-						$oContact->UUID = $oLocalContact->UUID;
-						$bContactExists = true;
-					}
-				}
-
-				$sTemptFile = md5($sData).'.vcf';
-				if ($oApiFileCache && $oApiFileCache->put($oUser->UUID, $sTemptFile, $sData, '', $this->GetName()))
-				{
-					$oVcard = \Aurora\Modules\Mail\Classes\Vcard::createInstance(\Aurora\System\Api::GetModule('Mail')->getNamespace() . '\Classes\Vcard', $this->GetName());
-
-					$oVcard->Uid = $oContact->UUID;
-					$oVcard->File = $sTemptFile;
-					$oVcard->Exists = !!$bContactExists;
-					$oVcard->Name = $oContact->FullName;
-					$oVcard->Email = $oContact->ViewEmail;
-
-					$oMessage->addExtend('VCARD', $oVcard);
-				}
-				else
-				{
-					\Aurora\System\Api::Log('Can\'t save temp file "'.$sTemptFile.'"', \Aurora\System\Enums\LogLevel::Error);
-				}					
-			}
-		}
-	}	
 	
 	public function onBeforeDeleteUser(&$aArgs, &$mResult)
 	{

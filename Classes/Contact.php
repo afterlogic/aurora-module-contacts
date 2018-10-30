@@ -152,6 +152,7 @@ class Contact extends \Aurora\System\EAV\Entity
 	 */
 	protected function addGroupsFromNames($aGroupNames)
 	{
+		$aNonExistingGroups = [];
 		if (is_array($aGroupNames) && count($aGroupNames) > 0)
 		{
 			$oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
@@ -169,21 +170,21 @@ class Contact extends \Aurora\System\EAV\Entity
 					// Group shouldn't be created here.
 					// Very often after this populating contact will never be created.
 					// It can be used only for suggestion to create.
-//					elseif (!empty($sGroupName))
-//					{
-//						$oGroup = \Aurora\Modules\Contacts\Classes\Group::createInstance(
-//							'\Aurora\Modules\Contacts\Classes\Group',
-//							$this->GetModule()
-//						);
-//						$oGroup->IdUser = $this->IdUser;
-//						$oGroup->Name = $sGroupName;
-//						
-//						$oApiContactsManager->createGroup($oGroup);
-//						$this->addGroup($oGroup->UUID);
-//					}
+					elseif (!empty($sGroupName))
+					{
+						$oGroup = \Aurora\Modules\Contacts\Classes\Group::createInstance(
+							'\Aurora\Modules\Contacts\Classes\Group',
+							$this->GetModule()
+						);
+						$oGroup->IdUser = $this->IdUser;
+						$oGroup->Name = $sGroupName;
+						$aNonExistingGroups[] = $oGroup;
+					}
 				}
 			}
 		}
+		
+		return $aNonExistingGroups;
 	}
 
 	/**
@@ -253,18 +254,23 @@ class Contact extends \Aurora\System\EAV\Entity
 			$this->UUID = $sUid;
 		}
 		
-		// IdUser shoud be filled before populating of contact.
-		$oVCard = \Sabre\VObject\Reader::read($sData, \Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES);
-		$aContactData = VCard\Helper::GetContactDataFromVcard($oVCard);
-		$this->populate($aContactData);
+		$this->populate(
+			VCard\Helper::GetContactDataFromVcard(
+				\Sabre\VObject\Reader::read(
+					$sData, 
+					\Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES
+				)
+			)
+		);
 	}
 	
 	/**
 	 * Populate contact with specified data.
 	 * @param array $aContact List of contact data.
 	 */
-	public function populate($aContact)
+	public function populate($aContact, $bCreateNonExistingGroups = false)
 	{
+		$aNonExistingGroups = [];
 		parent::populate($aContact);
 
 		if(!empty($aContact['UUID']))
@@ -287,10 +293,28 @@ class Contact extends \Aurora\System\EAV\Entity
 		
 		if (isset($aContact['GroupNames']))
 		{
-			$this->addGroupsFromNames($aContact['GroupNames']);
+			$aNonExistingGroups = $this->addGroupsFromNames($aContact['GroupNames']);
 		}
 		
 		$this->SetViewEmail();
+		if ($bCreateNonExistingGroups && is_array($aNonExistingGroups) && count($aNonExistingGroups) > 0)
+		{
+			$oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
+			$oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
+			if ($oApiContactsManager)
+			{
+				$oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
+				$oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
+				if ($oApiContactsManager)					
+				{
+					foreach($aNonExistingGroups as $oGroup)
+					{
+						$oApiContactsManager->createGroup($oGroup);
+						$this->addGroup($oGroup->UUID);
+					}
+				}
+			}
+		}
 	}
 	
 	/**
