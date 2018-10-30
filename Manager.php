@@ -249,7 +249,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 * @return array|bool
 	 */
 	public function getContacts($iSortField = \Aurora\Modules\Contacts\Enums\SortField::Name, $iSortOrder = \Aurora\System\Enums\SortOrder::ASC,
-		$iOffset = 0, $iLimit = 20, $aFilters = array(), $sGroupUUID = '', $aContactUUIDs = array())
+		$iOffset = 0, $iLimit = 20, $aFilters = array(), $sGroupUUID = '', $aContactUUIDs = array(), $aViewAttrs = array())
 	{
 		$sSortField = 'FullName';
 		switch ($iSortField)
@@ -261,8 +261,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 				$sSortField = 'Frequency';
 				break;
 		}
-		
-		$aViewAttrs = array();
+
 		$aOrderBy = array($sSortField);
 		return $this->oEavManager->getEntities(
 			$this->getModule()->getNamespace() . '\Classes\Contact',
