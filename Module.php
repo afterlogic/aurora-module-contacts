@@ -201,6 +201,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
+		$bResult = false;
+
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		if ($oUser)
 		{
@@ -213,11 +215,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 			if ($oUser->Role === \Aurora\System\Enums\UserRole::SuperAdmin)
 			{
 				$this->setConfig('ContactsPerPage', $ContactsPerPage);
-				return $this->saveModuleConfig();
+				$bResult = $this->saveModuleConfig();
 			}
 		}
 		
-		return false;
+		return $bResult;
 	}
 	
 	/**
