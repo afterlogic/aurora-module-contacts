@@ -33,11 +33,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Mail::GetBodyStructureParts', array($this, 'onGetBodyStructureParts'));
 		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
 		
-		$this->extendObject(
-			'Aurora\Modules\Core\Classes\User', 
-			array(
+		\Aurora\Modules\Core\Classes\User::extend(
+			self::GetName(),
+			[
 				'ContactsPerPage' => array('int', $this->getConfig('ContactsPerPage', 20)),
-			)
+			]
+
 		);
 	}
 	
@@ -126,9 +127,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		$ContactsPerPage = $this->getConfig('ContactsPerPage', 20);
-		if ($oUser && $oUser->Role === \Aurora\System\Enums\UserRole::NormalUser && isset($oUser->{$this->GetName().'::ContactsPerPage'}))
+		if ($oUser && $oUser->Role === \Aurora\System\Enums\UserRole::NormalUser && isset($oUser->{self::GetName().'::ContactsPerPage'}))
 		{
-			$ContactsPerPage = $oUser->{$this->GetName().'::ContactsPerPage'};
+			$ContactsPerPage = $oUser->{self::GetName().'::ContactsPerPage'};
 		}
 		
 		return array(
@@ -209,7 +210,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			if ($oUser->Role === \Aurora\System\Enums\UserRole::NormalUser)
 			{
 				$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
-				$oUser->{$this->GetName().'::ContactsPerPage'} = $ContactsPerPage;
+				$oUser->{self::GetName().'::ContactsPerPage'} = $ContactsPerPage;
 				return $oCoreDecorator->UpdateUserObject($oUser);
 			}
 			if ($oUser->Role === \Aurora\System\Enums\UserRole::SuperAdmin)
@@ -883,8 +884,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 		
 		$oContact = \Aurora\Modules\Contacts\Classes\Contact::createInstance(
-			$this->getNamespace() . '\Classes\Contact',
-			$this->GetName()
+			self::getNamespace() . '\Classes\Contact',
+			self::GetName()
 		);
 		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 		{
@@ -1092,8 +1093,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$oGroup = \Aurora\Modules\Contacts\Classes\Group::createInstance(
-			$this->getNamespace() . '\Classes\Group',
-			$this->GetName()
+			$this::getNamespace() . '\Classes\Group',
+			self::GetName()
 		);
 		if (isset($UserId) && $UserId !==  \Aurora\System\Api::getAuthenticatedUserId())
 		{
@@ -1447,9 +1448,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$oApiFileCacheManager = new \Aurora\System\Managers\Filecache();
 			$sTempFileName = 'import-post-' . md5($UploadData['name'] . $UploadData['tmp_name']);
-			if ($oApiFileCacheManager->moveUploadedFile($oUser->UUID, $sTempFileName, $UploadData['tmp_name'], '', $this->GetName()))
+			if ($oApiFileCacheManager->moveUploadedFile($oUser->UUID, $sTempFileName, $UploadData['tmp_name'], '', self::GetName()))
 			{
-				$sTempFilePath = $oApiFileCacheManager->generateFullFilePath($oUser->UUID, $sTempFileName, '', $this->GetName());
+				$sTempFilePath = $oApiFileCacheManager->generateFullFilePath($oUser->UUID, $sTempFileName, '', self::GetName());
 
 				$aImportResult = array();
 				
@@ -1475,7 +1476,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 					throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::IncorrectFileExtension);
 				}
 
-				$oApiFileCacheManager->clear($oUser->UUID, $sTempFileName, '', $this->GetName());
+				$oApiFileCacheManager->clear($oUser->UUID, $sTempFileName, '', self::GetName());
 			}
 			else
 			{
@@ -1515,7 +1516,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		$oApiFileCache = new \Aurora\System\Managers\Filecache();
 		
-		$sTempFilePath = $oApiFileCache->generateFullFilePath($oUser->UUID, $File, '', $this->GetName());
+		$sTempFilePath = $oApiFileCache->generateFullFilePath($oUser->UUID, $File, '', self::GetName());
 		$aImportResult = $this->importVcf($oUser->EntityId, $sTempFilePath);
 
 		return is_array($aImportResult) && isset($aImportResult['ImportedCount']) && $aImportResult['ImportedCount'] > 0;
