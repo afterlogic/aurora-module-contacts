@@ -38,7 +38,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 */
 	public function getContact($sUUID)
 	{
-		$oContact = $this->oEavManager->getEntity($sUUID, $this->getModule()::getNamespace() . '\Classes\Contact');
+		$oContact = $this->oEavManager->getEntity($sUUID, Module::getNamespace() . '\Classes\Contact');
 		if ($oContact)
 		{
 			$oContact->GroupsContacts = $this->getGroupContacts(null, $sUUID);
@@ -63,7 +63,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		);
 		$aOrderBy = array('FullName');
 		$aContacts = $this->oEavManager->getEntities(
-			$this->getModule()::getNamespace() . '\Classes\Contact',
+			Module::getNamespace() . '\Classes\Contact',
 			$aViewAttrs, 
 			0, 
 			0, 
@@ -87,7 +87,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 */
 	public function getGroup($sUUID)
 	{
-		return $this->oEavManager->getEntity($sUUID, $this->getModule()::getNamespace() . '\Classes\Group');
+		return $this->oEavManager->getEntity($sUUID, Module::getNamespace() . '\Classes\Group');
 	}
 	
 	/**
@@ -107,7 +107,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			]
 		];
 		$aGroups = $this->oEavManager->getEntities(
-			$this->getModule()::getNamespace() . '\Classes\Group',
+			Module::getNamespace() . '\Classes\Group',
 			[],
 			0,
 			0,
@@ -218,7 +218,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		}
 		
 		return $this->oEavManager->getEntitiesCount(
-			$this->getModule()::getNamespace() . '\Classes\Contact',
+			Module::getNamespace() . '\Classes\Contact',
 			$aFilters,
 			$aContactUUIDs
 		);
@@ -264,7 +264,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 
 		$aOrderBy = array($sSortField);
 		return $this->oEavManager->getEntities(
-			$this->getModule()::getNamespace() . '\Classes\Contact',
+			Module::getNamespace() . '\Classes\Contact',
 			$aViewAttrs, $iOffset, $iLimit, $aFilters, $aOrderBy, $iSortOrder, $aContactUUIDs);
 	}
 
@@ -289,7 +289,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		}
 		$aOrderBy = array('Name');
 		return $this->oEavManager->getEntities(
-			$this->getModule()::getNamespace() . '\Classes\Group',
+			Module::getNamespace() . '\Classes\Group',
 			$aViewAttrs, 0, 0, $aFilters, 'Name');
 	}
 
@@ -377,7 +377,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			$aFilters = array('ContactUUID' => $sContactUUID);
 		}
 		return $this->oEavManager->getEntities(
-			$this->getModule()::getNamespace() . '\Classes\GroupContact',
+			Modules::getNamespace() . '\Classes\GroupContact',
 			$aViewAttrs, 0, 0, $aFilters);
 	}
 	
@@ -430,8 +430,8 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			if (!in_array($sContactUUID, $aCurrContactUUIDs))
 			{
 				$oGroupContact = \Aurora\Modules\Contacts\Classes\GroupContact::createInstance(
-					$this->GetModule()::getNamespace() . '\Classes\GroupContact',
-					$this->GetModule()::GetName()
+					Module::getNamespace() . '\Classes\GroupContact',
+					Module::GetName()
 				);
 				$oGroupContact->GroupUUID = $sGroupUUID;
 				$oGroupContact->ContactUUID = $sContactUUID;
