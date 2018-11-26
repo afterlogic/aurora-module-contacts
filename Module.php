@@ -16,9 +16,19 @@ namespace Aurora\Modules\Contacts;
  */
 class Module extends \Aurora\System\Module\AbstractModule
 {
-	public $oApiContactsManager = null;
+	public $oManager = null;
 
 	protected $aImportExportFormats = ['csv', 'vcf'];
+
+	public function getManager()
+	{
+		if ($this->oManager === null)
+		{
+			$this->oManager = new Manager($this);
+		}
+
+		return $this->oManager;
+	}
 	
 	/**
 	 * Initializes Contacts Module.
@@ -27,8 +37,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function init() 
 	{
-		$this->oApiContactsManager = new Manager($this);
-		
 		$this->subscribeEvent('Mail::AfterUseEmails', array($this, 'onAfterUseEmails'));
 		$this->subscribeEvent('Mail::GetBodyStructureParts', array($this, 'onGetBodyStructureParts'));
 		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
@@ -38,7 +46,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 			[
 				'ContactsPerPage' => array('int', $this->getConfig('ContactsPerPage', 20)),
 			]
-
 		);
 	}
 	
@@ -49,7 +56,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function GetApiContactsManager()
 	{
-		return $this->oApiContactsManager;
+		return $this->getManager();
 	}
 	/***** public functions *****/
 	
@@ -286,7 +293,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		
 		
-		$aContacts = $this->oApiContactsManager->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters, $GroupUUID, $ContactUUIDs);
+		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters, $GroupUUID, $ContactUUIDs);
 		
 		$sOutput = '';
 		
@@ -301,7 +308,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				case 'vcf':
 					foreach ($aContacts as $oContact)
 					{
-						$oContact->GroupsContacts = $this->oApiContactsManager->getGroupContacts(null, $oContact->UUID);
+						$oContact->GroupsContacts = $this->getManager()->getGroupContacts(null, $oContact->UUID);
 					
 						$oVCard = new \Sabre\VObject\Component\VCard();
 						Classes\VCard\Helper::UpdateVCardFromContact($oContact, $oVCard);
@@ -377,7 +384,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		$iUserId = \Aurora\System\Api::getAuthenticatedUserId();
 		
-		return $this->oApiContactsManager->getGroups($iUserId);
+		return $this->getManager()->getGroups($iUserId);
 	}
 	
 	/**
@@ -452,7 +459,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
-		return $this->oApiContactsManager->getGroup($UUID);
+		return $this->getManager()->getGroup($UUID);
 	}
 
 	/**
@@ -473,7 +480,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$UserId = \Aurora\System\Api::getAuthenticatedUserId();
 		}
 
-		return $this->oApiContactsManager->getGroupByName($Name, $UserId);
+		return $this->getManager()->getGroupByName($Name, $UserId);
 	}
 	/**
 	 * @api {post} ?/Api/ GetContacts
@@ -556,7 +563,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$aContactUUIDs = array();
 		if (!empty($GroupUUID))
 		{
-			$aGroupContact = $this->oApiContactsManager->getGroupContacts($GroupUUID);
+			$aGroupContact = $this->getManager()->getGroupContacts($GroupUUID);
 			foreach ($aGroupContact as $oGroupContact)
 			{
 				$aContactUUIDs[] = $oGroupContact->ContactUUID;
@@ -619,8 +626,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$iCount = 0;
 		if ((!empty($GroupUUID) && count($aContactUUIDs) > 0) || empty($GroupUUID))
 		{
-			$iCount = $this->oApiContactsManager->getContactsCount($aFilters);
-			$aContacts = $this->oApiContactsManager->getContacts($SortField, $SortOrder, $Offset, $Limit, $aFilters);
+			$iCount = $this->getManager()->getContactsCount($aFilters);
+			$aContacts = $this->getManager()->getContacts($SortField, $SortOrder, $Offset, $Limit, $aFilters);
 		}
 		
 		$aList = array();
@@ -713,7 +720,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
-		return $this->oApiContactsManager->getContact($UUID);
+		return $this->getManager()->getContact($UUID);
 	}
 
 	/**
@@ -798,7 +805,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$aFilters['ViewEmail'] = [$Emails, 'IN'];
 		}
 		
-		$aContacts = $this->oApiContactsManager->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters, 0);
+		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters, 0);
 		
 		return $aContacts;
 	}	
@@ -884,7 +891,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 		
 		$oContact = \Aurora\Modules\Contacts\Classes\Contact::createInstance(
-			self::getNamespace() . '\Classes\Contact',
+			Classes\Contact::class,
 			self::GetName()
 		);
 		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
@@ -894,7 +901,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 		$oContact->populate($Contact, true);
 
-		$mResult = $this->oApiContactsManager->createContact($oContact);
+		$mResult = $this->getManager()->createContact($oContact);
 		return $mResult && $oContact ? $oContact->UUID : false;
 	}	
 	
@@ -963,11 +970,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
-		$oContact = $this->oApiContactsManager->getContact($Contact['UUID']);
+		$oContact = $this->getManager()->getContact($Contact['UUID']);
 		if ($oContact)
 		{
 			$oContact->populate($Contact, true);
-			return $this->oApiContactsManager->updateContact($oContact);
+			return $this->getManager()->updateContact($oContact);
 		}
 		
 		return false;
@@ -1030,7 +1037,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
-		return $this->oApiContactsManager->deleteContacts($UUIDs);
+		return $this->getManager()->deleteContacts($UUIDs);
 	}	
 	
 	/**
@@ -1093,7 +1100,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$oGroup = \Aurora\Modules\Contacts\Classes\Group::createInstance(
-			$this::getNamespace() . '\Classes\Group',
+			Classes\Group::class,
 			self::GetName()
 		);
 		if (isset($UserId) && $UserId !==  \Aurora\System\Api::getAuthenticatedUserId())
@@ -1108,7 +1115,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$oGroup->populate($Group);
 
-		$this->oApiContactsManager->createGroup($oGroup);
+		$this->getManager()->createGroup($oGroup);
 		return $oGroup ? $oGroup->UUID : false;
 	}	
 	
@@ -1171,11 +1178,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
-		$oGroup = $this->oApiContactsManager->getGroup($Group['UUID']);
+		$oGroup = $this->getManager()->getGroup($Group['UUID']);
 		if ($oGroup)
 		{
 			$oGroup->populate($Group);
-			return $this->oApiContactsManager->updateGroup($oGroup);
+			return $this->getManager()->updateGroup($oGroup);
 		}
 
 		return false;
@@ -1238,7 +1245,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
-		return $this->oApiContactsManager->deleteGroups([$UUID]);
+		return $this->getManager()->deleteGroups([$UUID]);
 	}
 	
 	/**
@@ -1302,7 +1309,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		if (is_array($ContactUUIDs) && !empty($ContactUUIDs))
 		{
-			return $this->oApiContactsManager->addContactsToGroup($GroupUUID, $ContactUUIDs);
+			return $this->getManager()->addContactsToGroup($GroupUUID, $ContactUUIDs);
 		}
 		
 		return true;
@@ -1369,7 +1376,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		if (is_array($ContactUUIDs) && !empty($ContactUUIDs))
 		{
-			return $this->oApiContactsManager->removeContactsFromGroup($GroupUUID, $ContactUUIDs);
+			return $this->getManager()->removeContactsFromGroup($GroupUUID, $ContactUUIDs);
 		}
 		
 		return true;
@@ -1524,7 +1531,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	
 	public function GetCTag($iUserId)
 	{
-		return $this->oApiContactsManager->getCTag($iUserId);
+		return $this->getManager()->getCTag($iUserId);
 	}	
 	
 	/**
@@ -1643,13 +1650,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$iUserId = \Aurora\System\Api::getAuthenticatedUserId();
 		foreach ($aAddresses as $sEmail => $sName)
 		{
-			$oContact = $this->oApiContactsManager->getContactByEmail($iUserId, $sEmail);
+			$oContact = $this->getManager()->getContactByEmail($iUserId, $sEmail);
 			if ($oContact)
 			{
 				if ($oContact->Frequency !== -1)
 				{
 					$oContact->Frequency = $oContact->Frequency + 1;
-					$this->oApiContactsManager->updateContact($oContact);
+					$this->getManager()->updateContact($oContact);
 				}
 			}
 			else
@@ -1682,7 +1689,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	
 	public function onBeforeDeleteUser(&$aArgs, &$mResult)
 	{
-		$aGroups = $this->oApiContactsManager->getGroups($aArgs['UserId']);
+		$aGroups = $this->getManager()->getGroups($aArgs['UserId']);
 		if (count($aGroups) > 0)
 		{
 			$aGroupUUIDs = [];
@@ -1690,7 +1697,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			{
 				$aGroupUUIDs[] = $oGroup->UUID;
 			}
-			$this->oApiContactsManager->deleteGroups($aGroupUUIDs);
+			$this->getManager()->deleteGroups($aGroupUUIDs);
 		}
 	}
 	/***** private functions *****/
