@@ -591,6 +591,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				'PersonalEmail' => ['%'.$Search.'%', 'LIKE'],
 				'BusinessEmail' => ['%'.$Search.'%', 'LIKE'],
 				'OtherEmail' => ['%'.$Search.'%', 'LIKE'],
+				'BusinessCompany' => ['%'.$Search.'%', 'LIKE']
 			];
 			
 			if (count($aFilters) > 0)
