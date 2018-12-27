@@ -269,6 +269,19 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	}
 
 	/**
+	 * Returns uid list of contacts. 
+
+	 * @param array $aFilters
+
+	 * 
+	 * @return array|bool
+	 */
+	public function getContactUids($aFilters = array())
+	{
+		return $this->oEavManager->getEntitiesUids(Classes\Contact::class, 0, 0, $aFilters);
+	}	
+
+	/**
 	 * Returns list of user's groups. 
 	 * 
 	 * @param int $iUserId User ID 
