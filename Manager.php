@@ -243,13 +243,13 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 * @param int $iOffset Ordinal number of the contact item the list stars with. Default value is **0**.
 	 * @param int $iLimit The upper limit for total number of contacts returned. Default value is **20**.
 	 * @param array $aFilters
-	 * @param string $sGroupUUID
 	 * @param array $aContactUUIDs
+	 * @param array $aViewAttrs
 	 * 
 	 * @return array|bool
 	 */
 	public function getContacts($iSortField = \Aurora\Modules\Contacts\Enums\SortField::Name, $iSortOrder = \Aurora\System\Enums\SortOrder::ASC,
-		$iOffset = 0, $iLimit = 20, $aFilters = array(), $sGroupUUID = '', $aContactUUIDs = array(), $aViewAttrs = array())
+		$iOffset = 0, $iLimit = 20, $aFilters = array(), $aContactUUIDs = array(), $aViewAttrs = array())
 	{
 		$sSortField = 'FullName';
 		switch ($iSortField)

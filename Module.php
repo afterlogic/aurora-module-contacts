@@ -288,12 +288,18 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
-		$aFilters = $this->prepareFilters($Filters);
-		$aFilters = ['$OR' => $aFilters];
+		$aFilters = ['$OR' => $this->prepareFilters($Filters)];
 		
+		if (empty($ContactUUIDs) && !empty($GroupUUID))
+		{
+			$aGroupContact = $this->getManager()->getGroupContacts($GroupUUID);
+			foreach ($aGroupContact as $oGroupContact)
+			{
+				$ContactUUIDs[] = $oGroupContact->ContactUUID;
+			}
+		}
 		
-		
-		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters, $GroupUUID, $ContactUUIDs);
+		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters, $ContactUUIDs);
 		
 		$sOutput = '';
 		
@@ -806,7 +812,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$aFilters['ViewEmail'] = [$Emails, 'IN'];
 		}
 		
-		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters, 0);
+		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters);
 		
 		return $aContacts;
 	}	
