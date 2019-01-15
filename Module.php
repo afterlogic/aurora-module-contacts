@@ -288,7 +288,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
-		$aFilters = ['$OR' => $this->prepareFilters($Filters)];
+		$aFilters = $this->prepareFilters($Filters);
 		
 		if (empty($ContactUUIDs) && !empty($GroupUUID))
 		{
@@ -297,7 +297,23 @@ class Module extends \Aurora\System\Module\AbstractModule
 			{
 				$ContactUUIDs[] = $oGroupContact->ContactUUID;
 			}
+			if (empty($ContactUUIDs))
+			{
+				$ContactUUIDs = array();
+			}
 		}
+		if (count($ContactUUIDs) > 0)
+		{
+			foreach ($aFilters as $sKey => $mValue)
+			{
+				if (stripos($sKey, '$AND'))
+				{
+					$aFilters[$sKey]['UUID'] = [$ContactUUIDs, 'IN'];
+				}
+			}
+		}
+		
+		$aFilters = ['$OR' => $aFilters];
 		
 		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters, $ContactUUIDs);
 		
