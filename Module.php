@@ -315,7 +315,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		$aFilters = ['$OR' => $aFilters];
 		
-		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters, $ContactUUIDs);
+		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters);
 		
 		$sOutput = '';
 		
