@@ -1546,7 +1546,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		$oApiFileCache = new \Aurora\System\Managers\Filecache();
 		
-		$sTempFilePath = $oApiFileCache->generateFullFilePath($oUser->UUID, $File, '', self::GetName());
+		$sTempFilePath = $oApiFileCache->generateFullFilePath($oUser->UUID, $File); // Temp files with access from another module should be stored in System folder
 		$aImportResult = $this->importVcf($oUser->EntityId, $sTempFilePath);
 
 		return is_array($aImportResult) && isset($aImportResult['ImportedCount']) && $aImportResult['ImportedCount'] > 0;
