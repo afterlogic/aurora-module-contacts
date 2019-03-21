@@ -299,7 +299,6 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		{
 			$aFilters = array('IdUser' => array($iUserId, '='));
 		}
-		$aOrderBy = array('Name');
 		return $this->oEavManager->getEntities(
 			Classes\Group::class,
 			$aViewAttrs, 0, 0, $aFilters, 'Name');
@@ -396,7 +395,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	/**
 	 * Deletes specific groups from address book.
 	 * 
-	 * @param array $aGroupUUIDs array of strings - groups identificators.
+	 * @param array $aGroupUUIDs array of strings - groups identifiers.
 	 * 
 	 * @return bool
 	 */
@@ -410,7 +409,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			$aGroupContact = $this->getGroupContacts($sGroupUUID);
 			foreach ($aGroupContact as $oGroupContact)
 			{
-				$aEntitiesUUIDs[] = $oGroupContact->sContactUUID;
+				$aEntitiesUUIDs[] = $oGroupContact->UUID;
 			}
 		}
 		
