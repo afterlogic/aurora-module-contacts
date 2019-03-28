@@ -118,7 +118,7 @@ class Contact extends \Aurora\System\EAV\Entity
 			'BusinessWeb'		=> array('string', ''),
 
 			'OtherEmail'		=> array('string', ''),
-			'Notes'				=> array('string', ''),
+			'Notes'				=> array('text', ''),
 
 			'BirthDay'			=> array('int', 0),
 			'BirthMonth'		=> array('int', 0),
