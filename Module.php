@@ -40,6 +40,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Mail::AfterUseEmails', array($this, 'onAfterUseEmails'));
 		$this->subscribeEvent('Mail::GetBodyStructureParts', array($this, 'onGetBodyStructureParts'));
 		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
+		$this->subscribeEvent('Core::CreateTables::after', array($this, 'onAfterCreateTables'));
 		
 		\Aurora\Modules\Core\Classes\User::extend(
 			self::GetName(),
@@ -1723,5 +1724,16 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$this->getManager()->deleteGroups($aGroupUUIDs);
 		}
 	}
+
+	/**
+	 * 
+	 */
+	public function onAfterCreateTables(&$aData, &$mResult)
+	{
+		$sFilePath = dirname(__FILE__) . '/Sql/update_contact_notes_field_type.sql';
+		$bResult = \Aurora\System\Managers\Db::getInstance()->executeSqlFile($sFilePath);
+
+		return $bResult;
+	}	
 	/***** private functions *****/
 }
