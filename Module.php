@@ -333,9 +333,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 					{
 						$oContact->GroupsContacts = $this->getManager()->getGroupContacts(null, $oContact->UUID);
 					
-						$oVCard = new \Sabre\VObject\Component\VCard();
-						Classes\VCard\Helper::UpdateVCardFromContact($oContact, $oVCard);
-						$sOutput .= $oVCard->serialize();
+						$sOutput .= self::Decorator()->GetContactAsVCF($oContact);
 					}
 					break;
 			}
@@ -350,6 +348,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 		
 		echo $sOutput;
+	}
+
+	public function GetContactAsVCF($Contact)
+	{
+		$oVCard = new \Sabre\VObject\Component\VCard();
+		Classes\VCard\Helper::UpdateVCardFromContact($Contact, $oVCard);
+		return $oVCard->serialize();
 	}
 	
 	/**
