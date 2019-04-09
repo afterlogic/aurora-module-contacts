@@ -1615,6 +1615,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			while ($oVCard = $oSplitter->getNext())
 			{
+				set_time_limit(30);
+				
 				$aContactData = Classes\VCard\Helper::GetContactDataFromVcard($oVCard);
 				$oContact = isset($aContactData['UUID']) ? $oApiContactsManager->getContact($aContactData['UUID']) : null;
 				$aImportResult['ParsedCount']++;
