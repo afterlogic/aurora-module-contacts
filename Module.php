@@ -1737,10 +1737,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function onAfterCreateTables(&$aData, &$mResult)
 	{
-		$sFilePath = dirname(__FILE__) . '/Sql/update_contact_notes_field_type.sql';
-		$bResult = \Aurora\System\Managers\Db::getInstance()->executeSqlFile($sFilePath);
-
-		return $bResult;
+		\Aurora\System\Managers\Db::getInstance()->executeSqlFile(
+			dirname(__FILE__) . '/Sql/update_contact_notes_field_type.sql'
+		);
 	}	
 	/***** private functions *****/
 }
