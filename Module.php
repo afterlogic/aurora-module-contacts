@@ -581,7 +581,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $Filters Other conditions for obtaining contacts list.
 	 * @return array
 	 */
-	public function GetContacts($Storage = '', $Offset = 0, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array())
+	public function GetContacts($Storage = '', $Offset = 0, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array(), $WithGroups = false)
 	{
 		// $Storage is used by subscribers to prepare filters.
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
@@ -589,6 +589,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$aFilters = $this->prepareFilters($Filters);
 
 		$aContactUUIDs = array();
+		$aGroupUsersList = [];
 		if (!empty($GroupUUID))
 		{
 			$aGroupContact = $this->getManager()->getGroupContacts($GroupUUID);
@@ -637,6 +638,43 @@ class Module extends \Aurora\System\Module\AbstractModule
 					'$OR' => $aSearchFilters
 				];
 			}
+			if ($WithGroups)
+			{
+			$oUser = \Aurora\System\Api::getAuthenticatedUser();
+				if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+				{
+					$aGroups = $this->getManager()->getGroups($oUser->EntityId, ['Name' => ['%' . $Search . '%', 'LIKE']]);
+					if ($aGroups)
+					{
+						foreach ($aGroups as $oGroup)
+						{
+							$aGroupContactsEmails = [];
+							$aGroupContacts = $this->getManager()->getGroupContacts($oGroup->UUID);
+
+							foreach ($aGroupContacts as $oGroupContact)
+							{
+								$oContact = $this->getManager()->getContact($oGroupContact->ContactUUID);
+								if ($oContact)
+								{
+									$aGroupContactsEmails[] = $oContact->FullName ? "\"{$oContact->FullName}\" <{$oContact->ViewEmail}>" : $oContact->ViewEmail;
+								}
+							}
+							$aGroupUsersList[] = [
+								'UUID' => $oGroup->UUID,
+								'IdUser' => $oGroup->IdUser,
+								'FullName' => $oGroup->Name,
+								'FirstName' => '',
+								'LastName' => '',
+								'ViewEmail' => implode(', ', $aGroupContactsEmails),
+								'Storage' => '',
+								'Frequency' => 0,
+								'DateModified' => '',
+								'IsGroup' => true,
+							];
+						}
+					}
+				}
+			}
 		}
 		elseif (count($aFilters) > 1)
 		{
@@ -678,6 +716,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 		}
 
+		$aList = array_merge($aList, $aGroupUsersList);
 		return array(
 			'ContactCount' => $iCount,
 			'List' => \Aurora\System\Managers\Response::GetResponseObject($aList)
