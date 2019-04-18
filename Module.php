@@ -957,7 +957,29 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$oUser = $oCoreDecorator->GetUser($UserId);
 			}
 		}
-		
+		//if user already have autocreated contact with the same email
+		//remember contact's Frequency and remove it
+		$Frequency = 0;
+		$aFilters = [
+			'$AND' => [
+				'ViewEmail' => [$Contact['PersonalEmail'], '='],
+				'IdUser' => [$UserId, '='],
+				'Auto' => [true, '='],
+				'Storage' => 'personal'
+			]
+		];
+		$oAutocreatedContacts = $this->getManager()->getContacts(
+			\Aurora\Modules\Contacts\Enums\SortField::Name,
+			\Aurora\System\Enums\SortOrder::ASC,
+			0,
+			1,
+			$aFilters
+		);
+		if (is_array($oAutocreatedContacts) && isset($oAutocreatedContacts[0]))
+		{
+			$Frequency = $oAutocreatedContacts[0]->Frequency;
+			$this->getManager()->deleteContacts([$oAutocreatedContacts[0]->UUID]);
+		}
 		$oContact = \Aurora\Modules\Contacts\Classes\Contact::createInstance(
 			Classes\Contact::class,
 			self::GetName()
@@ -968,7 +990,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$oContact->IdTenant = $oUser->IdTenant;
 		}
 		$oContact->populate($Contact, true);
-
+		$oContact->Frequency = $Frequency;
 		$mResult = $this->getManager()->createContact($oContact);
 		return $mResult && $oContact ? $oContact->UUID : false;
 	}	
