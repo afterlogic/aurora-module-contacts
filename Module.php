@@ -579,9 +579,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param string $Search Search string.
 	 * @param string $GroupUUID UUID of group that should contain all returned contacts.
 	 * @param array $Filters Other conditions for obtaining contacts list.
+	 * @param bool $WithGroups Indicates whether contact groups should be included in the contact list
+	 * @param bool $WithoutTeamContactsDuplicates Do not show a contact from the global address book if the contact with the same email address already exists in personal address book
 	 * @return array
 	 */
-	public function GetContacts($Storage = '', $Offset = 0, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array(), $WithGroups = false)
+	public function GetContacts($Storage = '', $Offset = 0, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array(), $WithGroups = false, $WithoutTeamContactsDuplicates = false)
 	{
 		// $Storage is used by subscribers to prepare filters.
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
@@ -640,7 +642,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 			if ($WithGroups)
 			{
-			$oUser = \Aurora\System\Api::getAuthenticatedUser();
+				$oUser = \Aurora\System\Api::getAuthenticatedUser();
 				if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 				{
 					$aGroups = $this->getManager()->getGroups($oUser->EntityId, ['Name' => ['%' . $Search . '%', 'LIKE']]);
@@ -696,7 +698,23 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$iCount = $this->getManager()->getContactsCount($aFilters);
 			$aContacts = $this->getManager()->getContacts($SortField, $SortOrder, $Offset, $Limit, $aFilters);
 		}
-		
+		if ($Storage === 'all' && $WithoutTeamContactsDuplicates)
+		{
+			$aPersonalContactEmails = array_map(function($oContact) {
+				if ($oContact->Storage === 'personal')
+				{
+					return $oContact->ViewEmail;
+				}
+			}, $aContacts);
+			$aUniquePersonalContactEmails = array_unique(array_diff($aPersonalContactEmails, [null]));
+			foreach ($aContacts as $key => $oContact)
+			{
+				if ($oContact->Storage === 'team' && in_array($oContact->ViewEmail, $aUniquePersonalContactEmails))
+				{
+					unset($aContacts[$key]);
+				}
+			}
+		}
 		$aList = array();
 		if (is_array($aContacts))
 		{
