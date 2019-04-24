@@ -804,9 +804,27 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function GetContact($UUID)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		$mResult = false;
+
+		$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+		{
+			//only owner or superadmin can access the contact
+			$oContact = $this->getManager()->getContact($UUID);
+			if ($oContact instanceof \Aurora\Modules\Contacts\Classes\Contact
+				&& $oUser->Role !== \Aurora\System\Enums\UserRole::SuperAdmin
+				&& $oUser->EntityId !== $oContact->IdUser
+			)
+			{
+				$mResult = false;
+			}
+			else
+			{
+				$mResult = $oContact;
+			}
+		}
 		
-		return $this->getManager()->getContact($UUID);
+		return $mResult;
 	}
 
 	/**
