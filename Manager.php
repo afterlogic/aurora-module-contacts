@@ -7,6 +7,8 @@
 
 namespace Aurora\Modules\Contacts;
 
+use Aurora\Modules\Contacts\Classes\CTag;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -131,10 +133,12 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	public function updateContact($oContact)
 	{
 		$oContact->DateModified = date('Y-m-d H:i:s');
+		$oContact->calculateETag();
 		$res = $this->oEavManager->saveEntity($oContact);
 		if ($res)
 		{
 			$this->updateContactGroups($oContact);
+			$this->updateCTag($oContact->IdUser, $oContact->Storage);
 		}
 		
 		return $res;
@@ -314,10 +318,13 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	public function createContact($oContact)
 	{
 		$oContact->DateModified = date('Y-m-d H:i:s');
+		$oContact->calculateETag();
 		$res = $this->oEavManager->saveEntity($oContact);
 		
 		if ($res)
 		{
+			$this->updateCTag($oContact->IdUser, $oContact->Storage);
+
 			foreach ($oContact->GroupsContacts as $oGroupContact)
 			{
 				$oGroupContact->ContactUUID = $oContact->UUID;
@@ -358,7 +365,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 * 
 	 * @return bool
 	 */
-	public function deleteContacts($aContactUUIDs)
+	public function deleteContacts($iIdUser, $sStorage, $aContactUUIDs)
 	{
 		$aEntitiesUUIDs = [];
 		
@@ -372,6 +379,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			}
 		}
 		
+		$this->updateCTag($iIdUser, $sStorage);
 		return $this->oEavManager->deleteEntities($aEntitiesUUIDs);
 	}
 
@@ -475,5 +483,38 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		}
 		
 		return $this->oEavManager->deleteEntities($aIdEntitiesToDelete);
+	}
+
+	public function getCTag($iUserId, $Storage)
+	{
+		$mResult = new Classes\CTag();
+		$mResult->UserId = $iUserId;
+		$mResult->Storage = $Storage;
+
+		$aFilters = [
+			'$AND' => [
+				'Storage' => [$Storage, '='],
+				'UserId' => [$iUserId, '=']
+			]
+		];
+		$aEntities = $this->oEavManager->getEntities(
+			Classes\CTag::class,
+			[], 0, 0, $aFilters
+		);
+
+		if (is_array($aEntities) && count($aEntities) > 0)
+		{
+			$mResult = $aEntities[0];
+		}
+
+		return $mResult;
+	}	
+
+	public function updateCTag($iUserId, $Storage)
+	{
+		$oCTagObject = $this->getCTag($iUserId, $Storage);
+		$oCTagObject->CTag = $oCTagObject->CTag + 1;
+
+		$this->oEavManager->saveEntity($oCTagObject);
 	}
 }

@@ -323,6 +323,8 @@ class Contact extends \Aurora\System\EAV\Entity
 	 */
 	public function toResponseArray()
 	{
+		$this->calculateETag();
+
 		$aRes = parent::toResponseArray();
 		
 		$aGroupUUIDs = array();
@@ -338,5 +340,13 @@ class Contact extends \Aurora\System\EAV\Entity
 		}
 		
 		return $aRes;
+	}
+
+	public function calculateETag()
+	{
+		if (empty($this->ETag))
+		{
+			$this->ETag = \md5(\serialize($this));
+		}
 	}
 }

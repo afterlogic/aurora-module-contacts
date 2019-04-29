@@ -730,6 +730,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 					'Storage' => $oContact->Storage,
 					'Frequency' => $oContact->Frequency,
 					'DateModified' => $oContact->DateModified,
+					'ETag' => $oContact->ETag,
 				);
 			}
 		}
@@ -913,6 +914,55 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		return $aContacts;
 	}	
+
+	/**
+	 * Returns list of contacts with specified uids.
+	 * @param string $Storage storage of contacts.
+	 * @param array $Uids List of uids of contacts to return.
+	 * @return array
+	 */
+	public function GetContactsByUids($Storage, $Uids, $Filters = array())
+	{
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		
+		$aFilters['UUID'] = [$Uids, 'IN'];
+		
+		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters);
+		
+		return $aContacts;
+	}		
+
+	/**
+	 * Returns list of contacts with specified emails.
+	 * @param string $Storage storage of contacts.
+	 * @param array $Uids List of emails of contacts to return.
+	 * @return array
+	 */
+	public function GetContactsInfo($Storage)
+	{
+		$aResult = [
+			'CTag' => $this->GetCTag($Storage)
+		];
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		
+		$aContacts =\Aurora\System\Managers\Eav::getInstance()->getEntities(
+			Classes\Contact::class,
+			['UUID', 'ETag'],
+			0,
+			0,
+			['Storage' => [$Storage, '=']]
+		);
+
+		foreach ($aContacts as $oContact)
+		{
+			$aResult['Info'][] = [
+				'UUID' => $oContact->UUID,
+				'ETag' => $oContact->ETag
+			];
+		}
+		
+		return $aResult;
+	}		
 	
 	/**
 	 * @api {post} ?/Api/ CreateContact
@@ -1008,7 +1058,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		$oContact->Frequency = $this->getAutocreatedContactFrequencyAndDeleteIt($UserId, $oContact->ViewEmail);
 		$mResult = $this->getManager()->createContact($oContact);
-		return $mResult && $oContact ? $oContact->UUID : false;
+		return $mResult && $oContact ? ['UUID' => $oContact->UUID, 'ETag' => $oContact->ETag] : false;
 	}
 	
 	/**
@@ -1020,12 +1070,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 	private function getAutocreatedContactFrequencyAndDeleteIt($UserId, $sViewEmail)
 	{
 		$iFrequency = 0;
+		$sStorage = 'personal';
 		$aFilters = [
 			'$AND' => [
 				'ViewEmail' => [$sViewEmail, '='],
 				'IdUser' => [$UserId, '='],
 				'Auto' => [true, '='],
-				'Storage' => 'personal'
+				'Storage' => $sStorage
 			]
 		];
 		$oAutocreatedContacts = $this->getManager()->getContacts(
@@ -1038,7 +1089,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if (is_array($oAutocreatedContacts) && isset($oAutocreatedContacts[0]))
 		{
 			$iFrequency = $oAutocreatedContacts[0]->Frequency;
-			$this->getManager()->deleteContacts([$oAutocreatedContacts[0]->UUID]);
+			$this->getManager()->deleteContacts($UserId, $sStorage, [$oAutocreatedContacts[0]->UUID]);
 		}
 		return $iFrequency;
 	}
@@ -1112,7 +1163,17 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($oContact)
 		{
 			$oContact->populate($Contact, true);
-			return $this->getManager()->updateContact($oContact);
+			if ($this->getManager()->updateContact($oContact))
+			{
+				return [
+					'UUID' => $oContact->UUID, 
+					'ETag' => $oContact->ETag
+				];
+			}
+			else
+			{
+				return false;
+			}
 		}
 		
 		return false;
@@ -1171,11 +1232,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $UUIDs Array of strings - UUIDs of contacts to delete.
 	 * @return bool
 	 */
-	public function DeleteContacts($UUIDs)
+	public function DeleteContacts($Storage, $UUIDs)
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+
+		$iUserId = \Aurora\Api::getAuthenticatedUserId();
 		
-		return $this->getManager()->deleteContacts($UUIDs);
+		return $this->getManager()->deleteContacts($iUserId, $Storage, $UUIDs);
 	}	
 	
 	/**
@@ -1667,9 +1730,17 @@ class Module extends \Aurora\System\Module\AbstractModule
 		return is_array($aImportResult) && isset($aImportResult['ImportedCount']) && $aImportResult['ImportedCount'] > 0;
 	}	
 	
-	public function GetCTag($iUserId)
+	public function GetCTag($Storage)
 	{
-		return $this->getManager()->getCTag($iUserId);
+		$iResult = 0;
+		$iUserId = \Aurora\Api::getAuthenticatedUserId();
+		$oCTag = $this->getManager()->getCTag($iUserId, $Storage);
+		if ($oCTag instanceof Classes\CTag)
+		{
+			$iResult = $oCTag->CTag;
+		}
+
+		return $iResult;
 	}	
 	
 	/**
