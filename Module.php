@@ -993,12 +993,36 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$oUser = $oCoreDecorator->GetUser($UserId);
 			}
 		}
-		//if user already have autocreated contact with the same email
-		//remember contact's Frequency and remove it
-		$Frequency = 0;
+		
+		$oContact = \Aurora\Modules\Contacts\Classes\Contact::createInstance(
+			Classes\Contact::class,
+			self::GetName()
+		);
+		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+		{
+			$oContact->IdUser = $oUser->EntityId;
+			$oContact->IdTenant = $oUser->IdTenant;
+		}
+		$oContact->populate($Contact, true);
+		
+		
+		$oContact->Frequency = $this->getAutocreatedContactFrequencyAndDeleteIt($UserId, $oContact->ViewEmail);
+		$mResult = $this->getManager()->createContact($oContact);
+		return $mResult && $oContact ? $oContact->UUID : false;
+	}
+	
+	/**
+	 * Obtains autocreated contact frequency if user have already created it.
+	 * Removes autocreated contact.
+	 * @param int $UserId User identifier.
+	 * @param string $sViewEmail View email of contact to create
+	 */
+	private function getAutocreatedContactFrequencyAndDeleteIt($UserId, $sViewEmail)
+	{
+		$iFrequency = 0;
 		$aFilters = [
 			'$AND' => [
-				'ViewEmail' => [$Contact['PersonalEmail'], '='],
+				'ViewEmail' => [$sViewEmail, '='],
 				'IdUser' => [$UserId, '='],
 				'Auto' => [true, '='],
 				'Storage' => 'personal'
@@ -1013,23 +1037,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 		);
 		if (is_array($oAutocreatedContacts) && isset($oAutocreatedContacts[0]))
 		{
-			$Frequency = $oAutocreatedContacts[0]->Frequency;
+			$iFrequency = $oAutocreatedContacts[0]->Frequency;
 			$this->getManager()->deleteContacts([$oAutocreatedContacts[0]->UUID]);
 		}
-		$oContact = \Aurora\Modules\Contacts\Classes\Contact::createInstance(
-			Classes\Contact::class,
-			self::GetName()
-		);
-		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
-		{
-			$oContact->IdUser = $oUser->EntityId;
-			$oContact->IdTenant = $oUser->IdTenant;
-		}
-		$oContact->populate($Contact, true);
-		$oContact->Frequency = $Frequency;
-		$mResult = $this->getManager()->createContact($oContact);
-		return $mResult && $oContact ? $oContact->UUID : false;
-	}	
+		return $iFrequency;
+	}
 	
 	/**
 	 * @api {post} ?/Api/ UpdateContact
