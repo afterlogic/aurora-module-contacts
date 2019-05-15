@@ -135,7 +135,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		$ContactsPerPage = $this->getConfig('ContactsPerPage', 20);
-		if ($oUser && $oUser->Role === \Aurora\System\Enums\UserRole::NormalUser && isset($oUser->{self::GetName().'::ContactsPerPage'}))
+		if ($oUser && $oUser->isNormalOrTenant() && isset($oUser->{self::GetName().'::ContactsPerPage'}))
 		{
 			$ContactsPerPage = $oUser->{self::GetName().'::ContactsPerPage'};
 		}
@@ -215,7 +215,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		if ($oUser)
 		{
-			if ($oUser->Role === \Aurora\System\Enums\UserRole::NormalUser)
+			if ($oUser->isNormalOrTenant())
 			{
 				$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
 				$oUser->{self::GetName().'::ContactsPerPage'} = $ContactsPerPage;
