@@ -1029,19 +1029,22 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function CreateContact($Contact, $UserId = 0)
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		$oAuthenticatedUser = \Aurora\System\Api::getAuthenticatedUser();
 		
-		$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
+		$oUser = $oCoreDecorator ? $oCoreDecorator->GetUser($UserId) : null;
 		
-		if ($UserId > 0 && (!isset($oUser) || $UserId !== $oUser->EntityId))
+		if ($oAuthenticatedUser->EntityId === $UserId)
+		{
+			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		}
+		else if ($oUser instanceof \Aurora\Modules\Core\Classes\User && $oAuthenticatedUser->Role === \Aurora\System\Enums\UserRole::TenantAdmin && $oUser->IdTenant === $oAuthenticatedUser->IdTenant)
+		{
+			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::TenantAdmin);
+		}
+		else
 		{
 			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::SuperAdmin);
-			
-			$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
-			if ($oCoreDecorator)
-			{
-				$oUser = $oCoreDecorator->GetUser($UserId);
-			}
 		}
 		
 		$oContact = \Aurora\Modules\Contacts\Classes\Contact::createInstance(
@@ -1054,7 +1057,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$oContact->IdTenant = $oUser->IdTenant;
 		}
 		$oContact->populate($Contact, true);
-		
 		
 		$oContact->Frequency = $this->getAutocreatedContactFrequencyAndDeleteIt($UserId, $oContact->ViewEmail);
 		$mResult = $this->getManager()->createContact($oContact);
