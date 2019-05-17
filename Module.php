@@ -1031,8 +1031,16 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		$oAuthenticatedUser = \Aurora\System\Api::getAuthenticatedUser();
 		
-		$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
-		$oUser = $oCoreDecorator ? $oCoreDecorator->GetUser($UserId) : null;
+		$oUser = null;
+		if ($UserId === 0 && $oAuthenticatedUser->isNormalOrTenant())
+		{
+			$oUser = $oAuthenticatedUser;
+			$UserId = $oAuthenticatedUser->EntityId;
+		}
+		else
+		{
+			$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUser($UserId);
+		}
 		
 		if ($oAuthenticatedUser->EntityId === $UserId)
 		{
@@ -1047,20 +1055,26 @@ class Module extends \Aurora\System\Module\AbstractModule
 			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::SuperAdmin);
 		}
 		
-		$oContact = \Aurora\Modules\Contacts\Classes\Contact::createInstance(
-			Classes\Contact::class,
-			self::GetName()
-		);
+		$mResult = false;
+		
 		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 		{
+			$oContact = \Aurora\Modules\Contacts\Classes\Contact::createInstance(
+				Classes\Contact::class,
+				self::GetName()
+			);
 			$oContact->IdUser = $oUser->EntityId;
 			$oContact->IdTenant = $oUser->IdTenant;
+			$oContact->populate($Contact, true);
+
+			$oContact->Frequency = $this->getAutocreatedContactFrequencyAndDeleteIt($oUser->EntityId, $oContact->ViewEmail);
+			if ($this->getManager()->createContact($oContact))
+			{
+				$mResult = ['UUID' => $oContact->UUID, 'ETag' => $oContact->ETag];
+			}
 		}
-		$oContact->populate($Contact, true);
 		
-		$oContact->Frequency = $this->getAutocreatedContactFrequencyAndDeleteIt($UserId, $oContact->ViewEmail);
-		$mResult = $this->getManager()->createContact($oContact);
-		return $mResult && $oContact ? ['UUID' => $oContact->UUID, 'ETag' => $oContact->ETag] : false;
+		return $mResult;
 	}
 	
 	/**
