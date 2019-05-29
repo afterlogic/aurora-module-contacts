@@ -944,13 +944,19 @@ class Module extends \Aurora\System\Module\AbstractModule
 			'CTag' => $this->GetCTag($Storage)
 		];
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+
+		$iUserId = \Aurora\System\Api::GetAuthenticatedUserId();
 		
 		$aContacts =\Aurora\System\Managers\Eav::getInstance()->getEntities(
 			Classes\Contact::class,
 			['UUID', 'ETag'],
 			0,
 			0,
-			['Storage' => [$Storage, '=']]
+			[
+				'Storage' => $Storage,
+				'IdUser' => $iUserId,
+				'Auto' => false
+			]
 		);
 
 		foreach ($aContacts as $oContact)
