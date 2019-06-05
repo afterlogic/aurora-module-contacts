@@ -1044,7 +1044,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oAuthenticatedUser = \Aurora\System\Api::getAuthenticatedUser();
 		
 		$oUser = null;
-		if ($UserId === 0 && $oAuthenticatedUser->isNormalOrTenant())
+		if ($UserId === 0 && $oAuthenticatedUser && $oAuthenticatedUser->isNormalOrTenant())
 		{
 			$oUser = $oAuthenticatedUser;
 			$UserId = $oAuthenticatedUser->EntityId;
@@ -1054,11 +1054,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUser($UserId);
 		}
 		
-		if ($oAuthenticatedUser->EntityId === $UserId)
+		if ($oAuthenticatedUser && $oAuthenticatedUser->EntityId === $UserId)
 		{
 			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		}
-		else if ($oUser instanceof \Aurora\Modules\Core\Classes\User && $oAuthenticatedUser->Role === \Aurora\System\Enums\UserRole::TenantAdmin && $oUser->IdTenant === $oAuthenticatedUser->IdTenant)
+		else if ($oUser instanceof \Aurora\Modules\Core\Classes\User && $oAuthenticatedUser && $oAuthenticatedUser->Role === \Aurora\System\Enums\UserRole::TenantAdmin && $oUser->IdTenant === $oAuthenticatedUser->IdTenant)
 		{
 			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::TenantAdmin);
 		}
