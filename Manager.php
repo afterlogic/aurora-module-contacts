@@ -323,7 +323,14 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		
 		if ($res)
 		{
-			$this->updateCTag($oContact->IdUser, $oContact->Storage);
+			if ($oContact->Storage === 'personal')
+			{
+				$this->updateCTag($oContact->IdUser, $oContact->Storage);
+			}
+			else
+			{
+				$this->updateCTag($oContact->IdTenant, $oContact->Storage);
+			}
 
 			foreach ($oContact->GroupsContacts as $oGroupContact)
 			{
@@ -484,6 +491,29 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		
 		return $this->oEavManager->deleteEntities($aIdEntitiesToDelete);
 	}
+	public function getCTags($iUserId, $Storage)
+	{
+		$mResult = [];
+
+		$aFilters = [
+			'$AND' => [
+				'Storage' => [$Storage, '='],
+				'UserId' => [$iUserId, '=']
+			]
+		];
+		$aEntities = $this->oEavManager->getEntities(
+			Classes\CTag::class,
+			[], 0, 0, $aFilters
+		);
+
+		if (is_array($aEntities) && count($aEntities) > 0)
+		{
+			$mResult = $aEntities;
+		}
+
+		return $mResult;
+	}	
+
 
 	public function getCTag($iUserId, $Storage)
 	{
@@ -516,5 +546,14 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		$oCTagObject->CTag = $oCTagObject->CTag + 1;
 
 		$this->oEavManager->saveEntity($oCTagObject);
+	}
+
+	public function deleteCTagsByUserId($iUserId, $Storage)
+	{
+		$aCTags = $this->getCTags($iUserId, $Storage);
+		foreach ($aCTags as $oCTag)
+		{
+			$this->oEavManager->deleteEntity($oCTag->EntityId);
+		}
 	}
 }

@@ -797,6 +797,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	ErrorCode: 102
 	 * }
 	 */
+
+	 public function CheckAccess($User, $UUID)
+	 {
+		 return true;
+	 }
 	
 	/**
 	 * Returns contact with specified UUID.
@@ -813,7 +818,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 		{
 			$oContact = $this->getManager()->getContact($UUID);
-			
+			if ($this->CheckAccess($oUser, $oContact))
+			{
+				$mResult = $oContact;
+			}						
 			//only owner or superadmin can access the contact
 
 			//!!!The following condition is wrong. It prevents user from seeing team or shared contacts.
@@ -827,7 +835,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 //			}
 //			else
 //			{
-				$mResult = $oContact;
+//					$mResult = $oContact;
 //			}
 		}
 		
@@ -1761,12 +1769,18 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function GetCTag($Storage)
 	{
 		$iResult = 0;
-		$iUserId = \Aurora\Api::getAuthenticatedUserId();
-		$oCTag = $this->getManager()->getCTag($iUserId, $Storage);
-		if ($oCTag instanceof Classes\CTag)
+		$oUser = \Aurora\Api::getAuthenticatedUser();
+		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 		{
-			$iResult = $oCTag->CTag;
+			$iUserId = $Storage === 'personal' ? $oUser->EntityId : $oUser->IdTenant;
+
+			$oCTag = $this->getManager()->getCTag($iUserId, $Storage);
+			if ($oCTag instanceof Classes\CTag)
+			{
+				$iResult = $oCTag->CTag;
+			}
 		}
+
 
 		return $iResult;
 	}	
@@ -1938,6 +1952,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 			$this->getManager()->deleteGroups($aGroupUUIDs);
 		}
+		$this->getManager()->deleteCTagsByUserId($aArgs['UserId'], 'personal');
 	}
 
 	/**
