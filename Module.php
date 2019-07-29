@@ -1059,7 +1059,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 		else
 		{
-			$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUser($UserId);
+			$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserUnchecked($UserId);
 		}
 		
 		if ($oAuthenticatedUser && $oAuthenticatedUser->EntityId === $UserId)
