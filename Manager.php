@@ -89,7 +89,16 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 */
 	public function getGroup($sUUID)
 	{
-		return $this->oEavManager->getEntity($sUUID, Classes\Group::class);
+		$mResult = false;
+		$oGroup = $this->oEavManager->getEntity($sUUID, Classes\Group::class);
+
+		if ($oGroup instanceof \Aurora\Modules\Contacts\Classes\Group)
+		{
+			$oGroup->GroupContacts = $this->getGroupContacts($oGroup->UUID);
+			$mResult = $oGroup;
+		}
+
+		return $mResult;
 	}
 	
 	/**
@@ -189,7 +198,18 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 */
 	public function updateGroup($oGroup)
 	{
-		return $this->oEavManager->saveEntity($oGroup);
+		$res = $this->oEavManager->saveEntity($oGroup);
+		if ($res)
+		{
+			foreach ($oGroup->GroupContacts as $oGroupContact)
+			{
+				$oGroupContact->GroupUUID = $oGroup->UUID;
+				$res = $this->oEavManager->saveEntity($oGroupContact);
+			}
+		}
+
+		return $res;
+
 	}
 
 	/**

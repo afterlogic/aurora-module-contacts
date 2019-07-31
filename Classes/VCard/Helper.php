@@ -33,6 +33,8 @@ class Helper
 			$aContact['UUID'] = (string) $oVCard->UID;
 		}
 */
+
+/*
 		$aGroupNames = [];
 		if (isset($oVCard->CATEGORIES))
 		{
@@ -42,7 +44,7 @@ class Helper
 			}
 		}
 		$aContact['GroupNames'] = $aGroupNames;
-
+*/
 		$aContact['FullName'] = isset($oVCard->FN) ? (string) $oVCard->FN : '';
 
 		if (isset($oVCard->N))
@@ -262,6 +264,50 @@ class Helper
 		
 		return $aContact;
 	}
+
+
+	public static function GetGroupDataFromVcard($oVCard, $sUUID = '')
+	{
+		$aGroup = [];
+
+		if (!empty($sUUID))
+		{
+			$aGroup['DavContacts::UID'] = (string) $sUUID;
+			$aGroup['UUID'] = $aGroup['DavContacts::UID'];
+		}
+		elseif (isset($oVCard->UID))
+		{
+			$aGroup['DavContacts::UID'] = \str_replace('urn:uuid:', '' ,(string) $oVCard->UID);
+			$aGroup['UUID'] = $aGroup['DavContacts::UID'];
+		}
+
+		if (isset($oVCard->N))
+		{
+			$aNames = $oVCard->N->getParts();
+			if (count($aNames) >= 1)
+			{
+				$aGroup['Name'] = !empty($aNames[0]) ? (string) $aNames[0] : '';
+			}
+		}
+
+		$aMembers = [];
+		if (isset($oVCard->MEMBER))
+		{
+			$aMembers = $oVCard->MEMBER;
+		} 
+		else if (isset($oVCard->{'X-ADDRESSBOOKSERVER-MEMBER'}))
+		{
+			$aMembers = $oVCard->{'X-ADDRESSBOOKSERVER-MEMBER'};
+		}
+
+		foreach ($aMembers as $sMember)
+		{
+			$aGroup['Contacts'][] = \str_replace('urn:uuid:', '', $sMember);
+		}
+
+		return $aGroup;
+	}
+
 	
 	/**
 	* @param \Aurora\Modules\Contacts\Classes\Contact $oContact
@@ -705,7 +751,7 @@ class Helper
 	{
 		$oVCard->VERSION = '3.0';
 
-		$oVCard->UID = $oContact->UUID;
+		$oVCard->UID = $oContact->{'DavContacts::VCardUID'};
 
 		$oVCard->FN = $oContact->FullName;
 		$oVCard->N = array(
@@ -755,4 +801,23 @@ class Helper
 			$oVCard->add('BDAY', $sBDayDT);
 		}
 	}
+
+	/**
+	* @param \Aurora\Modules\Contacts\Classes\Group $oGroup
+	* @param \Sabre\VObject\Component $oVCard
+	* @param bool $bIsUpdate = false
+	* @return void
+	*/
+	public static function UpdateVCardFromGroup($oGroup, &$oVCard, $bIsUpdate = false)
+	{
+		$oVCard->VERSION = '3.0';
+		$oVCard->UID = $oGroup->UUID;
+		$oVCard->N = [$oGroup->Name];
+		$oVCard->{'X-ADDRESSBOOKSERVER-KIND'} = 'GROUP';
+		unset($oVCard->{'X-ADDRESSBOOKSERVER-MEMBER'});
+		foreach ($oGroup->GroupContacts as $oGroupContact)
+		{
+			$oVCard->add('X-ADDRESSBOOKSERVER-MEMBER', 'urn:uuid:' . $oGroupContact->ContactUUID);
+		}
+	}	
 }
