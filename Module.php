@@ -947,7 +947,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			if ($oContact)
 			{
-				$oContact->GroupsContacts = $this->getGroupContacts(null, $oContact->UUID);
+				$oContact->GroupsContacts = $this->getManager()->getGroupContacts(null, $oContact->UUID);
 			}
 		}
 		
