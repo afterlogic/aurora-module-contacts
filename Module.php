@@ -942,6 +942,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$aFilters['UUID'] = [$Uids, 'IN'];
 		
 		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters);
+
+		foreach ($aContacts as $oContact)
+		{
+			if ($oContact)
+			{
+				$oContact->GroupsContacts = $this->getGroupContacts(null, $oContact->UUID);
+			}
+		}
 		
 		return $aContacts;
 	}		
