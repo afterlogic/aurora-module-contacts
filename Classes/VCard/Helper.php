@@ -281,13 +281,14 @@ class Helper
 			$aGroup['UUID'] = $aGroup['DavContacts::UID'];
 		}
 
-		if (isset($oVCard->N))
+		if (isset($oVCard->FN))
+		{
+			$aGroup['Name'] = (string) $oVCard->FN;
+		}
+		elseif (isset($oVCard->N))
 		{
 			$aNames = $oVCard->N->getParts();
-			if (count($aNames) >= 1)
-			{
-				$aGroup['Name'] = !empty($aNames[0]) ? (string) $aNames[0] : '';
-			}
+			$aGroup['Name'] = \implode(' ', $aNames);
 		}
 
 		$aMembers = [];
@@ -300,6 +301,7 @@ class Helper
 			$aMembers = $oVCard->{'X-ADDRESSBOOKSERVER-MEMBER'};
 		}
 
+		$aGroup['Contacts'] = [];
 		foreach ($aMembers as $sMember)
 		{
 			$aGroup['Contacts'][] = \str_replace('urn:uuid:', '', $sMember);
@@ -812,7 +814,8 @@ class Helper
 	{
 		$oVCard->VERSION = '3.0';
 		$oVCard->UID = $oGroup->UUID;
-		$oVCard->N = [$oGroup->Name];
+//		$oVCard->N = [$oGroup->Name];
+		$oVCard->FN = $oGroup->Name;
 		$oVCard->{'X-ADDRESSBOOKSERVER-KIND'} = 'GROUP';
 		unset($oVCard->{'X-ADDRESSBOOKSERVER-MEMBER'});
 		foreach ($oGroup->GroupContacts as $oGroupContact)

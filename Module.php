@@ -49,7 +49,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			]
 		);
 	}
-	
+
 	/***** public functions *****/
 	/**
 	 * Returns API contacts manager.
@@ -130,8 +130,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::Anonymous);
 		
-		$aStorages = array();
-		$this->broadcastEvent('GetStorage', $aStorages);
+		$aStorages = self::Decorator()->GetStorages();
 		
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		$ContactsPerPage = $this->getConfig('ContactsPerPage', 20);
@@ -151,6 +150,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 			'ImportExportFormats' => $this->aImportExportFormats,
 			'SaveVcfServerModuleName' => \Aurora\System\Api::GetModuleManager()->ModuleExists('DavContacts') ? 'DavContacts' : ''
 		);
+	}
+
+	public function GetStorages()
+	{
+		$aStorages = [];
+		$this->broadcastEvent('GetStorages', $aStorages);
+		return $aStorages;
 	}
 	
 	/**
@@ -285,8 +291,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param string $GroupUUID UUID of group that should contain contacts for export.
 	 * @param array $ContactUUIDs List of UUIDs of contacts that should be exported.
 	 */
-	public function Export($Format, $Filters = [], $GroupUUID = '', $ContactUUIDs = [])
+	public function Export($UserId, $Format, $Filters = [], $GroupUUID = '', $ContactUUIDs = [])
 	{
+		$this->CheckAccess($UserId);
+
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$aFilters = $this->prepareFilters($Filters);
@@ -333,7 +341,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 					{
 						$oContact->GroupsContacts = $this->getManager()->getGroupContacts(null, $oContact->UUID);
 					
-						$sOutput .= self::Decorator()->GetContactAsVCF($oContact);
+						$sOutput .= self::Decorator()->GetContactAsVCF($UserId, $oContact);
 					}
 					break;
 			}
@@ -350,8 +358,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 		echo $sOutput;
 	}
 
-	public function GetContactAsVCF($Contact)
+	public function GetContactAsVCF($UserId, $Contact)
 	{
+		$this->CheckAccess($UserId);
+
 		$oVCard = new \Sabre\VObject\Component\VCard();
 		Classes\VCard\Helper::UpdateVCardFromContact($Contact, $oVCard);
 		return $oVCard->serialize();
@@ -406,13 +416,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * Returns all groups for authenticated user.
 	 * @return array
 	 */
-	public function GetGroups()
+	public function GetGroups($UserId = null)
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
-		$iUserId = \Aurora\System\Api::getAuthenticatedUserId();
+		$this->CheckAccess($UserId);
 
-		return $this->getManager()->getGroups($iUserId);
+		return $this->getManager()->getGroups($UserId);
 	}
 	
 	/**
@@ -483,10 +493,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param string $UUID UUID of group to return.
 	 * @return \Aurora\Modules\Contacts\Classes\Group
 	 */
-	public function GetGroup($UUID)
+	public function GetGroup($UserId, $UUID)
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
+		$this->CheckAccess($UserId);
+
 		return $this->getManager()->getGroup($UUID);
 	}
 
@@ -507,6 +519,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$UserId = \Aurora\System\Api::getAuthenticatedUserId();
 		}
+
+		$this->CheckAccess($UserId);
 
 		return $this->getManager()->getGroupByName($Name, $UserId);
 	}
@@ -583,10 +597,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param bool $WithoutTeamContactsDuplicates Do not show a contact from the global address book if the contact with the same email address already exists in personal address book
 	 * @return array
 	 */
-	public function GetContacts($Storage = '', $Offset = 0, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array(), $WithGroups = false, $WithoutTeamContactsDuplicates = false)
+	public function GetContacts($UserId, $Storage = '', $Offset = 0, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array(), $WithGroups = false, $WithoutTeamContactsDuplicates = false)
 	{
 		// $Storage is used by subscribers to prepare filters.
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+
+		$this->CheckAccess($UserId);
 
 		$aFilters = $this->prepareFilters($Filters);
 
@@ -798,9 +814,62 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * }
 	 */
 
-	 public function CheckAccess($User, $UUID)
+	 public function CheckAccessToObject($User, $UUID)
 	 {
 		 return true;
+	 }
+
+	 public function CheckAccess(&$UserId)
+	 {
+		$bAccessDenied = true;
+		
+		$oAuthenticatedUser = \Aurora\System\Api::getAuthenticatedUser();
+
+		$iUserId = $UserId;
+		if ($iUserId === null)
+		{
+			$iUserId = $oAuthenticatedUser->EntityId;
+		}
+		else
+		{
+			$iUserRole = $oAuthenticatedUser instanceof \Aurora\Modules\Core\Classes\User ? $oAuthenticatedUser->Role : \Aurora\System\Enums\UserRole::Anonymous;
+			switch ($iUserRole)
+			{
+				case (\Aurora\System\Enums\UserRole::SuperAdmin):
+					// everything is allowed for SuperAdmin
+					$UserId = $iUserId;
+					$bAccessDenied = false;
+					break;
+				case (\Aurora\System\Enums\UserRole::TenantAdmin):
+					// everything is allowed for TenantAdmin
+					$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUser($iUserId);
+					if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+					{
+						if ($oAuthenticatedUser->IdTenant === $oUser->IdTenant)
+						{
+							$UserId = $iUserId;
+							$bAccessDenied = false;
+						}
+					}
+					break;
+				case (\Aurora\System\Enums\UserRole::NormalUser):
+					// User identifier shoud be checked
+					if ($iUserId === $oAuthenticatedUser->EntityId)
+					{
+						$UserId = $iUserId;
+						$bAccessDenied = false;
+					}
+					break;
+				case (\Aurora\System\Enums\UserRole::Customer):
+				case (\Aurora\System\Enums\UserRole::Anonymous):
+					// everything is forbidden for Customer and Anonymous users
+					break;
+			}
+			if ($bAccessDenied)
+			{
+				throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::AccessDenied);
+			}
+		}			 
 	 }
 	
 	/**
@@ -808,13 +877,15 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param string $UUID UUID of contact to return.
 	 * @return \Aurora\Modules\Contacts\Classes\Contact
 	 */
-	public function GetContact($UUID)
+	public function GetContact($UUID, $UserId = null)
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+
+		$this->CheckAccess($UserId);
+		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserUnchecked($UserId);
 		
 		$mResult = false;
 
-		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 		{
 			$oContact = $this->getManager()->getContact($UUID);
@@ -822,21 +893,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 			{
 				$mResult = $oContact;
 			}						
-			//only owner or superadmin can access the contact
-
-			//!!!The following condition is wrong. It prevents user from seeing team or shared contacts.
-			
-//			if ($oContact instanceof \Aurora\Modules\Contacts\Classes\Contact
-//				&& $oUser->Role !== \Aurora\System\Enums\UserRole::SuperAdmin
-//				&& $oUser->EntityId !== $oContact->IdUser
-//			)
-//			{
-//				$mResult = false;
-//			}
-//			else
-//			{
-//					$mResult = $oContact;
-//			}
 		}
 		
 		return $mResult;
@@ -904,9 +960,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $Emails List of emails of contacts to return.
 	 * @return array
 	 */
-	public function GetContactsByEmails($Storage, $Emails, $Filters = array())
+	public function GetContactsByEmails($UserId, $Storage, $Emails, $Filters = array())
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+
+		$this->CheckAccess($UserId);
 		
 		$aFilters = $this->prepareFilters($Filters);
 		
@@ -935,9 +993,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $Uids List of uids of contacts to return.
 	 * @return array
 	 */
-	public function GetContactsByUids($Storage, $Uids, $Filters = array())
+	public function GetContactsByUids($UserId, $Storage, $Uids, $Filters = array())
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+
+		$this->CheckAccess($UserId);
 		
 		$aFilters['UUID'] = [$Uids, 'IN'];
 		
@@ -960,15 +1020,21 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $Uids List of emails of contacts to return.
 	 * @return array
 	 */
-	public function GetContactsInfo($Storage)
+	public function GetContactsInfo($Storage, $UserId = null)
 	{
 		$aResult = [
-			'CTag' => $this->GetCTag($Storage)
+			'CTag' => $this->GetCTag($UserId, $Storage)
 		];
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
-		$iUserId = \Aurora\System\Api::GetAuthenticatedUserId();
-		
+		$this->CheckAccess($UserId);
+
+		$aContacts = (new \Aurora\System\EAV\Query())
+			->select(['UUID', 'ETag'])
+			->whereType(Classes\Contact::class)
+			->where(['Storage' => $Storage, 'IdUser' => $UserId, 'Auto' => false])
+			->exec();
+/*
 		$aContacts =\Aurora\System\Managers\Eav::getInstance()->getEntities(
 			Classes\Contact::class,
 			['UUID', 'ETag'],
@@ -976,11 +1042,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 			0,
 			[
 				'Storage' => $Storage,
-				'IdUser' => $iUserId,
+				'IdUser' => $UserId,
 				'Auto' => false
 			]
 		);
-
+*/
 		foreach ($aContacts as $oContact)
 		{
 			$aResult['Info'][] = [
@@ -1055,34 +1121,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @return bool|string
 	 * @throws \Aurora\System\Exceptions\ApiException
 	 */
-	public function CreateContact($Contact, $UserId = 0)
+	public function CreateContact($Contact, $UserId = null)
 	{
-		$oAuthenticatedUser = \Aurora\System\Api::getAuthenticatedUser();
-		
-		$oUser = null;
-		if ($UserId === 0 && $oAuthenticatedUser && $oAuthenticatedUser->isNormalOrTenant())
-		{
-			$oUser = $oAuthenticatedUser;
-			$UserId = $oAuthenticatedUser->EntityId;
-		}
-		else
-		{
-			$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserUnchecked($UserId);
-		}
-		
-		if ($oAuthenticatedUser && $oAuthenticatedUser->EntityId === $UserId)
-		{
-			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		}
-		else if ($oUser instanceof \Aurora\Modules\Core\Classes\User && $oAuthenticatedUser && $oAuthenticatedUser->Role === \Aurora\System\Enums\UserRole::TenantAdmin && $oUser->IdTenant === $oAuthenticatedUser->IdTenant)
-		{
-			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::TenantAdmin);
-		}
-		else
-		{
-			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::SuperAdmin);
-		}
-		
+		$this->CheckAccess($UserId);
+
+		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserUnchecked($UserId);
+
 		$mResult = false;
 		
 		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
@@ -1113,6 +1157,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	private function getAutocreatedContactFrequencyAndDeleteIt($UserId, $sViewEmail)
 	{
+		$this->CheckAccess($UserId);
+
 		$iFrequency = 0;
 		$sStorage = 'personal';
 		$aFilters = [
@@ -1199,8 +1245,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $Contact Parameters of contact to update.
 	 * @return bool
 	 */
-	public function UpdateContact($Contact)
+	public function UpdateContact($UserId, $Contact)
 	{
+		$this->CheckAccess($UserId);
+
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$oContact = $this->getManager()->getContact($Contact['UUID']);
@@ -1276,13 +1324,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $UUIDs Array of strings - UUIDs of contacts to delete.
 	 * @return bool
 	 */
-	public function DeleteContacts($Storage, $UUIDs)
+	public function DeleteContacts($UserId, $Storage, $UUIDs)
 	{
+		$this->CheckAccess($UserId);
+
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
-		$iUserId = \Aurora\Api::getAuthenticatedUserId();
-		
-		return $this->getManager()->deleteContacts($iUserId, $Storage, $UUIDs);
+		return $this->getManager()->deleteContacts($UserId, $Storage, $UUIDs);
 	}	
 	
 	/**
@@ -1342,21 +1390,15 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function CreateGroup($Group, $UserId = null)
 	{
+		$this->CheckAccess($UserId);
+
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$oGroup = \Aurora\Modules\Contacts\Classes\Group::createInstance(
 			Classes\Group::class,
 			self::GetName()
 		);
-		if (isset($UserId) && $UserId !==  \Aurora\System\Api::getAuthenticatedUserId())
-		{
-			\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::SuperAdmin);
-			$oGroup->IdUser = (int) $UserId;
-		}
-		else
-		{
-			$oGroup->IdUser = \Aurora\System\Api::getAuthenticatedUserId();
-		}
+		$oGroup->IdUser = (int) $UserId;
 
 		$oGroup->populate($Group);
 
@@ -1419,8 +1461,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $Group Parameters of group to update.
 	 * @return boolean
 	 */
-	public function UpdateGroup($Group)
+	public function UpdateGroup($UserId, $Group)
 	{
+		$this->CheckAccess($UserId);
+
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$oGroup = $this->getManager()->getGroup($Group['UUID']);
@@ -1486,8 +1530,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param string $UUID UUID of group to delete.
 	 * @return bool
 	 */
-	public function DeleteGroup($UUID)
+	public function DeleteGroup($UserId, $UUID)
 	{
+		$this->CheckAccess($UserId);
+		
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		return $this->getManager()->deleteGroups([$UUID]);
@@ -1548,8 +1594,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $ContactUUIDs Array of strings - UUIDs of contacts to add to group.
 	 * @return boolean
 	 */
-	public function AddContactsToGroup($GroupUUID, $ContactUUIDs)
+	public function AddContactsToGroup($UserId, $GroupUUID, $ContactUUIDs)
 	{
+		$this->CheckAccess($UserId);
+
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		if (is_array($ContactUUIDs) && !empty($ContactUUIDs))
@@ -1615,8 +1663,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $ContactUUIDs Array of strings - UUIDs of contacts to remove from group.
 	 * @return boolean
 	 */
-	public function RemoveContactsFromGroup($GroupUUID, $ContactUUIDs)
+	public function RemoveContactsFromGroup($UserId, $GroupUUID, $ContactUUIDs)
 	{
+		$this->CheckAccess($UserId);
+
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		if (is_array($ContactUUIDs) && !empty($ContactUUIDs))
@@ -1685,8 +1735,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @return array
 	 * @throws \Aurora\System\Exceptions\ApiException
 	 */
-	public function Import($UploadData, $GroupUUID)
+	public function Import($UserId, $UploadData, $GroupUUID)
 	{
+		$this->CheckAccess($UserId);
+		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserUnchecked($UserId);
+
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$aResponse = array(
@@ -1694,8 +1747,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 			'ParsedCount' => 0
 		);
 		
-		$oUser = \Aurora\System\Api::getAuthenticatedUser();
-
 		if (is_array($UploadData))
 		{
 			$oApiFileCacheManager = new \Aurora\System\Managers\Filecache();
@@ -1750,14 +1801,19 @@ class Module extends \Aurora\System\Module\AbstractModule
 //		return [];
 //	}	
 	
-	public function UpdateSharedContacts($UUIDs)
+	public function UpdateSharedContacts($UserId, $UUIDs)
 	{
+		$this->CheckAccess($UserId);
+
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		return true;
 	}	
 	
-	public function AddContactsFromFile($File)
+	public function AddContactsFromFile($UserId, $File)
 	{
+		$this->CheckAccess($UserId);
+		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserUnchecked($UserId);
+
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		if (empty($File))
@@ -1765,7 +1821,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 			throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::InvalidInputParameter);
 		}
 
-		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		$oApiFileCache = new \Aurora\System\Managers\Filecache();
 		
 		$sTempFilePath = $oApiFileCache->generateFullFilePath($oUser->UUID, $File); // Temp files with access from another module should be stored in System folder
@@ -1774,10 +1829,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 		return is_array($aImportResult) && isset($aImportResult['ImportedCount']) && $aImportResult['ImportedCount'] > 0;
 	}	
 	
-	public function GetCTag($Storage)
+	public function GetCTag($UserId, $Storage)
 	{
+		$this->CheckAccess($UserId);
+		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserUnchecked($UserId);
+
 		$iResult = 0;
-		$oUser = \Aurora\Api::getAuthenticatedUser();
 		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 		{
 			$iUserId = $Storage === 'personal' ? $oUser->EntityId : $oUser->IdTenant;
@@ -1803,6 +1860,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function SaveContactAsTempFile($UserId, $UUID, $FileName)
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+
+		$this->CheckAccess($UserId);
 
 		$mResult = false;
 

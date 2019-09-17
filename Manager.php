@@ -56,22 +56,20 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	public function getContactByEmail($iUserId, $sEmail)
 	{
 		$oContact = null;
-		$aViewAttrs = array();
 		$aFilters = array(
 			'$AND' => array(
 				'ViewEmail' => array($sEmail, '='),
 				'IdUser' => array($iUserId, '='),
 			)
 		);
-		$aOrderBy = array('FullName');
-		$aContacts = $this->oEavManager->getEntities(
-			Classes\Contact::class,
-			$aViewAttrs, 
-			0, 
-			0, 
-			$aFilters, 
-			$aOrderBy
-		);
+
+		$aContacts = (new \Aurora\System\EAV\Query())
+			->select()
+			->whereType(Classes\Contact::class)
+			->where($aFilters)
+			->orderBy(['FullName'])
+			->exec();
+
 		if (count($aContacts) > 0)
 		{
 			$oContact = $aContacts[0];
@@ -117,13 +115,14 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 				'IdUser' => [$iUserId, '=']
 			]
 		];
-		$aGroups = $this->oEavManager->getEntities(
-			Classes\Group::class,
-			[],
-			0,
-			0,
-			$aFilters
-		);
+
+		$aGroups = (new \Aurora\System\EAV\Query())
+			->select()
+			->whereType(Classes\Group::class)
+			->where($aFilters)
+			->exec();
+
+
 		if (count($aGroups) > 0)
 		{
 			$oGroup = $aGroups[0];
@@ -241,11 +240,12 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			}
 		}
 		
-		return $this->oEavManager->getEntitiesCount(
-			Classes\Contact::class,
-			$aFilters,
-			$aContactUUIDs
-		);
+		return (new \Aurora\System\EAV\Query())
+			->whereType(Classes\Contact::class)
+			->where($aFilters)
+			->whereIdOrUuidIn($aContactUUIDs)
+			->count()
+			->exec();
 	}
 
 	/**
@@ -285,10 +285,15 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 				break;
 		}
 
-		$aOrderBy = array($sSortField);
-		return $this->oEavManager->getEntities(
-			Classes\Contact::class,
-			$aViewAttrs, $iOffset, $iLimit, $aFilters, $aOrderBy, $iSortOrder);
+		return (new \Aurora\System\EAV\Query())
+			->select($aViewAttrs)
+			->whereType(Classes\Contact::class)
+			->where($aFilters)
+			->offset($iOffset)
+			->limit($iLimit)
+			->orderBy([$sSortField])
+			->sortOrder($iSortOrder)
+			->exec();
 	}
 
 	/**
@@ -301,7 +306,11 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 */
 	public function getContactUids($aFilters = array())
 	{
-		return $this->oEavManager->getEntitiesUids(Classes\Contact::class, 0, 0, $aFilters);
+		return (new \Aurora\System\EAV\Query())
+			->select(['UUID'])
+			->whereType(Classes\Contact::class)
+			->where($aFilters)
+			->exec();
 	}	
 
 	/**
@@ -323,9 +332,13 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		{
 			$aFilters = array('IdUser' => array($iUserId, '='));
 		}
-		return $this->oEavManager->getEntities(
-			Classes\Group::class,
-			$aViewAttrs, 0, 0, $aFilters, 'Name');
+
+		return (new \Aurora\System\EAV\Query())
+			->select($aViewAttrs)
+			->whereType(Classes\Group::class)
+			->where($aFilters)
+			->orderBy(['Name'])
+			->exec();
 	}
 
 	/**
@@ -422,9 +435,12 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		{
 			$aFilters = array('ContactUUID' => $sContactUUID);
 		}
-		return $this->oEavManager->getEntities(
-			Classes\GroupContact::class,
-			$aViewAttrs, 0, 0, $aFilters);
+
+		return (new \Aurora\System\EAV\Query())
+			->select($aViewAttrs)
+			->whereType(Classes\GroupContact::class)
+			->where($aFilters)
+			->exec();
 	}
 	
 	/**
@@ -521,10 +537,11 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 				'UserId' => [$iUserId, '=']
 			]
 		];
-		$aEntities = $this->oEavManager->getEntities(
-			Classes\CTag::class,
-			[], 0, 0, $aFilters
-		);
+
+		$aEntities = (new \Aurora\System\EAV\Query())
+			->whereType(Classes\CTag::class)
+			->where($aFilters)
+			->exec();
 
 		if (is_array($aEntities) && count($aEntities) > 0)
 		{
@@ -547,10 +564,11 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 				'UserId' => [$iUserId, '=']
 			]
 		];
-		$aEntities = $this->oEavManager->getEntities(
-			Classes\CTag::class,
-			[], 0, 0, $aFilters
-		);
+
+		$aEntities = (new \Aurora\System\EAV\Query())
+			->whereType(Classes\CTag::class)
+			->where($aFilters)
+			->exec();
 
 		if (is_array($aEntities) && count($aEntities) > 0)
 		{
