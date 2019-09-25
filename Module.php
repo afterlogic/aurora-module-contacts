@@ -889,7 +889,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 		{
 			$oContact = $this->getManager()->getContact($UUID);
-			if ($this->CheckAccess($oUser, $oContact))
+			if ($this->CheckAccessToObject($UserId, $UUID))
 			{
 				$mResult = $oContact;
 			}						
@@ -1535,7 +1535,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->CheckAccess($UserId);
 		
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		
+		$this->getManager()->updateCTag($UserId, 'personal');
 		return $this->getManager()->deleteGroups([$UUID]);
 	}
 	

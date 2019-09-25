@@ -200,6 +200,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		$res = $this->oEavManager->saveEntity($oGroup);
 		if ($res)
 		{
+			$this->updateCTag($oGroup->IdUser, 'personal');
 			foreach ($oGroup->GroupContacts as $oGroupContact)
 			{
 				$oGroupContact->GroupUUID = $oGroup->UUID;
