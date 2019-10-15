@@ -1020,7 +1020,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $Uids List of emails of contacts to return.
 	 * @return array
 	 */
-	public function GetContactsInfo($Storage, $UserId = null)
+	public function GetContactsInfo($Storage, $UserId = null, $Filters = [])
 	{
 		$aResult = [
 			'CTag' => $this->GetCTag($UserId, $Storage)
@@ -1029,29 +1029,23 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$this->CheckAccess($UserId);
 
+		$aFilters = $this->prepareFilters($Filters);
+		if (count($aFilters) > 1)
+		{
+			$aFilters = ['$OR' => $aFilters];
+		}
 		$aContacts = (new \Aurora\System\EAV\Query())
-			->select(['UUID', 'ETag'])
+			->select(['UUID', 'ETag', 'Storage'])
 			->whereType(Classes\Contact::class)
-			->where(['Storage' => $Storage, 'IdUser' => $UserId, 'Auto' => false])
+			->where($aFilters)
 			->exec();
-/*
-		$aContacts =\Aurora\System\Managers\Eav::getInstance()->getEntities(
-			Classes\Contact::class,
-			['UUID', 'ETag'],
-			0,
-			0,
-			[
-				'Storage' => $Storage,
-				'IdUser' => $UserId,
-				'Auto' => false
-			]
-		);
-*/
+
 		foreach ($aContacts as $oContact)
 		{
 			$aResult['Info'][] = [
 				'UUID' => $oContact->UUID,
-				'ETag' => $oContact->ETag
+				'ETag' => $oContact->ETag,
+				'Storage' => $oContact->Storage
 			];
 		}
 		
