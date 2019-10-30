@@ -311,6 +311,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			->select(['UUID'])
 			->whereType(Classes\Contact::class)
 			->where($aFilters)
+			->onlyUUIDs()
 			->exec();
 	}	
 
