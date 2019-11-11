@@ -146,7 +146,14 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		if ($res)
 		{
 			$this->updateContactGroups($oContact);
-			$this->updateCTag($oContact->IdUser, $oContact->Storage);
+			if ($oContact->Storage === 'personal')
+			{
+				$this->updateCTag($oContact->IdUser, $oContact->Storage);
+			}
+			else
+			{
+				$this->updateCTag($oContact->IdTenant, $oContact->Storage);
+			}
 		}
 		
 		return $res;
@@ -421,6 +428,11 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			}
 		}
 		
+		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserUnchecked($iIdUser);
+		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+		{
+			$iIdUser = $sStorage === 'personal' ? $oUser->EntityId : $oUser->IdTenant;
+		}
 		$this->updateCTag($iIdUser, $sStorage);
 		return $this->oEavManager->deleteEntities($aEntitiesUUIDs);
 	}
