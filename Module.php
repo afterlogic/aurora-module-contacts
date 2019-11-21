@@ -159,6 +159,24 @@ class Module extends \Aurora\System\Module\AbstractModule
 		return $aStorages;
 	}
 	
+	public function GetContactStorages()
+	{
+		$aStorages = [];
+		$aStorageNames = [];
+		$this->broadcastEvent('GetStorages', $aStorageNames);
+		
+		$iUserId = \Aurora\System\Api::getAuthenticatedUserId();
+		
+		foreach ($aStorageNames as $sStorageName) {
+			$aStorages[] = [
+				'Id' => $sStorageName,
+				'CTag' => $this->GetCTag($iUserId, $sStorageName)
+			];
+		}
+		
+		return $aStorages;
+	}
+	
 	/**
 	 * @api {post} ?/Api/ UpdateSettings
 	 * @apiName UpdateSettings
