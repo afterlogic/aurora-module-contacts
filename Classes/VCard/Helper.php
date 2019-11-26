@@ -778,7 +778,7 @@ class Helper
 		foreach ($oContact->GroupsContacts as $oGroupsContact)
 		{
 			$oContactsModule = \Aurora\System\Api::GetModuleDecorator('Contacts');
-			$oGroup = $oContactsModule->GetGroup($oGroupsContact->GroupUUID);
+			$oGroup = $oContactsModule->GetGroup($oContact->UserId, $oGroupsContact->GroupUUID);
 			if ($oGroup)
 			{
 				$aCategories[] = $oGroup->Name;
