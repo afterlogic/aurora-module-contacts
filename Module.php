@@ -159,6 +159,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 		return $aStorages;
 	}
 	
+	public function IsDisplayedStorage($Storage)
+	{
+		return true;
+	}
+
 	public function GetContactStorages()
 	{
 		$aStorages = [];
@@ -170,7 +175,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		foreach ($aStorageNames as $sStorageName) {
 			$aStorages[] = [
 				'Id' => $sStorageName,
-				'CTag' => $this->GetCTag($iUserId, $sStorageName)
+				'CTag' => $this->Decorator()->GetCTag($iUserId, $sStorageName),
+				'Display' => $this->Decorator()->IsDisplayedStorage($sStorageName)
 			];
 		}
 		
@@ -1053,7 +1059,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$aFilters = ['$OR' => $aFilters];
 		}
 		$aContacts = (new \Aurora\System\EAV\Query())
-			->select(['UUID', 'ETag', 'Storage'])
+			->select(['UUID', 'ETag', 'Storage', 'Auto'])
 			->whereType(Classes\Contact::class)
 			->where($aFilters)
 			->exec();
@@ -1063,7 +1069,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$aResult['Info'][] = [
 				'UUID' => $oContact->UUID,
 				'ETag' => $oContact->ETag,
-				'Storage' => $oContact->Storage
+				'Storage' => $oContact->Auto ? 'collected' : $oContact->Storage
 			];
 		}
 		
@@ -1849,7 +1855,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$iResult = 0;
 		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 		{
-			$iUserId = $Storage === 'personal' ? $oUser->EntityId : $oUser->IdTenant;
+			$iUserId = $Storage === 'personal' || $Storage === 'collected' ? $oUser->EntityId : $oUser->IdTenant;
 
 			$oCTag = $this->getManager()->getCTag($iUserId, $Storage);
 			if ($oCTag instanceof Classes\CTag)
@@ -2000,7 +2006,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 						'FullName' => $sName,
 						'PersonalEmail' => $sEmail,
 						'Auto' => true,
-					]);
+					], $iUserId);
+					$this->getManager()->updateCTag($iUserId, 'collected');
 				}
 			}
 		}
@@ -2032,6 +2039,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$this->getManager()->deleteGroups($aGroupUUIDs);
 		}
 		$this->getManager()->deleteCTagsByUserId($aArgs['UserId'], 'personal');
+		$this->getManager()->deleteCTagsByUserId($aArgs['UserId'], 'collected');
 	}
 
 	/**
