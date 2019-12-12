@@ -1488,6 +1488,16 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oGroup = $this->getManager()->getGroup($Group['UUID']);
 		if ($oGroup)
 		{
+			if (isset($Group['Contacts']) && is_array($Group['Contacts']))
+			{
+				$aGroupContactUUIDs = [];
+				foreach ($oGroup->GroupContacts as $oGroupContact)
+				{
+					$aGroupContactUUIDs[] = $oGroupContact->UUID;
+				}
+				\Aurora\System\Managers\Eav::getInstance()->deleteEntities($aGroupContactUUIDs);
+			}
+
 			$oGroup->populate($Group);
 			return $this->getManager()->updateGroup($oGroup);
 		}
