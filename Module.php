@@ -1019,6 +1019,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function GetContactsByUids($UserId, $Storage, $Uids, $Filters = array())
 	{
+		$aResult = [];
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		$this->CheckAccess($UserId);
@@ -1029,13 +1030,18 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		foreach ($aContacts as $oContact)
 		{
-			if ($oContact)
+			if ($oContact instanceof \Aurora\Modules\Contacts\Classes\Contact)
 			{
-				$oContact->GroupsContacts = $this->getManager()->getGroupContacts(null, $oContact->UUID);
+				if ($this->CheckAccessToObject($UserId, $oContact->UUID))
+				{
+					$oContact->GroupsContacts = $this->getManager()->getGroupContacts(null, $oContact->UUID);
+					$oContact->Storage = ($oContact->Auto) ? 'collected' : $oContact->Storage;
+					$aResult[] = $oContact;
+				}
 			}
 		}
 		
-		return $aContacts;
+		return $aResult;
 	}		
 
 	/**
