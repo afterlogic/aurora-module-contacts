@@ -487,6 +487,10 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 					{
 						$this->updateCTag($oContact->IdTenant, $oContact->Storage);
 					}
+
+					$oContact->DateModified = date('Y-m-d H:i:s');
+					$oContact->calculateETag();
+					$this->oEavManager->saveEntity($oContact);					
 				}
 
 			}
@@ -535,6 +539,10 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 					{
 						$this->updateCTag($oContact->IdTenant, $oContact->Storage);
 					}
+
+					$oContact->DateModified = date('Y-m-d H:i:s');
+					$oContact->calculateETag();
+					$this->oEavManager->saveEntity($oContact);					
 				}
 			}
 		}
@@ -572,6 +580,10 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 					{
 						$this->updateCTag($oContact->IdTenant, $oContact->Storage);
 					}
+
+					$oContact->DateModified = date('Y-m-d H:i:s');
+					$oContact->calculateETag();
+					$this->oEavManager->saveEntity($oContact);					
 				}
 			}
 		}
