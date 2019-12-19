@@ -475,6 +475,20 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			foreach ($aGroupContact as $oGroupContact)
 			{
 				$aEntitiesUUIDs[] = $oGroupContact->UUID;
+
+				$oContact = $this->getContact($oGroupContact->ContactUUID);
+				if ($oContact instanceof Classes\Contact)
+				{
+					if ($oContact->Storage === 'personal')
+					{
+						$this->updateCTag($oContact->IdUser, $oContact->Storage);
+					}
+					else
+					{
+						$this->updateCTag($oContact->IdTenant, $oContact->Storage);
+					}
+				}
+
 			}
 		}
 		
@@ -505,13 +519,23 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		{
 			if (!in_array($sContactUUID, $aCurrContactUUIDs))
 			{
-				$oGroupContact = \Aurora\Modules\Contacts\Classes\GroupContact::createInstance(
-					Classes\GroupContact::class,
-					Module::GetName()
-				);
+				$oGroupContact = new Classes\GroupContact(Module::GetName());
 				$oGroupContact->GroupUUID = $sGroupUUID;
 				$oGroupContact->ContactUUID = $sContactUUID;
-				$res = $this->oEavManager->saveEntity($oGroupContact) || $res;
+				$res = $oGroupContact->save() || $res;
+
+				$oContact = $this->getContact($sContactUUID);
+				if ($oContact instanceof Classes\Contact)
+				{
+					if ($oContact->Storage === 'personal')
+					{
+						$this->updateCTag($oContact->IdUser, $oContact->Storage);
+					}
+					else
+					{
+						$this->updateCTag($oContact->IdTenant, $oContact->Storage);
+					}
+				}
 			}
 		}
 		
@@ -536,6 +560,19 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			if (in_array($oGroupContact->ContactUUID, $aContactUUIDs))
 			{
 				$aIdEntitiesToDelete[] = $oGroupContact->UUID;
+
+				$oContact = $this->getContact($oGroupContact->ContactUUID);
+				if ($oContact instanceof Classes\Contact)
+				{
+					if ($oContact->Storage === 'personal')
+					{
+						$this->updateCTag($oContact->IdUser, $oContact->Storage);
+					}
+					else
+					{
+						$this->updateCTag($oContact->IdTenant, $oContact->Storage);
+					}
+				}
 			}
 		}
 		
