@@ -1057,7 +1057,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function GetContactsInfo($Storage, $UserId = null, $Filters = [])
 	{
 		$aResult = [
-			'CTag' => $this->GetCTag($UserId, $Storage)
+			'CTag' => $this->GetCTag($UserId, $Storage),
+			'Info' => array()
 		];
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
