@@ -780,7 +780,69 @@ class Module extends \Aurora\System\Module\AbstractModule
 			'ContactCount' => $iCount,
 			'List' => \Aurora\System\Managers\Response::GetResponseObject($aList)
 		);		
-	}	
+	}
+	
+	/*
+		This method used as trigger for subscibers. Check these modules: PersonalContacts, SharedContacts, TeamContacts
+	*/
+	
+	public function CheckAccessToObject($User, $UUID)
+	{
+		return true;
+	}
+
+	public function CheckAccess(&$UserId)
+	{
+		$bAccessDenied = true;
+		
+		$oAuthenticatedUser = \Aurora\System\Api::getAuthenticatedUser();
+
+		$iUserId = $UserId;
+		if ($iUserId === null)
+		{
+			$iUserId = $oAuthenticatedUser->EntityId;
+		}
+		else
+		{
+			$iUserRole = $oAuthenticatedUser instanceof \Aurora\Modules\Core\Classes\User ? $oAuthenticatedUser->Role : \Aurora\System\Enums\UserRole::Anonymous;
+			switch ($iUserRole)
+			{
+				case (\Aurora\System\Enums\UserRole::SuperAdmin):
+					// everything is allowed for SuperAdmin
+					$UserId = $iUserId;
+					$bAccessDenied = false;
+					break;
+				case (\Aurora\System\Enums\UserRole::TenantAdmin):
+					// everything is allowed for TenantAdmin
+					$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUser($iUserId);
+					if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+					{
+						if ($oAuthenticatedUser->IdTenant === $oUser->IdTenant)
+						{
+							$UserId = $iUserId;
+							$bAccessDenied = false;
+						}
+					}
+					break;
+				case (\Aurora\System\Enums\UserRole::NormalUser):
+					// User identifier shoud be checked
+					if ($iUserId === $oAuthenticatedUser->EntityId)
+					{
+						$UserId = $iUserId;
+						$bAccessDenied = false;
+					}
+					break;
+				case (\Aurora\System\Enums\UserRole::Customer):
+				case (\Aurora\System\Enums\UserRole::Anonymous):
+					// everything is forbidden for Customer and Anonymous users
+					break;
+			}
+			if ($bAccessDenied)
+			{
+				throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::AccessDenied);
+			}
+		}			 
+	}
 	
 	/**
 	 * @api {post} ?/Api/ GetContact
@@ -837,64 +899,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	ErrorCode: 102
 	 * }
 	 */
-
-	 public function CheckAccessToObject($User, $UUID)
-	 {
-		 return true;
-	 }
-
-	 public function CheckAccess(&$UserId)
-	 {
-		$bAccessDenied = true;
-		
-		$oAuthenticatedUser = \Aurora\System\Api::getAuthenticatedUser();
-
-		$iUserId = $UserId;
-		if ($iUserId === null)
-		{
-			$iUserId = $oAuthenticatedUser->EntityId;
-		}
-		else
-		{
-			$iUserRole = $oAuthenticatedUser instanceof \Aurora\Modules\Core\Classes\User ? $oAuthenticatedUser->Role : \Aurora\System\Enums\UserRole::Anonymous;
-			switch ($iUserRole)
-			{
-				case (\Aurora\System\Enums\UserRole::SuperAdmin):
-					// everything is allowed for SuperAdmin
-					$UserId = $iUserId;
-					$bAccessDenied = false;
-					break;
-				case (\Aurora\System\Enums\UserRole::TenantAdmin):
-					// everything is allowed for TenantAdmin
-					$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUser($iUserId);
-					if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
-					{
-						if ($oAuthenticatedUser->IdTenant === $oUser->IdTenant)
-						{
-							$UserId = $iUserId;
-							$bAccessDenied = false;
-						}
-					}
-					break;
-				case (\Aurora\System\Enums\UserRole::NormalUser):
-					// User identifier shoud be checked
-					if ($iUserId === $oAuthenticatedUser->EntityId)
-					{
-						$UserId = $iUserId;
-						$bAccessDenied = false;
-					}
-					break;
-				case (\Aurora\System\Enums\UserRole::Customer):
-				case (\Aurora\System\Enums\UserRole::Anonymous):
-					// everything is forbidden for Customer and Anonymous users
-					break;
-			}
-			if ($bAccessDenied)
-			{
-				throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::AccessDenied);
-			}
-		}			 
-	 }
 	
 	/**
 	 * Returns contact with specified UUID.
@@ -916,7 +920,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			if ($this->CheckAccessToObject($UserId, $UUID))
 			{
 				$mResult = $oContact;
-			}						
+			}
 		}
 		
 		return $mResult;
