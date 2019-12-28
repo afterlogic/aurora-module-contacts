@@ -1429,7 +1429,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->CheckAccess($UserId);
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		
+
+		\Aurora\System\Validator::validate($Group, [
+			'Name'	=>	'required'
+		]);		
+
 		$oGroup = new Classes\Group(self::GetName());
 		$oGroup->IdUser = (int) $UserId;
 
