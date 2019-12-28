@@ -283,18 +283,21 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		$iOffset = 0, $iLimit = 20, $aFilters = array(), $aViewAttrs = array())
 	{
 		$sSortField = 'FullName';
+		$sCustomSelect = '';
 		switch ($iSortField)
 		{
 			case \Aurora\Modules\Contacts\Enums\SortField::Email:
 				$sSortField = 'ViewEmail';
 				break;
 			case \Aurora\Modules\Contacts\Enums\SortField::Frequency:
-				$sSortField = 'Frequency';
+				$sSortField = 'AgeScore';
+				$sCustomSelect = ', (attr_Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, attr_DateModified)/30)) as attr_AgeScore';
 				break;
 		}
 
 		return (new \Aurora\System\EAV\Query())
 			->select($aViewAttrs)
+			->customSelect($sCustomSelect)
 			->whereType(Classes\Contact::class)
 			->where($aFilters)
 			->offset($iOffset)
@@ -490,7 +493,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 
 					$oContact->DateModified = date('Y-m-d H:i:s');
 					$oContact->calculateETag();
-					$this->oEavManager->saveEntity($oContact);					
+					$oContact->saveAttributes(['DateModified', 'ETag']);
 				}
 
 			}

@@ -247,9 +247,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			if ($oUser->isNormalOrTenant())
 			{
-				$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
 				$oUser->{self::GetName().'::ContactsPerPage'} = $ContactsPerPage;
-				return $oCoreDecorator->UpdateUserObject($oUser);
+				return \Aurora\Modules\Core\Module::Decorator()->UpdateUserObject($oUser);
 			}
 			if ($oUser->Role === \Aurora\System\Enums\UserRole::SuperAdmin)
 			{
@@ -1017,32 +1016,43 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 	/**
 	 * Returns list of contacts with specified uids.
-	 * @param string $Storage storage of contacts.
+	 * @param int $UserId 
 	 * @param array $Uids List of uids of contacts to return.
 	 * @return array
 	 */
-	public function GetContactsByUids($UserId, $Storage, $Uids, $Filters = array())
+	public function GetContactsByUids($UserId, $Uids)
 	{
 		$aResult = [];
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		$this->CheckAccess($UserId);
 		
-		$aFilters['UUID'] = [$Uids, 'IN'];
-		
-		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters);
-
-		foreach ($aContacts as $oContact)
+		if (is_array($Uids) && count($Uids) > 0)
 		{
-			if ($oContact instanceof \Aurora\Modules\Contacts\Classes\Contact)
+			$aContacts = $this->getManager()->getContacts(
+				Enums\SortField::Name, 
+				\Aurora\System\Enums\SortOrder::ASC, 
+				0, 
+				0, 
+				['UUID' => [$Uids, 'IN']]
+			);
+
+			foreach ($aContacts as $oContact)
 			{
-				if ($this->CheckAccessToObject($UserId, $oContact->UUID))
+				if ($oContact instanceof \Aurora\Modules\Contacts\Classes\Contact)
 				{
-					$oContact->GroupsContacts = $this->getManager()->getGroupContacts(null, $oContact->UUID);
-					$oContact->Storage = ($oContact->Auto) ? 'collected' : $oContact->Storage;
-					$aResult[] = $oContact;
+					if ($this->CheckAccessToObject($UserId, $oContact->UUID))
+					{
+						$oContact->GroupsContacts = $this->getManager()->getGroupContacts(null, $oContact->UUID);
+						$oContact->Storage = ($oContact->Auto) ? 'collected' : $oContact->Storage;
+						$aResult[] = $oContact;
+					}
 				}
 			}
+		}
+		else
+		{
+			throw new \Aurora\System\Exceptions\InvalidArgumentException();
 		}
 		
 		return $aResult;
@@ -1160,10 +1170,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 		{
-			$oContact = \Aurora\Modules\Contacts\Classes\Contact::createInstance(
-				Classes\Contact::class,
-				self::GetName()
-			);
+			$oContact = new Classes\Contact(self::GetName());
 			$oContact->IdUser = $oUser->EntityId;
 			$oContact->IdTenant = $oUser->IdTenant;
 			$oContact->populate($Contact, true);
@@ -1423,10 +1430,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
-		$oGroup = \Aurora\Modules\Contacts\Classes\Group::createInstance(
-			Classes\Group::class,
-			self::GetName()
-		);
+		$oGroup = new Classes\Group(self::GetName());
 		$oGroup->IdUser = (int) $UserId;
 
 		$oGroup->populate($Group);
@@ -1885,7 +1889,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 		}
 
-
 		return $iResult;
 	}	
 	
@@ -2020,16 +2023,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 			else
 			{
-				$oContactsDecorator = Module::Decorator();
-				if ($oContactsDecorator)
-				{
-					$oContactsDecorator->CreateContact([
-						'FullName' => $sName,
-						'PersonalEmail' => $sEmail,
-						'Auto' => true,
-					], $iUserId);
-					$this->getManager()->updateCTag($iUserId, 'collected');
-				}
+				self::Decorator()->CreateContact([
+					'FullName' => $sName,
+					'PersonalEmail' => $sEmail,
+					'Auto' => true,
+				], $iUserId);
+				$this->getManager()->updateCTag($iUserId, 'collected');
 			}
 		}
 	}

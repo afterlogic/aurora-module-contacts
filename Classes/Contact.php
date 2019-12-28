@@ -127,7 +127,9 @@ class Contact extends \Aurora\System\EAV\Entity
 			'ETag'				=> array('string', ''),
 			'Auto'				=> array('bool', false, true),
 			'Frequency'			=> array('int', 0, true),
-			'DateModified'		=> array('datetime', null, true)
+			'DateModified'		=> array('datetime', null, true),
+
+			'AgeScore'			=> array('nodb', 0),
 		);
 		parent::__construct($sModule);
 	}
@@ -172,10 +174,7 @@ class Contact extends \Aurora\System\EAV\Entity
 					// It can be used only for suggestion to create.
 					elseif (!empty($sGroupName))
 					{
-						$oGroup = \Aurora\Modules\Contacts\Classes\Group::createInstance(
-							'\Aurora\Modules\Contacts\Classes\Group',
-							$this->GetModule()
-						);
+						$oGroup = new \Aurora\Modules\Contacts\Classes\Group($this->getModule());
 						$oGroup->IdUser = $this->IdUser;
 						$oGroup->Name = $sGroupName;
 						$aNonExistingGroups[] = $oGroup;
@@ -339,9 +338,6 @@ class Contact extends \Aurora\System\EAV\Entity
 
 	public function calculateETag()
 	{
-		// if (empty($this->ETag))
-		// {
-			$this->ETag = \md5(\serialize($this));
-		// }
+		$this->ETag = \md5(\serialize($this));
 	}
 }
