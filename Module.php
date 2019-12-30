@@ -1911,25 +1911,28 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$mResult = false;
 
-		$oContact = self::Decorator()->GetContact($UUID);
-		$oVCard = new \Sabre\VObject\Component\VCard();
-		\Aurora\Modules\Contacts\Classes\VCard\Helper::UpdateVCardFromContact($oContact, $oVCard);
-		$sVCardData = $oVCard->serialize();
-		if ($sVCardData)
+		$oContact = self::Decorator()->GetContact($UUID, $UserId);
+		if ($oContact)
 		{
-			$sUUID = \Aurora\System\Api::getUserUUIDById($UserId);
-			$sTempName = md5($sUUID.$UUID);
-			$oApiFileCache = new \Aurora\System\Managers\Filecache();
-
-			$oApiFileCache->put($sUUID, $sTempName, $sVCardData);
-			if ($oApiFileCache->isFileExists($sUUID, $sTempName))
+			$oVCard = new \Sabre\VObject\Component\VCard();
+			\Aurora\Modules\Contacts\Classes\VCard\Helper::UpdateVCardFromContact($oContact, $oVCard);
+			$sVCardData = $oVCard->serialize();
+			if ($sVCardData)
 			{
-				$mResult = \Aurora\System\Utils::GetClientFileResponse(
-					null, $UserId, $FileName, $sTempName, $oApiFileCache->fileSize($sUUID, $sTempName)
-				);
+				$sUUID = \Aurora\System\Api::getUserUUIDById($UserId);
+				$sTempName = md5($sUUID.$UUID);
+				$oApiFileCache = new \Aurora\System\Managers\Filecache();
+
+				$oApiFileCache->put($sUUID, $sTempName, $sVCardData);
+				if ($oApiFileCache->isFileExists($sUUID, $sTempName))
+				{
+					$mResult = \Aurora\System\Utils::GetClientFileResponse(
+						null, $UserId, $FileName, $sTempName, $oApiFileCache->fileSize($sUUID, $sTempName)
+					);
+				}
 			}
 		}
-		
+				
 		return $mResult;		
 	}	
 	/***** public functions might be called with web API *****/
