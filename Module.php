@@ -916,7 +916,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 		{
 			$oContact = $this->getManager()->getContact($UUID);
-			if ($this->CheckAccessToObject($UserId, $UUID))
+			if (self::Decorator()->CheckAccessToObject($UserId, $UUID))
 			{
 				$mResult = $oContact;
 			}
@@ -1041,7 +1041,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			{
 				if ($oContact instanceof \Aurora\Modules\Contacts\Classes\Contact)
 				{
-					if ($this->CheckAccessToObject($UserId, $oContact->UUID))
+					if (self::Decorator()->CheckAccessToObject($UserId, $oContact->UUID))
 					{
 						$oContact->GroupsContacts = $this->getManager()->getGroupContacts(null, $oContact->UUID);
 						$oContact->Storage = ($oContact->Auto) ? 'collected' : $oContact->Storage;
