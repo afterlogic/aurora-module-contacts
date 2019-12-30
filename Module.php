@@ -785,7 +785,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		This method used as trigger for subscibers. Check these modules: PersonalContacts, SharedContacts, TeamContacts
 	*/
 	
-	public function CheckAccessToObject($User, $UUID)
+	public function CheckAccessToObject($User, $Contact)
 	{
 		return true;
 	}
@@ -916,7 +916,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 		{
 			$oContact = $this->getManager()->getContact($UUID);
-			if (self::Decorator()->CheckAccessToObject($UserId, $UUID))
+			if (self::Decorator()->CheckAccessToObject($oUser, $oContact))
 			{
 				$mResult = $oContact;
 			}
@@ -1026,6 +1026,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		$this->CheckAccess($UserId);
+		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserUnchecked($UserId);
 		
 		if (is_array($Uids) && count($Uids) > 0)
 		{
@@ -1041,7 +1042,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			{
 				if ($oContact instanceof \Aurora\Modules\Contacts\Classes\Contact)
 				{
-					if (self::Decorator()->CheckAccessToObject($UserId, $oContact->UUID))
+					if (self::Decorator()->CheckAccessToObject($oUser, $oContact))
 					{
 						$oContact->GroupsContacts = $this->getManager()->getGroupContacts(null, $oContact->UUID);
 						$oContact->Storage = ($oContact->Auto) ? 'collected' : $oContact->Storage;
