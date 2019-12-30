@@ -1932,7 +1932,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				}
 			}
 		}
-				
+
 		return $mResult;		
 	}	
 	/***** public functions might be called with web API *****/
@@ -2035,8 +2035,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 					'PersonalEmail' => $sEmail,
 					'Auto' => true,
 				], $iUserId);
-				$this->getManager()->updateCTag($iUserId, 'collected');
 			}
+			$this->getManager()->updateCTag($iUserId, 'collected');
 		}
 	}
 	
