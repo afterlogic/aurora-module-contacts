@@ -63,16 +63,16 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			)
 		);
 
-		$aContacts = (new \Aurora\System\EAV\Query())
+		$oContact = (new \Aurora\System\EAV\Query())
 			->select()
 			->whereType(Classes\Contact::class)
 			->where($aFilters)
 			->orderBy(['FullName'])
+			->one()
 			->exec();
 
-		if (count($aContacts) > 0)
+		if ($oContact instanceof Classes\Contact)
 		{
-			$oContact = $aContacts[0];
 			$oContact->GroupsContacts = $this->getGroupContacts(null, $oContact->UUID);
 		}
 		return $oContact;
@@ -108,7 +108,6 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 */
 	public function getGroupByName($sName, $iUserId)
 	{
-		$oGroup = null;
 		$aFilters = [
 			'$AND' => [
 				'Name' => [$sName, '='],
@@ -116,18 +115,12 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			]
 		];
 
-		$aGroups = (new \Aurora\System\EAV\Query())
+		return (new \Aurora\System\EAV\Query())
 			->select()
 			->whereType(Classes\Group::class)
 			->where($aFilters)
+			->one()
 			->exec();
-
-
-		if (count($aGroups) > 0)
-		{
-			$oGroup = $aGroups[0];
-		}
-		return $oGroup;
 	}
 
 	/**
@@ -204,19 +197,22 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 */
 	public function updateGroup($oGroup)
 	{
-		$res = $this->oEavManager->saveEntity($oGroup);
-		if ($res)
+		$res = false;
+		if ($oGroup instanceof Classes\Group)
 		{
-			$this->updateCTag($oGroup->IdUser, 'personal');
-			foreach ($oGroup->GroupContacts as $oGroupContact)
+			$res = $oGroup->save();
+			if ($res)
 			{
-				$oGroupContact->GroupUUID = $oGroup->UUID;
-				$res = $this->oEavManager->saveEntity($oGroupContact);
+				$this->updateCTag($oGroup->IdUser, 'personal');
+				foreach ($oGroup->GroupContacts as $oGroupContact)
+				{
+					$oGroupContact->GroupUUID = $oGroup->UUID;
+					$res = $oGroupContact->save();
+				}
 			}
 		}
 
 		return $res;
-
 	}
 
 	/**
@@ -380,7 +376,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			foreach ($oContact->GroupsContacts as $oGroupContact)
 			{
 				$oGroupContact->ContactUUID = $oContact->UUID;
-				$this->oEavManager->saveEntity($oGroupContact);
+				$oGroupContact->save();
 			}
 		}
 
@@ -396,14 +392,14 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 */
 	public function createGroup($oGroup)
 	{
-		$res = $this->oEavManager->saveEntity($oGroup);
+		$res = $oGroup->save();
 		
 		if ($res)
 		{
 			foreach ($oGroup->GroupContacts as $oGroupContact)
 			{
 				$oGroupContact->GroupUUID = $oGroup->UUID;
-				$res = $this->oEavManager->saveEntity($oGroupContact);
+				$res = $oGroupContact->save();
 			}
 		}
 
@@ -545,7 +541,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 
 					$oContact->DateModified = date('Y-m-d H:i:s');
 					$oContact->calculateETag();
-					$this->oEavManager->saveEntity($oContact);					
+					$oContact->save();
 				}
 			}
 		}
@@ -586,7 +582,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 
 					$oContact->DateModified = date('Y-m-d H:i:s');
 					$oContact->calculateETag();
-					$this->oEavManager->saveEntity($oContact);					
+					$oContact->save();
 				}
 			}
 		}

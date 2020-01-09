@@ -156,7 +156,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		$aStorages = [];
 		$this->broadcastEvent('GetStorages', $aStorages);
-		return $aStorages;
+		\ksort($aStorages);
+		return \array_values($aStorages);
 	}
 	
 	public function IsDisplayedStorage($Storage)
@@ -796,7 +797,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		$oAuthenticatedUser = \Aurora\System\Api::getAuthenticatedUser();
 
-		$iUserId = $UserId;
+		$iUserId = (int) $UserId;
 		if ($iUserId === null)
 		{
 			$iUserId = $oAuthenticatedUser->EntityId;
