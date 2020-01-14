@@ -797,13 +797,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		$oAuthenticatedUser = \Aurora\System\Api::getAuthenticatedUser();
 
-		$iUserId = (int) $UserId;
-		if ($iUserId === null)
+		if ($UserId === null)
 		{
 			$iUserId = $oAuthenticatedUser->EntityId;
 		}
 		else
 		{
+			$iUserId = (int) $UserId;
+
 			$iUserRole = $oAuthenticatedUser instanceof \Aurora\Modules\Core\Classes\User ? $oAuthenticatedUser->Role : \Aurora\System\Enums\UserRole::Anonymous;
 			switch ($iUserRole)
 			{
