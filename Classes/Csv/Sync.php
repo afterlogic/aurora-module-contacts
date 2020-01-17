@@ -184,7 +184,7 @@ class Sync
 				$mRow = preg_replace('/[\r\n]+/', "\n", $mRow);
 				if (!is_array($mRow) || count($mRow) === 0 || count($mRow) === 1 && empty($mRow[0]))
 				{
-					continue 2;
+					continue;
 				}
 				if (null === $aHeaders)
 				{
