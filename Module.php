@@ -128,9 +128,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function GetSettings()
 	{
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::Anonymous);
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$aStorages = self::Decorator()->GetStorages();
+		
+		$aStorageNames = \array_map(function($oStorage) {
+			return $oStorage['Id'];
+		}, $aStorages);
 		
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		$ContactsPerPage = $this->getConfig('ContactsPerPage', 20);
@@ -142,7 +146,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		return array(
 			'ContactsPerPage' => $ContactsPerPage,
 			'ImportContactsLink' => $this->getConfig('ImportContactsLink', ''),
-			'Storages' => $aStorages,
+			'Storages' => $aStorageNames,
 			'PrimaryEmail' => (new Enums\PrimaryEmail)->getMap(),
 			'PrimaryPhone' => (new Enums\PrimaryPhone)->getMap(),
 			'PrimaryAddress' => (new Enums\PrimaryAddress)->getMap(),
@@ -152,32 +156,34 @@ class Module extends \Aurora\System\Module\AbstractModule
 		);
 	}
 
-	public function GetStorages()
-	{
-		$aStorages = [];
-		$this->broadcastEvent('GetStorages', $aStorages);
-		\ksort($aStorages);
-		return \array_values($aStorages);
-	}
-	
 	public function IsDisplayedStorage($Storage)
 	{
 		return true;
 	}
 
+	//Depricated
 	public function GetContactStorages()
 	{
+		return $this->Decorator()->GetStorages();
+	}
+	
+	public function GetStorages()
+	{
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		
 		$aStorages = [];
 		$aStorageNames = [];
 		$this->broadcastEvent('GetStorages', $aStorageNames);
+		\ksort($aStorageNames);
 		
 		$iUserId = \Aurora\System\Api::getAuthenticatedUserId();
 		
-		foreach ($aStorageNames as $sStorageName) {
+		foreach ($aStorageNames as $iIndex => $sStorageName) {
 			$aStorages[] = [
 				'Id' => $sStorageName,
 				'CTag' => $this->Decorator()->GetCTag($iUserId, $sStorageName),
-				'Display' => $this->Decorator()->IsDisplayedStorage($sStorageName)
+				'Display' => $this->Decorator()->IsDisplayedStorage($sStorageName),
+				'Order' => $iIndex
 			];
 		}
 		
