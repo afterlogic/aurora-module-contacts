@@ -2064,6 +2064,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 	
 	public function onBeforeDeleteUser(&$aArgs, &$mResult)
 	{
+		$this->CheckAccess($aArgs['UserId']);
+		
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);	
+
 		$aGroups = $this->getManager()->getGroups($aArgs['UserId']);
 		if (count($aGroups) > 0)
 		{
