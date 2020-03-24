@@ -41,6 +41,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Mail::GetBodyStructureParts', array($this, 'onGetBodyStructureParts'));
 		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
 		$this->subscribeEvent('Core::CreateTables::after', array($this, 'onAfterCreateTables'));
+
+		$this->subscribeEvent('Calendar::CreateEvent', array($this, 'onCreateOrUpdateEvent'));
+		$this->subscribeEvent('Calendar::UpdateEvent', array($this, 'onCreateOrUpdateEvent'));
+		
 		
 		\Aurora\Modules\Core\Classes\User::extend(
 			self::GetName(),
@@ -1850,12 +1854,24 @@ class Module extends \Aurora\System\Module\AbstractModule
 		return $aResponse;
 	}
 	
-//	public function GetGroupEvents($UUID)
-//	{
-//		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-//		
-//		return [];
-//	}	
+	public function GetGroupEvents($UserId, $UUID)
+	{
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		
+		$this->CheckAccess($UserId);
+
+		$aResult = [];
+		$aEvents = $this->_getGroupEvents($UUID);
+		if (is_array($aEvents) && 0 < count($aEvents))
+		{
+			foreach ($aEvents as $oEvent)
+			{
+				$aResult[] = \Aurora\Modules\Calendar\Module::getInstance()->GetBaseEvent($UserId, $oEvent->CalendarUUID, $oEvent->EventUUID);
+			}
+		}
+		
+		return $aResult;
+	}	
 	
 	public function UpdateSharedContacts($UserId, $UUIDs)
 	{
@@ -2091,5 +2107,186 @@ class Module extends \Aurora\System\Module\AbstractModule
 			dirname(__FILE__) . '/Sql/update_contact_notes_field_type.sql'
 		);
 	}	
+
+	public function onCreateOrUpdateEvent(&$aArgs)
+	{
+		$oEvent = $aArgs['Event'];
+		$aGroups = \Aurora\Modules\Calendar\Classes\Helper::findGroupsHashTagsFromString($oEvent->Name);
+		$aGroupsDescription = \Aurora\Modules\Calendar\Classes\Helper::findGroupsHashTagsFromString($oEvent->Description);
+		$aGroups = array_merge($aGroups, $aGroupsDescription);
+		$aGroupsLocation = \Aurora\Modules\Calendar\Classes\Helper::findGroupsHashTagsFromString($oEvent->Location);
+		$aGroups = array_merge($aGroups, $aGroupsLocation);
+		$oUser = \Aurora\System\Api::getAuthenticatedUser();
+
+		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+		{
+			foreach ($aGroups as $sGroup) 
+			{
+				$sGroupName = ltrim($sGroup, '#');
+				$oGroup = $this->Decorator()->GetGroupByName($sGroupName, $oUser->EntityId);
+				if (!$oGroup) 
+				{
+					$sGroupUUID = $this->Decorator()->CreateGroup(['Name' => $sGroupName], $oUser->EntityId);
+					if ($sGroupUUID)
+					{
+						$oGroup = $this->GetGroup($oUser->EntityId, $sGroupUUID);
+					}
+				}
+	
+				if ($oGroup instanceof Classes\Group)
+				{
+					$this->removeEventFromGroup($oGroup->UUID, $oEvent->IdCalendar, $oEvent->Id);
+					$this->addEventToGroup($oGroup->UUID, $oEvent->IdCalendar, $oEvent->Id);
+				}
+			}
+		}
+	}
+
+	/**
+	 * @param string $sGroupUUID
+	 *
+	 * @return bool
+	 */
+	protected function _getGroupEvents($sGroupUUID)
+	{
+		$mResult = false;
+		try
+		{
+			$mResult = (new \Aurora\System\EAV\Query(Classes\GroupEvent::class))
+				->select()
+				->where(['GroupUUID' => $sGroupUUID])
+				->exec();
+
+		}
+		catch (\Aurora\System\Exceptions\BaseException $oException)
+		{
+			$mResult = false;
+		}
+		return $mResult;
+	}
+
+	/**
+	 * @param string $sCalendarUUID
+	 * @param string $sEventUUID
+	 *
+	 * @return bool
+	 */
+	protected function getGroupEvent($sCalendarUUID, $sEventUUID)
+	{
+		$mResult = false;
+		try
+		{
+			$mResult = (new \Aurora\System\EAV\Query(Classes\GroupEvent::class))
+				->select()
+				->where([
+					'CalendarUUID' => $sCalendarUUID,
+					'EventUUID' => $sEventUUID
+				])
+				->one()
+				->exec();
+		}
+		catch (\Aurora\System\Exceptions\BaseException $oException)
+		{
+			$mResult = false;
+		}
+		return $mResult;
+	}
+
+	/**
+	 * @param string $sGroupUUID
+	 * @param string $sCalendarUUID
+	 * @param string $sEventUUID
+	 *
+	 * @return bool
+	 */
+	protected function addEventToGroup($sGroupUUID, $sCalendarUUID, $sEventUUID)
+	{
+		$bResult = false;
+		try
+		{
+			$oGroupEvent = new Classes\GroupEvent($this->GetName());
+			$oGroupEvent->GroupUUID = $sGroupUUID;
+			$oGroupEvent->CalendarUUID = $sCalendarUUID;
+			$oGroupEvent->EventUUID = $sEventUUID;
+			$bResult = $oGroupEvent->save();
+		}
+		catch (\Aurora\System\Exceptions\BaseException $oException)
+		{
+			$bResult = false;
+		}
+		return $bResult;
+	}
+
+	/**
+	 * @param string $sGroupUUID
+	 * @param string $sCalendarUUID
+	 * @param string $sEventUUID
+	 *
+	 * @return bool
+	 */
+	protected function removeEventFromGroup($sGroupUUID, $sCalendarUUID, $sEventUUID)
+	{
+		$mResult = false;
+		try
+		{
+			$mResult = (new \Aurora\System\EAV\Query(Classes\GroupEvent::class))
+				->select()
+				->where([
+					'GroupUUID' => $sGroupUUID,
+					'CalendarUUID' => $sCalendarUUID,
+					'EventUUID' => $sEventUUID
+				])
+				->one()
+				->exec();
+			
+			if ($mResult instanceof Classes\GroupEvent)
+			{
+				$mResult = $mResult->delete();
+			}
+		}
+		catch (\Aurora\System\Exceptions\BaseException $oException)
+		{
+			$mResult = false;
+		}
+		return $mResult;
+	}
+
+	/**
+	 * @param string $sCalendarUUID
+	 * @param string $sEventUUID
+	 *
+	 * @return bool
+	 */
+	public function removeEventFromAllGroups($sCalendarUUID, $sEventUUID)
+	{
+		$mResult = false;
+		try
+		{
+			$mResult = (new \Aurora\System\EAV\Query(Classes\GroupEvent::class))
+				->select()
+				->where([
+					'CalendarUUID' => $sCalendarUUID,
+					'EventUUID' => $sEventUUID
+				])
+				->exec();
+
+			if (is_array($mResult))
+			{
+				foreach ($mResult as $oGroupEvent)
+				{
+					if ($mResult instanceof Classes\GroupEvent)
+					{
+						$mResult->delete();
+					}
+				}
+			}
+			$mResult = true;
+		}
+		catch (\Aurora\System\Exceptions\BaseException $oException)
+		{
+			$mResult = false;
+		}
+		return $mResult;
+	}		
 	/***** private functions *****/
 }
