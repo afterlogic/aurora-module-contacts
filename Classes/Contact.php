@@ -332,6 +332,13 @@ class Contact extends \Aurora\System\EAV\Entity
 		{
 			$aRes[$sKey] = $mValue;
 		}
+
+		$aArgs = ['Contact' => $this];
+		\Aurora\System\Api::GetModule('Core')->broadcastEvent(
+			'Contacts::Contact::ToResponseArray',
+			$aArgs,
+			$aRes
+		);		
 		
 		return $aRes;
 	}

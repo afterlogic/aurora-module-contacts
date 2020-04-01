@@ -730,7 +730,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 		elseif (count($aFilters) > 1)
 		{
-			$aFilters = ['$OR' => $aFilters];
+//			$aFilters = ['$OR' => $aFilters];
 		}
 		
 		if ($SortField === Enums\SortField::Frequency)
@@ -1088,10 +1088,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->CheckAccess($UserId);
 
 		$aFilters = $this->prepareFilters($Filters);
-		if (count($aFilters) > 1)
-		{
-			$aFilters = ['$OR' => $aFilters];
-		}
+		// if (count($aFilters) > 1)
+		// {
+		// 	$aFilters = ['$OR' => $aFilters];
+		// }
 		$aContacts = (new \Aurora\System\EAV\Query())
 			->select(['UUID', 'ETag', 'Storage', 'Auto'])
 			->whereType(Classes\Contact::class)
@@ -1304,7 +1304,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($oContact)
 		{
 			$oContact->populate($Contact, true);
-			if ($this->getManager()->updateContact($oContact))
+			if ($this->UpdateContactObject($oContact))
 			{
 				return [
 					'UUID' => $oContact->UUID, 
@@ -1319,6 +1319,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 		
 		return false;
 	}
+
+	public function UpdateContactObject($Contact)
+	{
+		$this->CheckAccess($Contact->IdUser);
+
+		return $this->getManager()->updateContact($Contact);
+	}
+		
 	
 	/**
 	 * @api {post} ?/Api/ DeleteContacts
@@ -2179,8 +2187,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$mResult = (new \Aurora\System\EAV\Query(Classes\GroupEvent::class))
 				->select()
 				->where([
-					'CalendarUUID' => $sCalendarUUID,
-					'EventUUID' => $sEventUUID
+					'$AND' => [
+						'CalendarUUID' => $sCalendarUUID,
+						'EventUUID' => $sEventUUID
+					]
 				])
 				->one()
 				->exec();
@@ -2232,9 +2242,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$mResult = (new \Aurora\System\EAV\Query(Classes\GroupEvent::class))
 				->select()
 				->where([
-					'GroupUUID' => $sGroupUUID,
-					'CalendarUUID' => $sCalendarUUID,
-					'EventUUID' => $sEventUUID
+					'$AND' => [
+						'GroupUUID' => $sGroupUUID,
+						'CalendarUUID' => $sCalendarUUID,
+						'EventUUID' => $sEventUUID
+					]
 				])
 				->one()
 				->exec();
@@ -2265,8 +2277,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$mResult = (new \Aurora\System\EAV\Query(Classes\GroupEvent::class))
 				->select()
 				->where([
-					'CalendarUUID' => $sCalendarUUID,
-					'EventUUID' => $sEventUUID
+					'$AND' => [
+						'CalendarUUID' => $sCalendarUUID,
+						'EventUUID' => $sEventUUID
+					]
 				])
 				->exec();
 
