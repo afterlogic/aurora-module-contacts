@@ -1015,10 +1015,28 @@ class Module extends \Aurora\System\Module\AbstractModule
 					'ViewEmail' => [$Emails, 'IN']
 				]
 			];
+			if ($Storage !== \Aurora\Modules\Contacts\Enums\StorageType::All)
+			{
+				$aFilters['$AND']['Storage'] = $Storage;
+			}
 		}
 		else
 		{
-			$aFilters['ViewEmail'] = [$Emails, 'IN'];
+			if ($Storage !== \Aurora\Modules\Contacts\Enums\StorageType::All)
+			{
+				$aFilters = [
+					'$AND' => [
+						'Storage' => $Storage,
+						'ViewEmail' => [$Emails, 'IN']
+					]
+				];
+			}			
+			else
+			{
+				$aFilters = [
+					'ViewEmail' => [$Emails, 'IN']
+				];
+			}
 		}
 		
 		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters);

@@ -142,7 +142,7 @@ class Contact extends \Aurora\System\EAV\Entity
 	{
 		if (is_string($mValue))
 		{
-	        $mValue = str_replace(array("\r","\n\n"), array('\n','\n'), $mValue);
+//	        $mValue = str_replace(array("\r","\n"), array("\n","\n"), $mValue);
 		}
 
 		parent::__set($sKey, $mValue);
