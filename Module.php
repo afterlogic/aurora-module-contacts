@@ -331,8 +331,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
-		$aFilters = $this->prepareFilters($Filters);
-		
+		$aPreparedFilters = $this->prepareFiltersFromStorage($UserId, $Storage, $SortField);
+		$aFilters = $this->prepareFilters($aPreparedFilters);
+			
 		if (empty($ContactUUIDs) && !empty($GroupUUID))
 		{
 			$aGroupContact = $this->getManager()->getGroupContacts($GroupUUID);
@@ -638,7 +639,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$this->CheckAccess($UserId);
 
-		$aFilters = $this->prepareFilters($Filters);
+		$aPreparedFilters = $this->prepareFiltersFromStorage($UserId, $Storage, $SortField);
+		$aFilters = array_merge($aPreparedFilters, $Filters);
+		$aFilters = $this->prepareFilters($aFilters);
 
 		$aContactUUIDs = array();
 		$aGroupUsersList = [];
@@ -730,7 +733,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 		elseif (count($aFilters) > 1)
 		{
-//			$aFilters = ['$OR' => $aFilters];
+			$aFilters = ['$OR' => $aFilters];
 		}
 		
 		if ($SortField === Enums\SortField::Frequency)
@@ -1004,8 +1007,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		$this->CheckAccess($UserId);
-		
-		$aFilters = $this->prepareFilters($Filters);
+
+		$aPreparedFilters = $this->prepareFiltersFromStorage($UserId, $Storage);
+		$aFilters = array_merge($aPreparedFilters, $Filters);
+		$aFilters = $this->prepareFilters($aFilters);
 		
 		if (!empty($aFilters))
 		{
@@ -1104,8 +1109,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		$this->CheckAccess($UserId);
+		
+		$aPreparedFilters = $this->prepareFiltersFromStorage($UserId, $Storage);
+		$aFilters = array_merge($aPreparedFilters, $Filters);
+		$aFilters = $this->prepareFilters($aFilters);
 
-		$aFilters = $this->prepareFilters($Filters);
 		// if (count($aFilters) > 1)
 		// {
 		// 	$aFilters = ['$OR' => $aFilters];
@@ -2019,6 +2027,20 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 		}
 		return $aImportResult;
+	}
+
+	private function prepareFiltersFromStorage($UserId, $Storage = '', $SortField = Enums\SortField::Name)
+	{
+		$aArgs = [
+			'UserId' => $UserId,
+			'Storage' => $Storage,
+			'SortField' => $SortField
+		];
+		$aPreparedFilters = [];
+		
+		$this->broadcastEvent('PrepareFiltersFromStorage', $aArgs, $aPreparedFilters);
+		
+		return $aPreparedFilters;
 	}
 	
 	private function prepareFilters($aRawFilters)
