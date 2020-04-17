@@ -29,13 +29,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		return $this->oManager;
 	}
-	
+
 	/**
 	 * Initializes Contacts Module.
-	 * 
+	 *
 	 * @ignore
 	 */
-	public function init() 
+	public function init()
 	{
 		$this->subscribeEvent('Mail::AfterUseEmails', array($this, 'onAfterUseEmails'));
 		$this->subscribeEvent('Mail::GetBodyStructureParts', array($this, 'onGetBodyStructureParts'));
@@ -44,8 +44,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$this->subscribeEvent('Calendar::CreateEvent', array($this, 'onCreateOrUpdateEvent'));
 		$this->subscribeEvent('Calendar::UpdateEvent', array($this, 'onCreateOrUpdateEvent'));
-		
-		
+
+
 		\Aurora\Modules\Core\Classes\User::extend(
 			self::GetName(),
 			[
@@ -64,34 +64,34 @@ class Module extends \Aurora\System\Module\AbstractModule
 		return $this->getManager();
 	}
 	/***** public functions *****/
-	
+
 	/***** public functions might be called with web API *****/
 	/**
 	 * @apiDefine Contacts Contacts Module
 	 * Main Contacts module. It provides PHP and Web APIs for managing contacts.
 	 */
-	
+
 	/**
 	 * @api {post} ?/Api/ GetSettings
 	 * @apiName GetSettings
 	 * @apiGroup Contacts
 	 * @apiDescription Obtains list of module settings for authenticated user.
-	 * 
+	 *
 	 * @apiHeader {string} [Authorization] "Bearer " + Authentication token which was received as the result of Core.Login method.
 	 * @apiHeaderExample {json} Header-Example:
 	 *	{
 	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
 	 *	}
-	 * 
+	 *
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=GetSettings} Method Method name
-	 * 
+	 *
 	 * @apiParamExample {json} Request-Example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'GetSettings'
 	 * }
-	 * 
+	 *
 	 * @apiSuccess {object[]} Result Array of response objects.
 	 * @apiSuccess {string} Result.Module Module name.
 	 * @apiSuccess {string} Result.Method Method name.
@@ -105,7 +105,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiSuccess {array} Result.Result.\Aurora\Modules\Contacts\Enums\PrimaryAddress='[]' Enumeration with primary address values.
 	 * @apiSuccess {array} Result.Result.\Aurora\Modules\Contacts\Enums\SortField='[]' Enumeration with sort field values.
 	 * @apiSuccess {int} [Result.ErrorCode] Error code
-	 * 
+	 *
 	 * @apiSuccessExample {json} Success response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -116,7 +116,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * \Aurora\Modules\Contacts\Enums\PrimaryAddress: {'Personal': 0, 'Business': 1},
 	 * \Aurora\Modules\Contacts\Enums\SortField: {'Name': 1, 'Email': 2, 'Frequency': 3} }
 	 * }
-	 * 
+	 *
 	 * @apiSuccessExample {json} Error response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -125,7 +125,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	ErrorCode: 102
 	 * }
 	 */
-	
+
 	/**
 	 * Obtains list of module settings for authenticated user.
 	 * @return array
@@ -133,20 +133,20 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function GetSettings()
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		
+
 		$aStorages = self::Decorator()->GetStorages();
-		
+
 		$aStorageNames = \array_map(function($oStorage) {
 			return $oStorage['Id'];
 		}, $aStorages);
-		
+
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		$ContactsPerPage = $this->getConfig('ContactsPerPage', 20);
 		if ($oUser && $oUser->isNormalOrTenant() && isset($oUser->{self::GetName().'::ContactsPerPage'}))
 		{
 			$ContactsPerPage = $oUser->{self::GetName().'::ContactsPerPage'};
 		}
-		
+
 		return array(
 			'ContactsPerPage' => $ContactsPerPage,
 			'ImportContactsLink' => $this->getConfig('ImportContactsLink', ''),
@@ -170,18 +170,18 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		return $this->Decorator()->GetStorages();
 	}
-	
+
 	public function GetStorages()
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		
+
 		$aStorages = [];
 		$aStorageNames = [];
 		$this->broadcastEvent('GetStorages', $aStorageNames);
 		\ksort($aStorageNames);
-		
+
 		$iUserId = \Aurora\System\Api::getAuthenticatedUserId();
-		
+
 		foreach ($aStorageNames as $iIndex => $sStorageName) {
 			$aStorages[] = [
 				'Id' => $sStorageName,
@@ -190,49 +190,49 @@ class Module extends \Aurora\System\Module\AbstractModule
 				'Order' => $iIndex
 			];
 		}
-		
+
 		return $aStorages;
 	}
-	
+
 	/**
 	 * @api {post} ?/Api/ UpdateSettings
 	 * @apiName UpdateSettings
 	 * @apiGroup Contacts
 	 * @apiDescription Updates module's settings - saves them to config.json file.
-	 * 
+	 *
 	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
 	 * @apiHeaderExample {json} Header-Example:
 	 *	{
 	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
 	 *	}
-	 * 
+	 *
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=UpdateSettings} Method Method name
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **ContactsPerPage** *int* Count of contacts per page.<br>
 	 * }
-	 * 
+	 *
 	 * @apiParamExample {json} Request-Example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'UpdateSettings',
 	 *	Parameters: '{ ContactsPerPage: 10 }'
 	 * }
-	 * 
+	 *
 	 * @apiSuccess {object[]} Result Array of response objects.
 	 * @apiSuccess {string} Result.Module Module name
 	 * @apiSuccess {string} Result.Method Method name
 	 * @apiSuccess {bool} Result.Result Indicates if settings were updated successfully.
 	 * @apiSuccess {int} [Result.ErrorCode] Error code
-	 * 
+	 *
 	 * @apiSuccessExample {json} Success response example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'UpdateSettings',
 	 *	Result: true
 	 * }
-	 * 
+	 *
 	 * @apiSuccessExample {json} Error response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -241,7 +241,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	ErrorCode: 102
 	 * }
 	 */
-	
+
 	/**
 	 * Updates module's settings - saves them to config.json file or to user settings in db.
 	 * @param int $ContactsPerPage Count of contacts per page.
@@ -250,7 +250,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function UpdateSettings($ContactsPerPage)
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		
+
 		$bResult = false;
 
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
@@ -267,22 +267,22 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$bResult = $this->saveModuleConfig();
 			}
 		}
-		
+
 		return $bResult;
 	}
-	
+
 	/**
 	 * @api {post} ?/Api/ Export
 	 * @apiName Export
 	 * @apiGroup Contacts
 	 * @apiDescription Exports specified contacts to a file with specified format.
-	 * 
+	 *
 	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
 	 * @apiHeaderExample {json} Header-Example:
 	 *	{
 	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
 	 *	}
-	 * 
+	 *
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=Export} Method Method name
 	 * @apiParam {string} Parameters JSON.stringified object <br>
@@ -292,23 +292,23 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * &emsp; **GroupUUID** *string* UUID of group that should contain contacts for export.<br>
 	 * &emsp; **ContactUUIDs** *array* List of UUIDs of contacts that should be exported.<br>
 	 * }
-	 * 
+	 *
 	 * @apiParamExample {json} Request-Example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'Export',
 	 *	Parameters: '{ Format: "csv", Filters: [], GroupUUID: "", ContactUUIDs: [] }'
 	 * }
-	 * 
+	 *
 	 * @apiSuccess {object[]} Result Array of response objects.
 	 * @apiSuccess {string} Result.Module Module name
 	 * @apiSuccess {string} Result.Method Method name
 	 * @apiSuccess {mixed} Result.Result Contents of CSV or VCF file in case of success, otherwise **false**.
 	 * @apiSuccess {int} [Result.ErrorCode] Error code
-	 * 
+	 *
 	 * @apiSuccessExample {json} Success response example:
-	 * contents of CSV or VCF file 
-	 * 
+	 * contents of CSV or VCF file
+	 *
 	 * @apiSuccessExample {json} Error response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -317,7 +317,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	ErrorCode: 102
 	 * }
 	 */
-	
+
 	/**
 	 * Exports specified contacts to a file with specified format.
 	 * @param string $Format File format that should be used for export.
@@ -330,10 +330,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->CheckAccess($UserId);
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		
+
 		$aPreparedFilters = $this->prepareFiltersFromStorage($UserId, $Storage, $SortField);
 		$aFilters = $this->prepareFilters($aPreparedFilters);
-			
+
 		if (empty($ContactUUIDs) && !empty($GroupUUID))
 		{
 			$aGroupContact = $this->getManager()->getGroupContacts($GroupUUID);
@@ -356,13 +356,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 				}
 			}
 		}
-		
+
 		$aFilters = ['$OR' => $aFilters];
-		
+
 		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters);
-		
+
 		$sOutput = '';
-		
+
 		if (is_array($aContacts))
 		{
 			switch ($Format)
@@ -375,13 +375,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 					foreach ($aContacts as $oContact)
 					{
 						$oContact->GroupsContacts = $this->getManager()->getGroupContacts(null, $oContact->UUID);
-					
+
 						$sOutput .= self::Decorator()->GetContactAsVCF($UserId, $oContact);
 					}
 					break;
 			}
 		}
-		
+
 		if (is_string($sOutput) && !empty($sOutput))
 		{
 			header('Pragma: public');
@@ -389,7 +389,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			header('Content-Disposition: attachment; filename="export.' . $Format . '";');
 			header('Content-Transfer-Encoding: binary');
 		}
-		
+
 		echo $sOutput;
 	}
 
@@ -401,34 +401,34 @@ class Module extends \Aurora\System\Module\AbstractModule
 		Classes\VCard\Helper::UpdateVCardFromContact($Contact, $oVCard);
 		return $oVCard->serialize();
 	}
-	
+
 	/**
 	 * @api {post} ?/Api/ GetGroups
 	 * @apiName GetGroups
 	 * @apiGroup Contacts
 	 * @apiDescription Returns all groups for authenticated user.
-	 * 
+	 *
 	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
 	 * @apiHeaderExample {json} Header-Example:
 	 *	{
 	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
 	 *	}
-	 * 
+	 *
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=GetGroups} Method Method name
-	 * 
+	 *
 	 * @apiParamExample {json} Request-Example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'GetGroups'
 	 * }
-	 * 
+	 *
 	 * @apiSuccess {object[]} Result Array of response objects.
 	 * @apiSuccess {string} Result.Module Module name
 	 * @apiSuccess {string} Result.Method Method name
 	 * @apiSuccess {mixed} Result.Result List of groups in case of success, otherwise **false**.
 	 * @apiSuccess {int} [Result.ErrorCode] Error code
-	 * 
+	 *
 	 * @apiSuccessExample {json} Success response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -437,7 +437,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * IsOrganization: false, Name: 'group_name', Phone: '', State: '', Street: '', UUID: 'uuid_value',
 	 * Web: '', Zip: '' }]
 	 * }
-	 * 
+	 *
 	 * @apiSuccessExample {json} Error response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -446,7 +446,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	ErrorCode: 102
 	 * }
 	 */
-	
+
 	/**
 	 * Returns all groups for authenticated user.
 	 * @return array
@@ -454,38 +454,38 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function GetGroups($UserId = null)
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		
+
 		$this->CheckAccess($UserId);
 
 		return $this->getManager()->getGroups($UserId);
 	}
-	
+
 	/**
 	 * @api {post} ?/Api/ GetGroup
 	 * @apiName GetGroup
 	 * @apiGroup Contacts
 	 * @apiDescription Returns group with specified UUID.
-	 * 
+	 *
 	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
 	 * @apiHeaderExample {json} Header-Example:
 	 *	{
 	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
 	 *	}
-	 * 
+	 *
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=GetGroup} Method Method name
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **$UUID** *string* UUID of group to return.<br>
 	 * }
-	 * 
+	 *
 	 * @apiParamExample {json} Request-Example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'GetGroup',
 	 *	Parameters: '{ UUID: "group_uuid" }'
 	 * }
-	 * 
+	 *
 	 * @apiSuccess {object[]} Result Array of response objects.
 	 * @apiSuccess {string} Result.Module Module name
 	 * @apiSuccess {string} Result.Method Method name
@@ -505,7 +505,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiSuccess {string} Result.Result.Web=&quot;&quot;
 	 * @apiSuccess {string} Result.Result.Zip=&quot;&quot;
 	 * @apiSuccess {int} [Result.ErrorCode] Error code
-	 * 
+	 *
 	 * @apiSuccessExample {json} Success response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -513,7 +513,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	Result: { City: '', Company: 'group_company', Contacts: [], Country: '', Email: '', Fax: '',
 	 * IdUser: 3, IsOrganization: true, Name: 'group_name', Phone:'', State:'', Street:'',
 	 * UUID: 'group_uuid', Web:'', Zip: '' }
-	 * 
+	 *
 	 * @apiSuccessExample {json} Error response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -522,7 +522,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	ErrorCode: 102
 	 * }
 	 */
-	
+
 	/**
 	 * Returns group with specified UUID.
 	 * @param string $UUID UUID of group to return.
@@ -531,7 +531,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function GetGroup($UserId, $UUID)
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		
+
 		$this->CheckAccess($UserId);
 
 		return $this->getManager()->getGroup($UUID);
@@ -564,13 +564,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiName GetContacts
 	 * @apiGroup Contacts
 	 * @apiDescription Returns list of contacts for specified parameters.
-	 * 
+	 *
 	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
 	 * @apiHeaderExample {json} Header-Example:
 	 *	{
 	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
 	 *	}
-	 * 
+	 *
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=GetContacts} Method Method name
 	 * @apiParam {string} Parameters JSON.stringified object <br>
@@ -584,7 +584,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * &emsp; **GroupUUID** *string* UUID of group that should contain all returned contacts.<br>
 	 * &emsp; **Filters** *array* Other conditions for obtaining contacts list.<br>
 	 * }
-	 * 
+	 *
 	 * @apiParamExample {json} Request-Example:
 	 * {
 	 *	Module: 'Contacts',
@@ -592,7 +592,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	Parameters: '{ Offset: 0, Limit: 20, SortField: 1, SortOrder: 0, Storage: "personal",
 	 *		Search: "", GroupUUID: "", Filters: [] }'
 	 * }
-	 * 
+	 *
 	 * @apiSuccess {object[]} Result Array of response objects.
 	 * @apiSuccess {string} Result.Module Module name
 	 * @apiSuccess {string} Result.Method Method name
@@ -600,7 +600,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiSuccess {int} Result.Result.ContactCount Count of contacts that are obtained with specified conditions.
 	 * @apiSuccess {array} Result.Result.List List of contacts objects.
 	 * @apiSuccess {int} [Result.ErrorCode] Error code
-	 * 
+	 *
 	 * @apiSuccessExample {json} Success response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -608,7 +608,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	Result: '{ "ContactCount": 6, "List": [{ "UUID": "contact_uuid", "IdUser": 3, "Name": "",
 	 *		"Email": "contact@email.com", "Storage": "personal" }] }'
 	 * }
-	 * 
+	 *
 	 * @apiSuccessExample {json} Error response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -617,7 +617,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	ErrorCode: 102
 	 * }
 	 */
-	
+
 	/**
 	 * Returns list of contacts for specified parameters.
 	 * @param string $Storage Storage type of contacts.
@@ -667,7 +667,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				}
 			}
 		}
-		
+
 		if (!empty($Search))
 		{
 			$aSearchFilters = [
@@ -677,12 +677,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 				'OtherEmail' => ['%'.$Search.'%', 'LIKE'],
 				'BusinessCompany' => ['%'.$Search.'%', 'LIKE']
 			];
-			
+
 			if (count($aFilters) > 0)
 			{
 				$aFilters = [
 					'$AND' => [
-						'1$OR' => $aFilters, 
+						'1$OR' => $aFilters,
 						'2$OR' => $aSearchFilters
 					]
 				];
@@ -735,7 +735,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$aFilters = ['$OR' => $aFilters];
 		}
-		
+
 		if ($SortField === Enums\SortField::Frequency)
 		{
 			$aFilters['Frequency'] = ['-1', '!='];
@@ -743,7 +743,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				'$AND' => $aFilters
 			];
 		}
-		
+
 		$aContacts = array();
 		$iCount = 0;
 		if ((!empty($GroupUUID) && count($aContactUUIDs) > 0) || empty($GroupUUID))
@@ -792,13 +792,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 		return array(
 			'ContactCount' => $iCount,
 			'List' => \Aurora\System\Managers\Response::GetResponseObject($aList)
-		);		
+		);
 	}
-	
+
 	/*
 		This method used as trigger for subscibers. Check these modules: PersonalContacts, SharedContacts, TeamContacts
 	*/
-	
+
 	public function CheckAccessToObject($User, $Contact)
 	{
 		return true;
@@ -807,7 +807,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function CheckAccess(&$UserId)
 	{
 		$bAccessDenied = true;
-		
+
 		$oAuthenticatedUser = \Aurora\System\Api::getAuthenticatedUser();
 
 		if ($UserId === null)
@@ -855,41 +855,41 @@ class Module extends \Aurora\System\Module\AbstractModule
 			{
 				throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::AccessDenied);
 			}
-		}			 
+		}
 	}
-	
+
 	/**
 	 * @api {post} ?/Api/ GetContact
 	 * @apiName GetContact
 	 * @apiGroup Contacts
 	 * @apiDescription Returns contact with specified UUID.
-	 * 
+	 *
 	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
 	 * @apiHeaderExample {json} Header-Example:
 	 *	{
 	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
 	 *	}
-	 * 
+	 *
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=GetContact} Method Method name
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **UUID** *string* UUID of contact to return.<br>
 	 * }
-	 * 
+	 *
 	 * @apiParamExample {json} Request-Example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'GetContact',
 	 *	Parameters: '{ UUID: "contact_uuid" }'
 	 * }
-	 * 
+	 *
 	 * @apiSuccess {object[]} Result Array of response objects.
 	 * @apiSuccess {string} Result.Module Module name
 	 * @apiSuccess {string} Result.Method Method name
 	 * @apiSuccess {mixed} Result.Result Object with contact data in case of success, otherwise **false**.
 	 * @apiSuccess {int} [Result.ErrorCode] Error code
-	 * 
+	 *
 	 * @apiSuccessExample {json} Success response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -904,7 +904,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * "BusinessFax": "", "BusinessWeb": "", "OtherEmail": "", "Notes": "", "BirthDay": 0, "BirthMonth": 0,
 	 * "BirthYear": 0, "ETag": "", "GroupUUIDs": ["group1_uuid", "group2_uuid"] }'
 	 * }
-	 * 
+	 *
 	 * @apiSuccessExample {json} Error response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -913,7 +913,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	ErrorCode: 102
 	 * }
 	 */
-	
+
 	/**
 	 * Returns contact with specified UUID.
 	 * @param string $UUID UUID of contact to return.
@@ -925,7 +925,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$this->CheckAccess($UserId);
 		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserUnchecked($UserId);
-		
+
 		$mResult = false;
 
 		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
@@ -936,7 +936,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$mResult = $oContact;
 			}
 		}
-		
+
 		return $mResult;
 	}
 
@@ -945,33 +945,33 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @apiName GetContactsByEmails
 	 * @apiGroup Contacts
 	 * @apiDescription Returns list of contacts with specified emails.
-	 * 
+	 *
 	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
 	 * @apiHeaderExample {json} Header-Example:
 	 *	{
 	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
 	 *	}
-	 * 
+	 *
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=GetContactsByEmails} Method Method name
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **Emails** *array* List of emails of contacts to return.<br>
 	 * }
-	 * 
+	 *
 	 * @apiParamExample {json} Request-Example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'GetContactsByEmails',
 	 *	Parameters: '{ Emails: ["contact@email.com"] }'
 	 * }
-	 * 
+	 *
 	 * @apiSuccess {object[]} Result Array of response objects.
 	 * @apiSuccess {string} Result.Module Module name
 	 * @apiSuccess {string} Result.Method Method name
 	 * @apiSuccess {mixed} Result.Result List of contacts in case of success, otherwise **false**.
 	 * @apiSuccess {int} [Result.ErrorCode] Error code
-	 * 
+	 *
 	 * @apiSuccessExample {json} Success response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -986,7 +986,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * "BusinessFax": "", "BusinessWeb": "", "OtherEmail": "", "Notes": "", "BirthDay": 0, "BirthMonth": 0,
 	 * "BirthYear": 0, "ETag": "", "GroupUUIDs": ["group1_uuid", "group2_uuid"] }]
 	 * }
-	 * 
+	 *
 	 * @apiSuccessExample {json} Error response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -995,7 +995,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	ErrorCode: 102
 	 * }
 	 */
-	
+
 	/**
 	 * Returns list of contacts with specified emails.
 	 * @param string $Storage storage of contacts.
@@ -1011,7 +1011,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$aPreparedFilters = $this->prepareFiltersFromStorage($UserId, $Storage);
 		$aFilters = array_merge($aPreparedFilters, $Filters);
 		$aFilters = $this->prepareFilters($aFilters);
-		
+
 		if (!empty($aFilters))
 		{
 			$aFilters = [
@@ -1035,7 +1035,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 						'ViewEmail' => [$Emails, 'IN']
 					]
 				];
-			}			
+			}
 			else
 			{
 				$aFilters = [
@@ -1043,15 +1043,15 @@ class Module extends \Aurora\System\Module\AbstractModule
 				];
 			}
 		}
-		
+
 		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters);
-		
+
 		return $aContacts;
-	}	
+	}
 
 	/**
 	 * Returns list of contacts with specified uids.
-	 * @param int $UserId 
+	 * @param int $UserId
 	 * @param array $Uids List of uids of contacts to return.
 	 * @return array
 	 */
@@ -1062,14 +1062,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$this->CheckAccess($UserId);
 		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserUnchecked($UserId);
-		
+
 		if (is_array($Uids) && count($Uids) > 0)
 		{
 			$aContacts = $this->getManager()->getContacts(
-				Enums\SortField::Name, 
-				\Aurora\System\Enums\SortOrder::ASC, 
-				0, 
-				0, 
+				Enums\SortField::Name,
+				\Aurora\System\Enums\SortOrder::ASC,
+				0,
+				0,
 				['UUID' => [$Uids, 'IN']]
 			);
 
@@ -1090,9 +1090,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::InvalidInputParameter);
 		}
-		
+
 		return $aResult;
-	}		
+	}
 
 	/**
 	 * Returns list of contacts with specified emails.
@@ -1109,7 +1109,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		$this->CheckAccess($UserId);
-		
+
 		$aPreparedFilters = $this->prepareFiltersFromStorage($UserId, $Storage);
 		$aFilters = array_merge($aPreparedFilters, $Filters);
 		$aFilters = $this->prepareFilters($aFilters);
@@ -1132,29 +1132,29 @@ class Module extends \Aurora\System\Module\AbstractModule
 				'Storage' => $oContact->Auto ? 'collected' : $oContact->Storage
 			];
 		}
-		
+
 		return $aResult;
-	}		
-	
+	}
+
 	/**
 	 * @api {post} ?/Api/ CreateContact
 	 * @apiName CreateContact
 	 * @apiGroup Contacts
 	 * @apiDescription Creates contact with specified parameters.
-	 * 
+	 *
 	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
 	 * @apiHeaderExample {json} Header-Example:
 	 *	{
 	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
 	 *	}
-	 * 
+	 *
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=CreateContact} Method Method name
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **Contact** *object* Parameters of contact to create.<br>
 	 * }
-	 * 
+	 *
 	 * @apiParamExample {json} Request-Example:
 	 * {
 	 *	Module: 'Contacts',
@@ -1169,20 +1169,20 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * "BusinessPhone": "", "BusinessWeb": "", "OtherEmail": "", "Notes": "", "ETag": "", "BirthDay": 0,
 	 * "BirthMonth": 0, "BirthYear": 0, "GroupUUIDs": [] } }'
 	 * }
-	 * 
+	 *
 	 * @apiSuccess {object[]} Result Array of response objects.
 	 * @apiSuccess {string} Result.Module Module name
 	 * @apiSuccess {string} Result.Method Method name
 	 * @apiSuccess {mixed} Result.Result New contact UUID in case of success, otherwise **false**.
 	 * @apiSuccess {int} [Result.ErrorCode] Error code
-	 * 
+	 *
 	 * @apiSuccessExample {json} Success response example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'CreateContact',
 	 *	Result: 'new_contact_uuid'
 	 * }
-	 * 
+	 *
 	 * @apiSuccessExample {json} Error response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -1191,7 +1191,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	ErrorCode: 102
 	 * }
 	 */
-	
+
 	/**
 	 * Creates contact with specified parameters.
 	 * @param array $Contact Parameters of contact to create.
@@ -1206,7 +1206,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserUnchecked($UserId);
 
 		$mResult = false;
-		
+
 		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 		{
 			$oContact = new Classes\Contact(self::GetName());
@@ -1220,10 +1220,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$mResult = ['UUID' => $oContact->UUID, 'ETag' => $oContact->ETag];
 			}
 		}
-		
+
 		return $mResult;
 	}
-	
+
 	/**
 	 * Obtains autocreated contact frequency if user have already created it.
 	 * Removes autocreated contact.
@@ -1258,26 +1258,26 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 		return $iFrequency;
 	}
-	
+
 	/**
 	 * @api {post} ?/Api/ UpdateContact
 	 * @apiName UpdateContact
 	 * @apiGroup Contacts
 	 * @apiDescription Updates contact with specified parameters.
-	 * 
+	 *
 	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
 	 * @apiHeaderExample {json} Header-Example:
 	 *	{
 	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
 	 *	}
-	 * 
+	 *
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=UpdateContact} Method Method name
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **Contact** *array* Parameters of contact to update.<br>
 	 * }
-	 * 
+	 *
 	 * @apiParamExample {json} Request-Example:
 	 * {
 	 *	Module: 'Contacts',
@@ -1292,20 +1292,20 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * "BusinessFax": "", "BusinessPhone": "", "BusinessWeb": "", "OtherEmail": "", "Notes": "", "ETag": "",
 	 * "BirthDay": 0, "BirthMonth": 0, "BirthYear": 0, "GroupUUIDs": [] } }'
 	 * }
-	 * 
+	 *
 	 * @apiSuccess {object[]} Result Array of response objects.
 	 * @apiSuccess {string} Result.Module Module name
 	 * @apiSuccess {string} Result.Method Method name
 	 * @apiSuccess {bool} Result.Result Indicates if contact was updated successfully.
 	 * @apiSuccess {int} [Result.ErrorCode] Error code
-	 * 
+	 *
 	 * @apiSuccessExample {json} Success response example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'UpdateContact',
 	 *	Result: true
 	 * }
-	 * 
+	 *
 	 * @apiSuccessExample {json} Error response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -1314,7 +1314,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	ErrorCode: 102
 	 * }
 	 */
-	
+
 	/**
 	 * Updates contact with specified parameters.
 	 * @param array $Contact Parameters of contact to update.
@@ -1325,7 +1325,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->CheckAccess($UserId);
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		
+
 		$oContact = $this->getManager()->getContact($Contact['UUID']);
 		if ($oContact)
 		{
@@ -1333,7 +1333,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			if ($this->UpdateContactObject($oContact))
 			{
 				return [
-					'UUID' => $oContact->UUID, 
+					'UUID' => $oContact->UUID,
 					'ETag' => $oContact->ETag
 				];
 			}
@@ -1342,57 +1342,58 @@ class Module extends \Aurora\System\Module\AbstractModule
 				return false;
 			}
 		}
-		
+
 		return false;
 	}
 
 	public function UpdateContactObject($Contact)
 	{
-		$this->CheckAccess($Contact->IdUser);
+		$iUserId = $Contact->IdUser;
+		$this->CheckAccess($iUserId);
 
 		return $this->getManager()->updateContact($Contact);
 	}
-		
-	
+
+
 	/**
 	 * @api {post} ?/Api/ DeleteContacts
 	 * @apiName DeleteContacts
 	 * @apiGroup Contacts
 	 * @apiDescription Deletes contacts with specified UUIDs.
-	 * 
+	 *
 	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
 	 * @apiHeaderExample {json} Header-Example:
 	 *	{
 	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
 	 *	}
-	 * 
+	 *
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=DeleteContacts} Method Method name
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **UUIDs** *array* Array of strings - UUIDs of contacts to delete.<br>
 	 * }
-	 * 
+	 *
 	 * @apiParamExample {json} Request-Example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'DeleteContacts',
 	 *	Parameters: '{ UUIDs: ["uuid1", "uuid"] }'
 	 * }
-	 * 
+	 *
 	 * @apiSuccess {object[]} Result Array of response objects.
 	 * @apiSuccess {string} Result.Module Module name
 	 * @apiSuccess {string} Result.Method Method name
 	 * @apiSuccess {bool} Result.Result Indicates if contacts were deleted successfully.
 	 * @apiSuccess {int} [Result.ErrorCode] Error code
-	 * 
+	 *
 	 * @apiSuccessExample {json} Success response example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'DeleteContacts',
 	 *	Result: true
 	 * }
-	 * 
+	 *
 	 * @apiSuccessExample {json} Error response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -1401,7 +1402,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	ErrorCode: 102
 	 * }
 	 */
-	
+
 	/**
 	 * Deletes contacts with specified UUIDs.
 	 * @param array $UUIDs Array of strings - UUIDs of contacts to delete.
@@ -1414,27 +1415,27 @@ class Module extends \Aurora\System\Module\AbstractModule
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		return $this->getManager()->deleteContacts($UserId, $Storage, $UUIDs);
-	}	
-	
+	}
+
 	/**
 	 * @api {post} ?/Api/ CreateGroup
 	 * @apiName CreateGroup
 	 * @apiGroup Contacts
 	 * @apiDescription Creates group with specified parameters.
-	 * 
+	 *
 	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
 	 * @apiHeaderExample {json} Header-Example:
 	 *	{
 	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
 	 *	}
-	 * 
+	 *
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=CreateGroup} Method Method name
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **Group** *object* Parameters of group to create.<br>
 	 * }
-	 * 
+	 *
 	 * @apiParamExample {json} Request-Example:
 	 * {
 	 *	Module: 'Contacts',
@@ -1443,20 +1444,20 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * "Country": "", "City": "", "Company": "", "Fax": "", "Phone": "", "State": "", "Street": "",
 	 * "Web": "", "Zip": "", "Contacts": [] } }'
 	 * }
-	 * 
+	 *
 	 * @apiSuccess {object[]} Result Array of response objects.
 	 * @apiSuccess {string} Result.Module Module name
 	 * @apiSuccess {string} Result.Method Method name
 	 * @apiSuccess {mixed} Result.Result New group UUID in case of success, otherwise **false**.
 	 * @apiSuccess {int} [Result.ErrorCode] Error code
-	 * 
+	 *
 	 * @apiSuccessExample {json} Success response example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'CreateGroup',
 	 *	Result: 'new_group_uuid'
 	 * }
-	 * 
+	 *
 	 * @apiSuccessExample {json} Error response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -1465,7 +1466,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	ErrorCode: 102
 	 * }
 	 */
-	
+
 	/**
 	 * Creates group with specified parameters.
 	 * @param array $Group Parameters of group to create.
@@ -1479,7 +1480,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		\Aurora\System\Validator::validate($Group, [
 			'Name'	=>	'required'
-		]);		
+		]);
 
 		$oGroup = new Classes\Group(self::GetName());
 		$oGroup->IdUser = (int) $UserId;
@@ -1488,27 +1489,27 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$this->getManager()->createGroup($oGroup);
 		return $oGroup ? $oGroup->UUID : false;
-	}	
-	
+	}
+
 	/**
 	 * @api {post} ?/Api/ UpdateGroup
 	 * @apiName UpdateGroup
 	 * @apiGroup Contacts
 	 * @apiDescription Updates group with specified parameters.
-	 * 
+	 *
 	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
 	 * @apiHeaderExample {json} Header-Example:
 	 *	{
 	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
 	 *	}
-	 * 
+	 *
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=UpdateGroup} Method Method name
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **Group** *object* Parameters of group to update.<br>
 	 * }
-	 * 
+	 *
 	 * @apiParamExample {json} Request-Example:
 	 * {
 	 *	Module: 'Contacts',
@@ -1517,20 +1518,20 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * "Email": "", "Country": "", "City": "", "Company": "", "Fax": "", "Phone": "", "State": "",
 	 * "Street": "", "Web": "", "Zip": "", "Contacts": [] } }'
 	 * }
-	 * 
+	 *
 	 * @apiSuccess {object[]} Result Array of response objects.
 	 * @apiSuccess {string} Result.Module Module name
 	 * @apiSuccess {string} Result.Method Method name
 	 * @apiSuccess {bool} Result.Result Indicates if group was updated successfully.
 	 * @apiSuccess {int} [Result.ErrorCode] Error code
-	 * 
+	 *
 	 * @apiSuccessExample {json} Success response example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'UpdateGroup',
 	 *	Result: true
 	 * }
-	 * 
+	 *
 	 * @apiSuccessExample {json} Error response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -1539,7 +1540,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	ErrorCode: 102
 	 * }
 	 */
-	
+
 	/**
 	 * Updates group with specified parameters.
 	 * @param array $Group Parameters of group to update.
@@ -1550,7 +1551,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->CheckAccess($UserId);
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		
+
 		$oGroup = $this->getManager()->getGroup($Group['UUID']);
 		if ($oGroup)
 		{
@@ -1569,47 +1570,47 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 
 		return false;
-	}	
-	
+	}
+
 	/**
 	 * @api {post} ?/Api/ DeleteGroup
 	 * @apiName DeleteGroup
 	 * @apiGroup Contacts
 	 * @apiDescription Deletes group with specified UUID.
-	 * 
+	 *
 	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
 	 * @apiHeaderExample {json} Header-Example:
 	 *	{
 	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
 	 *	}
-	 * 
+	 *
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=DeleteGroup} Method Method name
 	 * @apiParam {string} Parameters JSON.stringified object <br>
 	 * {<br>
 	 * &emsp; **UUID** *string* UUID of group to delete.<br>
 	 * }
-	 * 
+	 *
 	 * @apiParamExample {json} Request-Example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'DeleteGroup',
 	 *	Parameters: '{ UUID: "group_uuid" }'
 	 * }
-	 * 
+	 *
 	 * @apiSuccess {object[]} Result Array of response objects.
 	 * @apiSuccess {string} Result.Module Module name
 	 * @apiSuccess {string} Result.Method Method name
 	 * @apiSuccess {bool} Result.Result Indicates if group was deleted successfully.
 	 * @apiSuccess {int} [Result.ErrorCode] Error code
-	 * 
+	 *
 	 * @apiSuccessExample {json} Success response example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'DeleteGroup',
 	 *	Result: true
 	 * }
-	 * 
+	 *
 	 * @apiSuccessExample {json} Error response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -1618,7 +1619,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	ErrorCode: 102
 	 * }
 	 */
-	
+
 	/**
 	 * Deletes group with specified UUID.
 	 * @param string $UUID UUID of group to delete.
@@ -1627,24 +1628,24 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function DeleteGroup($UserId, $UUID)
 	{
 		$this->CheckAccess($UserId);
-		
+
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		$this->getManager()->updateCTag($UserId, 'personal');
 		return $this->getManager()->deleteGroups([$UUID]);
 	}
-	
+
 	/**
 	 * @api {post} ?/Api/ AddContactsToGroup
 	 * @apiName AddContactsToGroup
 	 * @apiGroup Contacts
 	 * @apiDescription Adds specified contacts to specified group.
-	 * 
+	 *
 	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
 	 * @apiHeaderExample {json} Header-Example:
 	 *	{
 	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
 	 *	}
-	 * 
+	 *
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=AddContactsToGroup} Method Method name
 	 * @apiParam {string} Parameters JSON.stringified object <br>
@@ -1652,27 +1653,27 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * &emsp; **GroupUUID** *string* UUID of group.<br>
 	 * &emsp; **ContactUUIDs** *array* Array of strings - UUIDs of contacts to add to group.<br>
 	 * }
-	 * 
+	 *
 	 * @apiParamExample {json} Request-Example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'AddContactsToGroup',
 	 *	Parameters: '{ GroupUUID: "group_uuid", ContactUUIDs: ["contact1_uuid", "contact2_uuid"] }'
 	 * }
-	 * 
+	 *
 	 * @apiSuccess {object[]} Result Array of response objects.
 	 * @apiSuccess {string} Result.Module Module name
 	 * @apiSuccess {string} Result.Method Method name
 	 * @apiSuccess {bool} Result.Result Indicates if contacts were successfully added to group.
 	 * @apiSuccess {int} [Result.ErrorCode] Error code
-	 * 
+	 *
 	 * @apiSuccessExample {json} Success response example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'AddContactsToGroup',
 	 *	Result: true
 	 * }
-	 * 
+	 *
 	 * @apiSuccessExample {json} Error response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -1681,7 +1682,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	ErrorCode: 102
 	 * }
 	 */
-	
+
 	/**
 	 * Adds specified contacts to specified group.
 	 * @param string $GroupUUID UUID of group.
@@ -1693,27 +1694,27 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->CheckAccess($UserId);
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		
+
 		if (is_array($ContactUUIDs) && !empty($ContactUUIDs))
 		{
 			return $this->getManager()->addContactsToGroup($GroupUUID, $ContactUUIDs);
 		}
-		
+
 		return true;
 	}
-	
+
 	/**
 	 * @api {post} ?/Api/ RemoveContactsFromGroup
 	 * @apiName RemoveContactsFromGroup
 	 * @apiGroup Contacts
 	 * @apiDescription Removes specified contacts from specified group.
-	 * 
+	 *
 	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
 	 * @apiHeaderExample {json} Header-Example:
 	 *	{
 	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
 	 *	}
-	 * 
+	 *
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=RemoveContactsFromGroup} Method Method name
 	 * @apiParam {string} Parameters JSON.stringified object <br>
@@ -1721,27 +1722,27 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * &emsp; **GroupUUID** *string* UUID of group.<br>
 	 * &emsp; **ContactUUIDs** *array* Array of strings - UUIDs of contacts to remove from group.<br>
 	 * }
-	 * 
+	 *
 	 * @apiParamExample {json} Request-Example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'RemoveContactsFromGroup',
 	 *	Parameters: '{ GroupUUID: "group_uuid", ContactUUIDs: ["contact1_uuid", "contact2_uuid"] }'
 	 * }
-	 * 
+	 *
 	 * @apiSuccess {object[]} Result Array of response objects.
 	 * @apiSuccess {string} Result.Module Module name
 	 * @apiSuccess {string} Result.Method Method name
 	 * @apiSuccess {bool} Result.Result Indicates if contacts were successfully removed from group.
 	 * @apiSuccess {int} [Result.ErrorCode] Error code
-	 * 
+	 *
 	 * @apiSuccessExample {json} Success response example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'RemoveContactsFromGroup',
 	 *	Result: true
 	 * }
-	 * 
+	 *
 	 * @apiSuccessExample {json} Error response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -1750,7 +1751,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	ErrorCode: 102
 	 * }
 	 */
-	
+
 	/**
 	 * Removes specified contacts from specified group.
 	 * @param string $GroupUUID UUID of group.
@@ -1762,27 +1763,27 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->CheckAccess($UserId);
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		
+
 		if (is_array($ContactUUIDs) && !empty($ContactUUIDs))
 		{
 			return $this->getManager()->removeContactsFromGroup($GroupUUID, $ContactUUIDs);
 		}
-		
+
 		return true;
-	}	
-	
+	}
+
 	/**
 	 * @api {post} ?/Api/ Import
 	 * @apiName Import
 	 * @apiGroup Contacts
 	 * @apiDescription Imports contacts from file with specified format.
-	 * 
+	 *
 	 * @apiHeader {string} Authorization "Bearer " + Authentication token which was received as the result of Core.Login method.
 	 * @apiHeaderExample {json} Header-Example:
 	 *	{
 	 *		"Authorization": "Bearer 32b2ecd4a4016fedc4abee880425b6b8"
 	 *	}
-	 * 
+	 *
 	 * @apiParam {string=Contacts} Module Module name
 	 * @apiParam {string=Import} Method Method name
 	 * @apiParam {string} Parameters JSON.stringified object <br>
@@ -1791,7 +1792,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * &emsp; **Storage** *string* Storage name.<br>
 	 * &emsp; **GroupUUID** *array* Group UUID.<br>
 	 * }
-	 * 
+	 *
 	 * @apiParamExample {json} Request-Example:
 	 * {
 	 *	Module: 'Contacts',
@@ -1799,20 +1800,20 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	Parameters: '{ "UploadData": { "tmp_name": "tmp_name_value", "name": "name_value" },
 	 *		"Storage": "personal", "GroupUUID": "" }'
 	 * }
-	 * 
+	 *
 	 * @apiSuccess {object[]} Result Array of response objects.
 	 * @apiSuccess {string} Result.Module Module name
 	 * @apiSuccess {string} Result.Method Method name
 	 * @apiSuccess {mixed} Result.Result Object with counts of imported and parsed contacts in case of success, otherwise **false**.
 	 * @apiSuccess {int} [Result.ErrorCode] Error code
-	 * 
+	 *
 	 * @apiSuccessExample {json} Success response example:
 	 * {
 	 *	Module: 'Contacts',
 	 *	Method: 'Import',
 	 *	Result: { "ImportedCount" : 2, "ParsedCount": 3}
 	 * }
-	 * 
+	 *
 	 * @apiSuccessExample {json} Error response example:
 	 * {
 	 *	Module: 'Contacts',
@@ -1821,7 +1822,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *	ErrorCode: 102
 	 * }
 	 */
-	
+
 	/**
 	 * Imports contacts from file with specified format.
 	 * @param array $UploadData Array of uploaded file data.
@@ -1835,12 +1836,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserUnchecked($UserId);
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		
+
 		$aResponse = array(
 			'ImportedCount' => 0,
 			'ParsedCount' => 0
 		);
-		
+
 		if (is_array($UploadData))
 		{
 			$oApiFileCacheManager = new \Aurora\System\Managers\Filecache();
@@ -1850,7 +1851,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$sTempFilePath = $oApiFileCacheManager->generateFullFilePath($oUser->UUID, $sTempFileName, '', self::GetName());
 
 				$aImportResult = array();
-				
+
 				$sFileExtension = strtolower(\Aurora\System\Utils::GetFileExtension($UploadData['name']));
 				switch ($sFileExtension)
 				{
@@ -1887,11 +1888,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		return $aResponse;
 	}
-	
+
 	public function GetGroupEvents($UserId, $UUID)
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-		
+
 		$this->CheckAccess($UserId);
 
 		$aResult = [];
@@ -1903,18 +1904,18 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$aResult[] = \Aurora\Modules\Calendar\Module::getInstance()->GetBaseEvent($UserId, $oEvent->CalendarUUID, $oEvent->EventUUID);
 			}
 		}
-		
+
 		return $aResult;
-	}	
-	
+	}
+
 	public function UpdateSharedContacts($UserId, $UUIDs)
 	{
 		$this->CheckAccess($UserId);
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		return true;
-	}	
-	
+	}
+
 	public function AddContactsFromFile($UserId, $File)
 	{
 		$this->CheckAccess($UserId);
@@ -1928,13 +1929,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 
 		$oApiFileCache = new \Aurora\System\Managers\Filecache();
-		
+
 		$sTempFilePath = $oApiFileCache->generateFullFilePath($oUser->UUID, $File); // Temp files with access from another module should be stored in System folder
 		$aImportResult = $this->importVcf($oUser->EntityId, $sTempFilePath);
 
 		return is_array($aImportResult) && isset($aImportResult['ImportedCount']) && $aImportResult['ImportedCount'] > 0;
-	}	
-	
+	}
+
 	public function GetCTag($UserId, $Storage)
 	{
 		$this->CheckAccess($UserId);
@@ -1953,10 +1954,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 
 		return $iResult;
-	}	
-	
+	}
+
 	/**
-	 * 
+	 *
 	 * @param type $UserId
 	 * @param type $UUID
 	 * @param type $Storage
@@ -1992,10 +1993,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 		}
 
-		return $mResult;		
-	}	
+		return $mResult;
+	}
 	/***** public functions might be called with web API *****/
-	
+
 	/***** private functions *****/
 	private function importVcf($iUserId, $sTempFilePath)
 	{
@@ -2013,7 +2014,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			while ($oVCard = $oSplitter->getNext())
 			{
 				set_time_limit(30);
-				
+
 				$aContactData = Classes\VCard\Helper::GetContactDataFromVcard($oVCard);
 				$oContact = isset($aContactData['UUID']) ? $oApiContactsManager->getContact($aContactData['UUID']) : null;
 				$aImportResult['ParsedCount']++;
@@ -2037,16 +2038,16 @@ class Module extends \Aurora\System\Module\AbstractModule
 			'SortField' => $SortField
 		];
 		$aPreparedFilters = [];
-		
+
 		$this->broadcastEvent('PrepareFiltersFromStorage', $aArgs, $aPreparedFilters);
-		
+
 		return $aPreparedFilters;
 	}
-	
+
 	private function prepareFilters($aRawFilters)
 	{
 		$aFilters = [];
-		
+
 		if (is_array($aRawFilters) && count($aRawFilters) > 0)
 		{
 			$iAndIndex = 1;
@@ -2082,10 +2083,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 			// If filters are empty, there is no subscribers from modules that describe behaviour of contacts storages.
 			throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::InvalidInputParameter);
 		}
-		
+
 		return $aFilters;
 	}
-	
+
 	public function onAfterUseEmails($Args, &$Result)
 	{
 		$aAddresses = $Args['Emails'];
@@ -2112,25 +2113,25 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$this->getManager()->updateCTag($iUserId, 'collected');
 		}
 	}
-	
+
 	public function onGetBodyStructureParts($aParts, &$aResultParts)
 	{
 		foreach ($aParts as $oPart)
 		{
-			if ($oPart instanceof \MailSo\Imap\BodyStructure && 
+			if ($oPart instanceof \MailSo\Imap\BodyStructure &&
 					($oPart->ContentType() === 'text/vcard' || $oPart->ContentType() === 'text/x-vcard'))
 			{
 				$aResultParts[] = $oPart;
-				break;				
+				break;
 			}
 		}
 	}
-	
+
 	public function onBeforeDeleteUser(&$aArgs, &$mResult)
 	{
 		$this->CheckAccess($aArgs['UserId']);
-		
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);	
+
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		$aGroups = $this->getManager()->getGroups($aArgs['UserId']);
 		if (count($aGroups) > 0)
@@ -2147,14 +2148,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	public function onAfterCreateTables(&$aData, &$mResult)
 	{
 		\Aurora\System\Managers\Db::getInstance()->executeSqlFile(
 			dirname(__FILE__) . '/Sql/update_contact_notes_field_type.sql'
 		);
-	}	
+	}
 
 	public function onCreateOrUpdateEvent(&$aArgs)
 	{
@@ -2168,11 +2169,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 		{
-			foreach ($aGroups as $sGroup) 
+			foreach ($aGroups as $sGroup)
 			{
 				$sGroupName = ltrim($sGroup, '#');
 				$oGroup = $this->Decorator()->GetGroupByName($sGroupName, $oUser->EntityId);
-				if (!$oGroup) 
+				if (!$oGroup)
 				{
 					$sGroupUUID = $this->Decorator()->CreateGroup(['Name' => $sGroupName], $oUser->EntityId);
 					if ($sGroupUUID)
@@ -2180,7 +2181,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 						$oGroup = $this->GetGroup($oUser->EntityId, $sGroupUUID);
 					}
 				}
-	
+
 				if ($oGroup instanceof Classes\Group)
 				{
 					$this->removeEventFromGroup($oGroup->UUID, $oEvent->IdCalendar, $oEvent->Id);
@@ -2290,7 +2291,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				])
 				->one()
 				->exec();
-			
+
 			if ($mResult instanceof Classes\GroupEvent)
 			{
 				$mResult = $mResult->delete();
@@ -2341,6 +2342,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$mResult = false;
 		}
 		return $mResult;
-	}		
+	}
 	/***** private functions *****/
 }
