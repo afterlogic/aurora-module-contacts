@@ -670,13 +670,26 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		if (!empty($Search))
 		{
-			$aSearchFilters = [
-				'FullName' => ['%'.$Search.'%', 'LIKE'],
-				'PersonalEmail' => ['%'.$Search.'%', 'LIKE'],
-				'BusinessEmail' => ['%'.$Search.'%', 'LIKE'],
-				'OtherEmail' => ['%'.$Search.'%', 'LIKE'],
-				'BusinessCompany' => ['%'.$Search.'%', 'LIKE']
-			];
+			$aSearchFilters = [];
+			if ($SortField === Enums\SortField::Frequency)
+			{
+				$aSearchFilters = [
+					'FullName' => ['%'.$Search.'%', 'LIKE'],
+					'ViewEmail' => ['%'.$Search.'%', 'LIKE'],
+					'BusinessCompany' => ['%'.$Search.'%', 'LIKE']
+				];
+			}
+			else
+			{
+				$aSearchFilters = [
+					'FullName' => ['%'.$Search.'%', 'LIKE'],
+					'ViewEmail' => ['%'.$Search.'%', 'LIKE'],
+					'PersonalEmail' => ['%'.$Search.'%', 'LIKE'],
+					'BusinessEmail' => ['%'.$Search.'%', 'LIKE'],
+					'OtherEmail' => ['%'.$Search.'%', 'LIKE'],
+					'BusinessCompany' => ['%'.$Search.'%', 'LIKE']
+				];
+			}
 
 			if (count($aFilters) > 0)
 			{
