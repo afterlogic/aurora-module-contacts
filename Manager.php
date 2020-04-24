@@ -653,7 +653,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		$aCTags = $this->getCTags($iUserId, $Storage);
 		foreach ($aCTags as $oCTag)
 		{
-			$this->oEavManager->deleteEntity($oCTag->EntityId);
+			$this->oEavManager->deleteEntity($oCTag->EntityId, Classes\CTag::class);
 		}
 	}
 }
