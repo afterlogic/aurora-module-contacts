@@ -325,13 +325,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param string $GroupUUID UUID of group that should contain contacts for export.
 	 * @param array $ContactUUIDs List of UUIDs of contacts that should be exported.
 	 */
-	public function Export($UserId, $Format, $Filters = [], $GroupUUID = '', $ContactUUIDs = [])
+	public function Export($UserId, $Storage, $Format, $Filters = [], $GroupUUID = '', $ContactUUIDs = [])
 	{
 		$this->CheckAccess($UserId);
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
-		$aPreparedFilters = $this->prepareFiltersFromStorage($UserId, $Storage, $SortField);
+		$aPreparedFilters = $this->prepareFiltersFromStorage($UserId, $Storage);
 		$aFilters = $this->prepareFilters($aPreparedFilters);
 
 		if (empty($ContactUUIDs) && !empty($GroupUUID))
