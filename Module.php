@@ -1491,17 +1491,24 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
-		\Aurora\System\Validator::validate($Group, [
-			'Name'	=>	'required'
-		]);
+		if (is_array($Group))
+		{
+			\Aurora\System\Validator::validate($Group, [
+				'Name'	=>	'required'
+			]);
 
-		$oGroup = new Classes\Group(self::GetName());
-		$oGroup->IdUser = (int) $UserId;
+			$oGroup = new Classes\Group(self::GetName());
+			$oGroup->IdUser = (int) $UserId;
 
-		$oGroup->populate($Group);
+			$oGroup->populate($Group);
 
-		$this->getManager()->createGroup($oGroup);
-		return $oGroup ? $oGroup->UUID : false;
+			$this->getManager()->createGroup($oGroup);
+			return $oGroup ? $oGroup->UUID : false;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	/**
