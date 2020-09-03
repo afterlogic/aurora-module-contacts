@@ -331,6 +331,43 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
+		$sOutput = '';
+
+		if (empty($GroupUUID) && $Format === 'vcf')
+		{
+			$aGroups = $this->getManager()->getGroups($UserId);
+			foreach ($aGroups as $oGroup)
+			{
+				$oVCard = new \Sabre\VObject\Component\VCard();
+				\Aurora\Modules\Contacts\Classes\VCard\Helper::UpdateVCardFromGroup($oGroup, $oVCard);
+				foreach ($oGroup->GroupContacts as $oGroupContact)
+				{
+					$oContact = \Aurora\System\Managers\Eav::getInstance()->getEntity($oGroupContact->ContactUUID, \Aurora\Modules\Contacts\Classes\Contact::class);
+					if ($oContact)
+					{
+						$sVCardUID = null;
+						if ($oContact->Storage !== 'team')
+						{
+							if (!empty($oContact->{'DavContacts::VCardUID'}))
+							{
+								$sVCardUID = $oContact->{'DavContacts::VCardUID'};
+							}
+						}
+						else
+						{
+							$sVCardUID = $oContact->UUID;
+						}
+						if (isset($sVCardUID))
+						{
+							$oVCard->add('X-ADDRESSBOOKSERVER-MEMBER', 'urn:uuid:' . $sVCardUID);
+						}
+					}
+				}
+
+				$sOutput .= $oVCard->serialize();
+			}
+		}
+
 		$aPreparedFilters = $this->prepareFiltersFromStorage($UserId, $Storage);
 		$aFilters = $this->prepareFilters($aPreparedFilters);
 
@@ -360,8 +397,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$aFilters = ['$OR' => $aFilters];
 
 		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters);
-
-		$sOutput = '';
 
 		if (is_array($aContacts))
 		{
