@@ -34,7 +34,6 @@ class Helper
 		}
 */
 
-/*
 		$aGroupNames = [];
 		if (isset($oVCard->CATEGORIES))
 		{
@@ -44,7 +43,7 @@ class Helper
 			}
 		}
 		$aContact['GroupNames'] = $aGroupNames;
-*/
+
 		$aContact['FullName'] = isset($oVCard->FN) ? (string) $oVCard->FN : '';
 
 		if (isset($oVCard->N))
