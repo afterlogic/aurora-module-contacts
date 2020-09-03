@@ -1953,7 +1953,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$sTempFilePath = $oApiFileCache->generateFullFilePath($oUser->UUID, $File); // Temp files with access from another module should be stored in System folder
 		$aImportResult = $this->importVcf($oUser->EntityId, $sTempFilePath);
 
-		return is_array($aImportResult) && isset($aImportResult['ImportedCount']) && $aImportResult['ImportedCount'] > 0;
+		return $aImportResult;
 	}
 
 	public function GetCTag($UserId, $Storage)
@@ -2023,6 +2023,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$aImportResult = array(
 			'ParsedCount' => 0,
 			'ImportedCount' => 0,
+			'ImportedUids' => []
 		);
 		// You can either pass a readable stream, or a string.
 		$oHandler = fopen($sTempFilePath, 'r');
@@ -2040,9 +2041,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$aImportResult['ParsedCount']++;
 				if (!isset($oContact) || empty($oContact))
 				{
-					if ($oContactsDecorator->CreateContact($aContactData, $iUserId))
+					$CreatedContactData = $oContactsDecorator->CreateContact($aContactData, $iUserId);
+					if ($CreatedContactData)
 					{
 						$aImportResult['ImportedCount']++;
+						$aImportResult['ImportedUids'][] = $CreatedContactData['UUID'];
 					}
 				}
 			}
