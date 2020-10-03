@@ -726,58 +726,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 				];
 			}
 
-			if (count($aFilters) > 0)
-			{
-				$aFilters = [
-					'$AND' => [
-						'1$OR' => $aFilters,
-						'2$OR' => $aSearchFilters
-					]
-				];
-			}
-			else
-			{
-				$aFilters = [
-					'$OR' => $aSearchFilters
-				];
-			}
-			if ($WithGroups)
-			{
-				$oUser = \Aurora\System\Api::getAuthenticatedUser();
-				if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
-				{
-					$aGroups = $this->getManager()->getGroups($oUser->EntityId, ['Name' => ['%' . $Search . '%', 'LIKE']]);
-					if ($aGroups)
-					{
-						foreach ($aGroups as $oGroup)
-						{
-							$aGroupContactsEmails = [];
-							$aGroupContacts = $this->getManager()->getGroupContacts($oGroup->UUID);
-
-							foreach ($aGroupContacts as $oGroupContact)
-							{
-								$oContact = $this->getManager()->getContact($oGroupContact->ContactUUID);
-								if ($oContact)
-								{
-									$aGroupContactsEmails[] = $oContact->FullName ? "\"{$oContact->FullName}\" <{$oContact->ViewEmail}>" : $oContact->ViewEmail;
-								}
-							}
-							$aGroupUsersList[] = [
-								'UUID' => $oGroup->UUID,
-								'IdUser' => $oGroup->IdUser,
-								'FullName' => $oGroup->Name,
-								'FirstName' => '',
-								'LastName' => '',
-								'ViewEmail' => implode(', ', $aGroupContactsEmails),
-								'Storage' => '',
-								'Frequency' => 0,
-								'DateModified' => '',
-								'IsGroup' => true,
-							];
-						}
-					}
-				}
-			}
+			$aFilters[] = [
+				'$OR' => $aSearchFilters
+			];
 		}
 		elseif (count($aFilters) > 1)
 		{
