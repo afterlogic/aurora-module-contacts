@@ -369,7 +369,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 
 		$aPreparedFilters = $this->prepareFiltersFromStorage($UserId, $Storage);
-		$aFilters = $this->prepareFilters($aPreparedFilters);
+		$aFilters = \Aurora\System\EAV\Query::prepareWhere($aPreparedFilters);
 
 		if (empty($ContactUUIDs) && !empty($GroupUUID))
 		{
@@ -676,7 +676,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$aPreparedFilters = $this->prepareFiltersFromStorage($UserId, $Storage, $SortField);
 		$aFilters = array_merge($aPreparedFilters, $Filters);
-		$aFilters = $this->prepareFilters($aFilters);
+		$aFilters = \Aurora\System\EAV\Query::prepareWhere($aFilters);
 
 		$aContactUUIDs = array();
 		$aGroupUsersList = [];
@@ -726,9 +726,58 @@ class Module extends \Aurora\System\Module\AbstractModule
 				];
 			}
 
-			$aFilters[] = [
-				'$OR' => $aSearchFilters
-			];
+			if (count($aFilters) > 0)
+			{
+				$aFilters = [
+					'$AND' => [
+						'1$OR' => $aFilters,
+						'2$OR' => $aSearchFilters
+					]
+				];
+			}
+			else
+			{
+				$aFilters = [
+					'$OR' => $aSearchFilters
+				];
+			}
+			if ($WithGroups)
+			{
+				$oUser = \Aurora\System\Api::getAuthenticatedUser();
+				if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+				{
+					$aGroups = $this->getManager()->getGroups($oUser->EntityId, ['Name' => ['%' . $Search . '%', 'LIKE']]);
+					if ($aGroups)
+					{
+						foreach ($aGroups as $oGroup)
+						{
+							$aGroupContactsEmails = [];
+							$aGroupContacts = $this->getManager()->getGroupContacts($oGroup->UUID);
+
+							foreach ($aGroupContacts as $oGroupContact)
+							{
+								$oContact = $this->getManager()->getContact($oGroupContact->ContactUUID);
+								if ($oContact)
+								{
+									$aGroupContactsEmails[] = $oContact->FullName ? "\"{$oContact->FullName}\" <{$oContact->ViewEmail}>" : $oContact->ViewEmail;
+								}
+							}
+							$aGroupUsersList[] = [
+								'UUID' => $oGroup->UUID,
+								'IdUser' => $oGroup->IdUser,
+								'FullName' => $oGroup->Name,
+								'FirstName' => '',
+								'LastName' => '',
+								'ViewEmail' => implode(', ', $aGroupContactsEmails),
+								'Storage' => '',
+								'Frequency' => 0,
+								'DateModified' => '',
+								'IsGroup' => true,
+							];
+						}
+					}
+				}
+			}
 		}
 		elseif (count($aFilters) > 1)
 		{
@@ -783,6 +832,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 					'Frequency' => $oContact->Frequency,
 					'DateModified' => $oContact->DateModified,
 					'ETag' => $oContact->ETag,
+					'AgeScore' => (float) $oContact->AgeScore
 				);
 			}
 		}
@@ -792,6 +842,64 @@ class Module extends \Aurora\System\Module\AbstractModule
 			'ContactCount' => $iCount,
 			'List' => \Aurora\System\Managers\Response::GetResponseObject($aList)
 		);
+	}
+
+	public function GetContactSuggestions($UserId,  $Storage, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $WithoutTeamContactsDuplicates = false)
+	{
+		// $Storage is used by subscribers to prepare filters.
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+
+		$this->CheckAccess($UserId);
+		$aResult = array(
+			'ContactCount' => 0,
+			'List' => []
+		);
+		$aArgs = [
+			'UserId' => $UserId,
+			'Storage' => $Storage,
+ 			'Limit' => $Limit,
+			'SortField' => $SortField,
+			'SortOrder' => $SortOrder,
+			'Search' => $Search
+		];
+		$aContacts = [];
+		$this->broadcastEvent('GetContactSuggestions', $aArgs, $aContacts);
+		$aResultList = [];
+		foreach ($aContacts as $sStorage => $aStorageContacts)
+		{
+			$aResultList = array_merge(
+				$aResultList,
+				$aStorageContacts['List']
+			);
+		}
+
+		$aPersonalContactEmails = array_map(function($aContact) {
+			return $aContact['ViewEmail'];
+		}, $aContacts['personal']['List']);
+
+		$aUniquePersonalContactEmails = array_unique(array_diff($aPersonalContactEmails, [null]));
+		foreach ($aResultList as $key => $aContact)
+		{
+			if ($aContact['Storage'] === 'team' && in_array($aContact['ViewEmail'], $aUniquePersonalContactEmails))
+			{
+				unset($aResultList[$key]);
+			}
+		}
+
+		usort(
+			$aResultList,
+			function($a, $b){
+				if ($a['AgeScore'] == $b['AgeScore']) 
+				{
+					return 0;
+				}
+				return ($a['AgeScore'] > $b['AgeScore']) ? +1 : -1;
+			}
+		);
+
+		$aResult['List'] = array_slice($aResultList, 0, $Limit);
+		$aResult['ContactCount'] = count($aResult['List']);
+		return $aResult;
 	}
 
 	/*
@@ -1009,7 +1117,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$aPreparedFilters = $this->prepareFiltersFromStorage($UserId, $Storage);
 		$aFilters = array_merge($aPreparedFilters, $Filters);
-		$aFilters = $this->prepareFilters($aFilters);
+		$aFilters = \Aurora\System\EAV\Query::prepareWhere($aFilters);
 
 		if (!empty($aFilters))
 		{
@@ -1111,7 +1219,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$aPreparedFilters = $this->prepareFiltersFromStorage($UserId, $Storage);
 		$aFilters = array_merge($aPreparedFilters, $Filters);
-		$aFilters = $this->prepareFilters($aFilters);
+		$aFilters = \Aurora\System\EAV\Query::prepareWhere($aFilters);
 
 		// if (count($aFilters) > 1)
 		// {
@@ -2051,49 +2159,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->broadcastEvent('PrepareFiltersFromStorage', $aArgs, $aPreparedFilters);
 
 		return $aPreparedFilters;
-	}
-
-	private function prepareFilters($aRawFilters)
-	{
-		$aFilters = [];
-
-		if (is_array($aRawFilters) && count($aRawFilters) > 0)
-		{
-			$iAndIndex = 1;
-			$iOrIndex = 1;
-			foreach ($aRawFilters as $aSubFilters)
-			{
-				if (is_array($aSubFilters))
-				{
-					foreach ($aSubFilters as $sKey => $a2ndSubFilters)
-					{
-						if (is_array($a2ndSubFilters))
-						{
-							$sNewKey = $sKey;
-							if ($sKey === '$AND')
-							{
-								$sNewKey = $iAndIndex.'$AND';
-								$iAndIndex++;
-							}
-							if ($sKey === '$OR')
-							{
-								$sNewKey = $iOrIndex.'$OR';
-								$iOrIndex++;
-							}
-							$aFilters[$sNewKey] = $a2ndSubFilters;
-						}
-					}
-				}
-			}
-		}
-		else
-		{
-			// It's forbidden to request contacts without any filters because in that case all contacts of all users will be returned.
-			// If filters are empty, there is no subscribers from modules that describe behaviour of contacts storages.
-			throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::InvalidInputParameter);
-		}
-
-		return $aFilters;
 	}
 
 	public function onAfterUseEmails($Args, &$Result)
