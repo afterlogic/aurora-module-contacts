@@ -873,9 +873,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 			);
 		}
 
-		$aPersonalContactEmails = array_map(function($aContact) {
-			return $aContact['ViewEmail'];
-		}, $aContacts['personal']['List']);
+		$aPersonalContactEmails = [];
+		if (isset($aContacts['personal'])) {
+			$aPersonalContactEmails = array_map(function($aContact) {
+				return $aContact['ViewEmail'];
+			}, $aContacts['personal']['List']);
+		}
 
 		$aUniquePersonalContactEmails = array_unique(array_diff($aPersonalContactEmails, [null]));
 		foreach ($aResultList as $key => $aContact)
