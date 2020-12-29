@@ -900,6 +900,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 		);
 
+		$aGroupUsersList = [];
 		if ($WithGroups)
 		{
 			$oUser = \Aurora\System\Api::getAuthenticatedUser();
