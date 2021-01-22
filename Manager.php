@@ -303,6 +303,58 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			->exec();
 	}
 
+		/**
+	 * Returns list of contacts within specified range, sorted according to specified requirements. 
+	 * 
+	 * @param int $iSortField Sort field. Accepted values:
+	 *
+	 *		\Aurora\Modules\Contacts\Enums\SortField::Name
+	 *		\Aurora\Modules\Contacts\Enums\SortField::Email
+	 *		\Aurora\Modules\Contacts\Enums\SortField::Frequency
+	 *
+	 * Default value is **\Aurora\Modules\Contacts\Enums\SortField::Email**.
+	 * @param int $iSortOrder Sorting order. Accepted values:
+	 *
+	 *		\Aurora\System\Enums\SortOrder::ASC
+	 *		\Aurora\System\Enums\SortOrder::DESC,
+	 *
+	 * for ascending and descending respectively. Default value is **\Aurora\System\Enums\SortOrder::ASC**.
+	 * @param int $iOffset Ordinal number of the contact item the list stars with. Default value is **0**.
+	 * @param int $iLimit The upper limit for total number of contacts returned. Default value is **20**.
+	 * @param array $aFilters
+	 * @param array $aViewAttrs
+	 * 
+	 * @return array|bool
+	 */
+	public function getContactsAsArray($iSortField = \Aurora\Modules\Contacts\Enums\SortField::Name, $iSortOrder = \Aurora\System\Enums\SortOrder::ASC,
+		$iOffset = 0, $iLimit = 20, $aFilters = array(), $aViewAttrs = array())
+	{
+		$sSortField = 'FullName';
+		$sCustomSelect = '';
+		switch ($iSortField)
+		{
+			case \Aurora\Modules\Contacts\Enums\SortField::Email:
+				$sSortField = 'ViewEmail';
+				break;
+			case \Aurora\Modules\Contacts\Enums\SortField::Frequency:
+				$sSortField = 'AgeScore';
+				$sCustomSelect = ', (attr_Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, attr_DateModified)/30)) as attr_AgeScore';
+				break;
+		}
+
+		return (new \Aurora\System\EAV\Query())
+			->select($aViewAttrs)
+			->customSelect($sCustomSelect)
+			->whereType(Classes\Contact::class)
+			->where($aFilters)
+			->offset($iOffset)
+			->limit($iLimit)
+			->orderBy([$sSortField])
+			->sortOrder($iSortOrder)
+			->asArray()
+			->exec();
+	}
+
 	/**
 	 * Returns uid list of contacts. 
 

@@ -797,7 +797,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ((!empty($GroupUUID) && count($aContactUUIDs) > 0) || empty($GroupUUID))
 		{
 			$iCount = $this->getManager()->getContactsCount($aFilters);
-			$aContacts = $this->getManager()->getContacts($SortField, $SortOrder, $Offset, $Limit, $aFilters);
+			$aContacts = $this->getManager()->getContactsAsArray($SortField, $SortOrder, $Offset, $Limit, $aFilters);
 		}
 		if ($Storage === 'all' && $WithoutTeamContactsDuplicates)
 		{
@@ -808,9 +808,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 				}
 			}, $aContacts);
 			$aUniquePersonalContactEmails = array_unique(array_diff($aPersonalContactEmails, [null]));
-			foreach ($aContacts as $key => $oContact)
+			foreach ($aContacts as $key => $aContact)
 			{
-				if ($oContact->Storage === 'team' && in_array($oContact->ViewEmail, $aUniquePersonalContactEmails))
+				if ($oContact->Storage === 'team' && in_array($aContact['ViewEmail'], $aUniquePersonalContactEmails))
 				{
 					unset($aContacts[$key]);
 				}
@@ -819,20 +819,20 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$aList = array();
 		if (is_array($aContacts))
 		{
-			foreach ($aContacts as $oContact)
+			foreach ($aContacts as $aContact)
 			{
 				$aList[] = array(
-					'UUID' => $oContact->UUID,
-					'IdUser' => $oContact->IdUser,
-					'FullName' => $oContact->FullName,
-					'FirstName' => $oContact->FirstName,
-					'LastName' => $oContact->LastName,
-					'ViewEmail' => $oContact->ViewEmail,
-					'Storage' => $oContact->Storage,
-					'Frequency' => $oContact->Frequency,
-					'DateModified' => $oContact->DateModified,
-					'ETag' => $oContact->ETag,
-					'AgeScore' => (float) $oContact->AgeScore
+					'UUID' => $aContact['UUID'],
+					'IdUser' => $aContact['IdUser'],
+					'FullName' => $aContact['FullName'],
+					'FirstName' => isset($aContact['FirstName']) ? $aContact['FirstName'] : '',
+					'LastName' => isset($aContact['LastName']) ? $aContact['LastName'] : '',
+					'ViewEmail' => $aContact['ViewEmail'],
+					'Storage' => $aContact['Storage'],
+					'Frequency' => $aContact['Frequency'],
+					'DateModified' => isset($aContact['DateModified']) ? $aContact['DateModified'] : 0,
+					'ETag' => isset($aContact['ETag']) ? $aContact['ETag'] : '',
+					'AgeScore' => isset($aContact['AgeScore']) ? (float) $aContact['AgeScore'] : 0
 				);
 			}
 		}
