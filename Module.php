@@ -1499,8 +1499,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 	public function UpdateContactObject($Contact)
 	{
-		$iUserId = $Contact->IdUser;
-		$this->CheckAccess($iUserId);
+		// $iUserId = $Contact->IdUser;
+		// $this->CheckAccess($iUserId);
+
+		$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		$this->CheckAccessToObject($oUser, $Contact);
 
 		return $this->getManager()->updateContact($Contact);
 	}
