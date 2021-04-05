@@ -2168,7 +2168,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		);
 		// You can either pass a readable stream, or a string.
 		$oHandler = fopen($sTempFilePath, 'r');
-		$oSplitter = new \Sabre\VObject\Splitter\VCard($oHandler);
+		$oSplitter = new \Sabre\VObject\Splitter\VCard($oHandler, \Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES);
 		$oContactsDecorator = Module::Decorator();
 		$oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
 		if ($oApiContactsManager)
