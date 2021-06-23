@@ -15,6 +15,7 @@ class CreateContactsTable extends Migration
     {
         Capsule::schema()->create('contacts', function (Blueprint $table) {
             $table->increments('Id');
+            $table->string('UUID')->default('');
             $table->integer('IdUser')->default(0);
             $table->integer('IdTenant')->default(0);
             $table->string('Storage')->default('');

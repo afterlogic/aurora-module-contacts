@@ -345,6 +345,9 @@ class Contact extends \Aurora\System\EAV\Entity
 
 	public function calculateETag()
 	{
-		$this->ETag = \md5(\serialize($this));
+		if (empty($this->ETag))
+		{
+			$this->ETag = \md5(\serialize($this));
+		}
 	}
 }

@@ -5,9 +5,10 @@
  * For full statements of the licenses see LICENSE-AFTERLOGIC and LICENSE-AGPL3 files.
  */
 
-namespace Aurora\Modules\Contacts\Classes;
+namespace Aurora\Modules\Contacts\Models;
 
 use \Aurora\System\Classes\Model;
+use Aurora\Modules\Contacts\Classes\VCard\Helper;
 class Contact extends Model
 {
 	public $GroupsContacts = array();
@@ -15,6 +16,7 @@ class Contact extends Model
 	public $ExtendedInformation = array();
 
 	protected $fillable = [
+		'UUID',
 		'IdUser',
 		'IdTenant',
 		'Storage',
@@ -67,8 +69,13 @@ class Contact extends Model
 		'ETag',
 		'Auto',
 		'Frequency',
-		'DateModified'
+		'DateModified',
+		'Properties'
 	];
+
+	protected $casts = [
+        'Properties' => 'array',
+    ];
 
 	protected $appends = [
 		'AgeScore'
@@ -180,7 +187,7 @@ class Contact extends Model
 		}
 
 		$this->populate(
-			VCard\Helper::GetContactDataFromVcard(
+			Helper::GetContactDataFromVcard(
 				\Sabre\VObject\Reader::read(
 					$sData,
 					\Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES
@@ -252,12 +259,9 @@ class Contact extends Model
 
 		$aRes = parent::toResponseArray();
 
-		$aGroupUUIDs = array();
-		foreach ($this->GroupsContacts as $oGroupContact)
-		{
-			$aGroupUUIDs[] = $oGroupContact->GroupUUID;
-		}
-		$aRes['GroupUUIDs'] = $aGroupUUIDs;
+		$aRes['GroupUUIDs'] = $this->Groups->map(function ($oGroup) {
+			return $oGroup->UUID;
+		});
 
 		foreach ($this->ExtendedInformation as $sKey => $mValue)
 		{
@@ -276,6 +280,14 @@ class Contact extends Model
 
 	public function calculateETag()
 	{
-		$this->ETag = \md5(\serialize($this));
+		if (empty($this->ETag))
+		{
+			$this->ETag = \md5(\json_encode($this));
+		}
+	}
+
+	public function Groups()
+	{
+		return $this->belongsToMany(Group::class, 'group_contact', 'ContactId', 'GroupId');
 	}
 }
