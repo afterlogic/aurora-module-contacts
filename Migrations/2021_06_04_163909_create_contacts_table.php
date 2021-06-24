@@ -55,7 +55,7 @@ class CreateContactsTable extends Migration
             $table->string('BusinessFax')->default('');
             $table->string('BusinessWeb')->default('');
             $table->string('OtherEmail')->default('');
-            $table->text('Notes')->default('');
+            $table->text('Notes')->nullable();
             $table->integer('BirthDay')->default(0);
             $table->integer('BirthMonth')->default(0);
             $table->integer('BirthYear')->default(0);
