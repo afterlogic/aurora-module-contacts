@@ -9,6 +9,8 @@ namespace Aurora\Modules\Contacts\Models;
 
 use \Aurora\System\Classes\Model;
 use Aurora\Modules\Contacts\Classes\VCard\Helper;
+use Aurora\Modules\Contacts\Models\Group;
+
 class Contact extends Model
 {
 	public $GroupsContacts = array();
@@ -101,10 +103,10 @@ class Contact extends Model
 			{
 				foreach($aGroupNames as $sGroupName)
 				{
-					$aGroups = $oApiContactsManager->getGroups($this->IdUser, ['Name' => [$sGroupName, '=']]);
-					if (is_array($aGroups) && count($aGroups) > 0)
+					$oGroup = $oApiContactsManager->getGroups($this->IdUser, Group::firstWhere('Name', $sGroupName));
+					if ($oGroup)
 					{
-						$this->addGroup($aGroups[0]->UUID);
+						$this->Groups()->sync([$oGroup->Id], false);
 					}
 
 					// Group shouldn't be created here.
@@ -112,7 +114,7 @@ class Contact extends Model
 					// It can be used only for suggestion to create.
 					elseif (!empty($sGroupName))
 					{
-						$oGroup = new \Aurora\Modules\Contacts\Classes\Group($this->getModule());
+						$oGroup = new Group();
 						$oGroup->IdUser = $this->IdUser;
 						$oGroup->Name = $sGroupName;
 						$aNonExistingGroups[] = $oGroup;
@@ -128,15 +130,39 @@ class Contact extends Model
 	 * Add group to contact.
 	 * @param string $sGroupUUID Group UUID.
 	 */
-	public function addGroup($sGroupUUID)
+	public function addGroups($aGroupUUIDs, $aGroupNames, $bCreateNonExistingGroups = false)
 	{
-		if (!empty($sGroupUUID))
+		if (isset($aGroupUUIDs) && is_array($aGroupUUIDs)) {
+			$this->Groups()->sync(Group::whereIn('UUID', $aGroupUUIDs)
+				->get()->map(function ($oGroup) {
+					return $oGroup->Id;
+				}
+			)->toArray());
+		}
+		$aNonExistingGroups = [];
+		if (isset($aGroupNames))
 		{
-			$oGroupContact = new \Aurora\Modules\Contacts\Classes\GroupContact($this->getModule());
+			$aNonExistingGroups = $this->addGroupsFromNames($aGroupNames);
+		}
 
-			$oGroupContact->ContactUUID = $this->UUID;
-			$oGroupContact->GroupUUID = $sGroupUUID;
-			$this->GroupsContacts[] = $oGroupContact;
+		if ($bCreateNonExistingGroups && is_array($aNonExistingGroups) && count($aNonExistingGroups) > 0) {
+			$oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
+			$oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
+			if ($oApiContactsManager) {
+				$oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
+				$oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
+				if ($oApiContactsManager) {
+					$aGroupIds = [];
+					foreach($aNonExistingGroups as $oGroup)
+					{
+						$oApiContactsManager->createGroup($oGroup);
+						$aGroupIds[] = $oGroup->Id;
+					}
+					if (count($aGroupIds) > 0) {
+						$this->Groups()->sync($aGroupIds, false);
+					}
+				}
+			}
 		}
 	}
 
@@ -213,41 +239,9 @@ class Contact extends Model
 		{
 			$this->UUID = \Sabre\DAV\UUIDUtil::getUUID();
 		}
-
-		$this->GroupsContacts = array();
-		if (isset($aContact['GroupUUIDs']) && is_array($aContact['GroupUUIDs']))
-		{
-			foreach ($aContact['GroupUUIDs'] as $sGroupUUID)
-			{
-				$this->addGroup($sGroupUUID);
-			}
-		}
-
-		if (isset($aContact['GroupNames']))
-		{
-			$aNonExistingGroups = $this->addGroupsFromNames($aContact['GroupNames']);
-		}
-
 		$this->SetViewEmail();
-		if ($bCreateNonExistingGroups && is_array($aNonExistingGroups) && count($aNonExistingGroups) > 0)
-		{
-			$oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
-			$oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
-			if ($oApiContactsManager)
-			{
-				$oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
-				$oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
-				if ($oApiContactsManager)
-				{
-					foreach($aNonExistingGroups as $oGroup)
-					{
-						$oApiContactsManager->createGroup($oGroup);
-						$this->addGroup($oGroup->UUID);
-					}
-				}
-			}
-		}
 	}
+
 
 	/**
 	 * Returns array with contact data.

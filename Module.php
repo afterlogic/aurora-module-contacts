@@ -383,25 +383,22 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$oQuery->whereIn('UUID', $ContactUUIDs);
 		}
 
-		$aContacts = $this->getManager()->getContactsAsArray(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $oQuery);
+		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $oQuery);
 
-		if (is_array($aContacts))
+		switch ($Format)
 		{
-			switch ($Format)
-			{
-				case 'csv':
-					$oSync = new Classes\Csv\Sync();
-					$sOutput = $oSync->Export($aContacts);
-					break;
-				case 'vcf':
-					foreach ($aContacts as $oContact)
-					{
+			case 'csv':
+				$oSync = new Classes\Csv\Sync();
+				$sOutput = $oSync->Export($aContacts);
+				break;
+			case 'vcf':
+				foreach ($aContacts as $oContact)
+				{
 //						$oContact->GroupsContacts = $this->getManager()->getGroupContacts(null, $oContact->UUID);
 
-						$sOutput .= self::Decorator()->GetContactAsVCF($UserId, $oContact);
-					}
-					break;
-			}
+					$sOutput .= self::Decorator()->GetContactAsVCF($UserId, $oContact);
+				}
+				break;
 		}
 
 		if (is_string($sOutput) && !empty($sOutput))
@@ -479,7 +476,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$this->CheckAccess($UserId);
 
-		return $this->getManager()->getGroups($UserId);
+		return $this->getManager()->getGroups($UserId)->toArray();
 	}
 
 	/**
@@ -709,7 +706,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 						{
 							$aGroupContactsEmails = $oGroup->Contacts->map(function ($oContact) {
 								return $oContact->FullName ? "\"{$oContact->FullName}\" <{$oContact->ViewEmail}>" : $oContact->ViewEmail;
-							});
+							})->toArray();
 
 							$aGroupUsersList[] = [
 								'UUID' => $oGroup->UUID,
@@ -790,95 +787,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 			'ContactCount' => 0,
 			'List' => []
 		);
-		$aArgs = [
-			'UserId' => $UserId,
-			'Storage' => $Storage,
- 			'Limit' => $Limit,
-			'SortField' => $SortField,
-			'SortOrder' => $SortOrder,
-			'Search' => $Search
-		];
-		$aContacts = [];
-		$this->broadcastEvent('GetContactSuggestions', $aArgs, $aContacts);
-		$aResultList = [];
-		foreach ($aContacts as $sStorage => $aStorageContacts)
-		{
-			$aResultList = array_merge(
-				$aResultList,
-				$aStorageContacts['List']
-			);
-		}
 
-		$aPersonalContactEmails = [];
-		if (isset($aContacts['personal'])) {
-			$aPersonalContactEmails = array_map(function($aContact) {
-				return $aContact['ViewEmail'];
-			}, $aContacts['personal']['List']);
-		}
+		$aContacts = $this->GetContacts($UserId,  $Storage, 0, $Limit, $SortField, $SortOrder, $Search, '', null, $WithGroups, $WithoutTeamContactsDuplicates);
+		$aResultList = $aContacts['List'];
 
-		$aUniquePersonalContactEmails = array_unique(array_diff($aPersonalContactEmails, [null]));
-		foreach ($aResultList as $key => $aContact)
-		{
-			if ($aContact['Storage'] === 'team' && in_array($aContact['ViewEmail'], $aUniquePersonalContactEmails))
-			{
-				unset($aResultList[$key]);
-			}
-		}
-
-		usort(
-			$aResultList,
-			function($a, $b){
-				if ($a['AgeScore'] == $b['AgeScore'])
-				{
-					return 0;
-				}
-				return ($a['AgeScore'] > $b['AgeScore']) ? +1 : -1;
-			}
-		);
-
-		$aGroupUsersList = [];
-		if ($WithGroups)
-		{
-			$oUser = \Aurora\System\Api::getAuthenticatedUser();
-			if ($oUser instanceof \Aurora\Modules\Core\Models\User)
-			{
-				$aGroups = $this->getManager()->getGroups($oUser->Id, ['Name' => ['%' . $Search . '%', 'LIKE']]);
-				if ($aGroups)
-				{
-					foreach ($aGroups as $oGroup)
-					{
-						$aGroupContactsEmails = [];
-						$aGroupContacts = $this->getManager()->getGroupContacts($oGroup->UUID);
-
-						foreach ($aGroupContacts as $oGroupContact)
-						{
-							$oContact = $this->getManager()->getContact($oGroupContact->ContactUUID);
-							if ($oContact)
-							{
-								$aGroupContactsEmails[] = $oContact->FullName ? "\"{$oContact->FullName}\" <{$oContact->ViewEmail}>" : $oContact->ViewEmail;
-							}
-						}
-						$aGroupUsersList[] = [
-							'UUID' => $oGroup->UUID,
-							'IdUser' => $oGroup->IdUser,
-							'FullName' => $oGroup->Name,
-							'FirstName' => '',
-							'LastName' => '',
-							'ViewEmail' => implode(', ', $aGroupContactsEmails),
-							'Storage' => '',
-							'Frequency' => 0,
-							'DateModified' => '',
-							'IsGroup' => true,
-						];
-					}
-				}
-			}
-		}
-
-		$aResultList = array_slice($aResultList, 0, $Limit);
-		$aResultList = array_merge($aResultList, $aGroupUsersList);
 		$aResult['List'] = $aResultList;
-		$aResult['ContactCount'] = count($aResult['List']);
+		$aResult['ContactCount'] = count($aResultList);
 		return $aResult;
 	}
 
@@ -1270,6 +1184,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$oContact->Frequency = $this->getAutocreatedContactFrequencyAndDeleteIt($oUser->Id, $oContact->ViewEmail);
 			if ($this->getManager()->createContact($oContact))
 			{
+				$oContact->addGroups(
+					isset($Contact['GroupUUIDs']) ? $Contact['GroupUUIDs'] : null,
+					isset($Contact['GroupNames']) ? $Contact['GroupNames'] : null,
+					true
+				);
 				$mResult = ['UUID' => $oContact->UUID, 'ETag' => $oContact->ETag];
 			}
 		}
@@ -1383,6 +1302,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$oContact->populate($Contact, true);
 			if ($this->UpdateContactObject($oContact))
 			{
+				$oContact->addGroups(
+					isset($Contact['GroupUUIDs']) ? $Contact['GroupUUIDs'] : null,
+					isset($Contact['GroupNames']) ? $Contact['GroupNames'] : null,
+					true
+				);
 				return [
 					'UUID' => $oContact->UUID,
 					'ETag' => $oContact->ETag
@@ -2167,15 +2091,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		$aGroups = $this->getManager()->getGroups($aArgs['UserId']);
-		if (count($aGroups) > 0)
-		{
-			$aGroupUUIDs = [];
-			foreach ($aGroups as $oGroup)
-			{
-				$aGroupUUIDs[] = $oGroup->UUID;
-			}
-			$this->getManager()->deleteGroups($aGroupUUIDs);
-		}
+		$aGroupUUIDs = $aGroups->map(function ($oGroup) {
+			return $oGroup->UUID;
+		})->toArray();
+		$this->getManager()->deleteGroups($aGroupUUIDs);
 		$this->getManager()->deleteCTagsByUserId($aArgs['UserId'], 'personal');
 		$this->getManager()->deleteCTagsByUserId($aArgs['UserId'], 'collected');
 	}

@@ -99,7 +99,6 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		$res = $oContact->save();
 		if ($res)
 		{
-			$this->updateContactGroups($oContact);
 			if ($oContact->Storage === 'personal')
 			{
 				$this->updateCTag($oContact->IdUser, $oContact->Storage);
@@ -241,10 +240,14 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 				$oFilters->select(Capsule::schema()->getConnection()->raw('*, (Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, DateModified)/30)) as AgeScore'));
 				break;
 		}
+		if ($iOffset > 0) {
+			$oFilters = $oFilters->offset($iOffset);
+		}
+		if ($iLimit > 0) {
+			$oFilters = $oFilters->limit($iLimit);
+		}
 
 		return $oFilters
-			->offset($iOffset)
-			->limit($iLimit)
 			->orderBy($sSortField, $iSortOrder === \Aurora\System\Enums\SortOrder::ASC ? 'asc' : 'desc')
 			->get();
 	}
@@ -286,9 +289,13 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 				$oFilters->select(Capsule::schema()->getConnection()->raw('*, (Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, DateModified)/30)) as AgeScore'));
 				break;
 		}
+		if ($iOffset > 0) {
+			$oFilters = $oFilters->offset($iOffset);
+		}
+		if ($iLimit > 0) {
+			$oFilters = $oFilters->limit($iLimit);
+		}
 		return $oFilters
-			->offset($iOffset)
-			->limit($iLimit)
 			->orderBy($sSortField, $iSortOrder === \Aurora\System\Enums\SortOrder::ASC ? 'asc' : 'desc')
 			->get()
 			->toArray();
@@ -321,7 +328,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	public function getGroups($iUserId, $oFilters = null)
 	{
 		$oQuery = $oFilters instanceof Builder ? $oFilters : Group::query();
-		return $oQuery->where('IdUser', $iUserId)->orderBy('Name')->get()->toArray();
+		return $oQuery->where('IdUser', $iUserId)->orderBy('Name')->get();
 	}
 
 	/**
