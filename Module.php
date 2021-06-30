@@ -44,7 +44,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Mail::AfterUseEmails', array($this, 'onAfterUseEmails'));
 		$this->subscribeEvent('Mail::GetBodyStructureParts', array($this, 'onGetBodyStructureParts'));
 		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
-		$this->subscribeEvent('Core::CreateTables::after', array($this, 'onAfterCreateTables'));
 
 		$this->subscribeEvent('Calendar::CreateEvent', array($this, 'onCreateOrUpdateEvent'));
 		$this->subscribeEvent('Calendar::UpdateEvent', array($this, 'onCreateOrUpdateEvent'));
@@ -2097,18 +2096,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->getManager()->deleteGroups($aGroupUUIDs);
 		$this->getManager()->deleteCTagsByUserId($aArgs['UserId'], 'personal');
 		$this->getManager()->deleteCTagsByUserId($aArgs['UserId'], 'collected');
-	}
-
-	/**
-	 *
-	 */
-	public function onAfterCreateTables(&$aData, &$mResult)
-	{
-	    /*
-		\Aurora\System\Managers\Db::getInstance()->executeSqlFile(
-			dirname(__FILE__) . '/Sql/update_contact_notes_field_type.sql'
-		);
-	    */
 	}
 
 	public function onCreateOrUpdateEvent(&$aArgs)
