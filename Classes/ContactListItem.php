@@ -27,9 +27,9 @@ class ContactListItem
 	 * @var string
 	 */
 	public $IdStr;
-	
+
 	/**
-	 *  @var int $IdUser	
+	 *  @var int $IdUser
 	 */
 	public $IdUser;
 
@@ -42,12 +42,12 @@ class ContactListItem
 	 * @var bool
 	 */
 	public $IsGroup;
-	
+
 	/**
 	 * @var bool
 	 */
 	public $IsOrganization;
-	
+
 
 	/**
 	 * @var string
@@ -93,12 +93,12 @@ class ContactListItem
 	 * @var bool
 	 */
 	public $Auto;
-	
+
 	/**
 	 * @var bool
 	 */
 	public $ForSharedToAll;
-	
+
 	/**
 	 * @var bool
 	 */
@@ -112,15 +112,15 @@ class ContactListItem
 	/**
 	 * @var array
 	 */
-	public $Events;	
-	
+	public $Events;
+
 	/**
 	 * @var int
 	 */
 	public $AgeScore;
-	
+
 	public $DateModified;
-	
+
 	public function __construct()
 	{
 		$this->Id = null;
@@ -305,7 +305,7 @@ class ContactListItem
 						$this->ItsMe = true;
 						$this->ReadOnly = false;
 					}
-					
+
 					if (
 						(int) $oRow->type === \Aurora\Modules\Contacts\Enums\ContactType::GlobalAccounts
 						||
@@ -346,7 +346,7 @@ class ContactListItem
 					{
 						$this->Phones[] = trim($oRow->h_mobile);
 					}
-					
+
 					switch ((int) $oRow->primary_email)
 					{
 						case \Aurora\Modules\Contacts\Enums\PrimaryEmail::Personal:
@@ -372,7 +372,7 @@ class ContactListItem
 					}
 
 					break;
-				
+
 				case 'group':
 					$this->Id = (int) $oRow->id_group;
 					$this->IsGroup = true;

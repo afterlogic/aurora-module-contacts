@@ -5,23 +5,27 @@
  * For full statements of the licenses see LICENSE-AFTERLOGIC and LICENSE-AGPL3 files.
  */
 
-namespace Aurora\Modules\Contacts\Classes;
+namespace Aurora\Modules\Contacts\Models;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  *
- * @package Classes
- * @subpackage GroupContact
- * 
+ * @package Models
+ * @subpackage GroupEvent
+ *
  * @property string $GroupUUID
  * @property string $ContactUUID
  */
-class GroupContact extends \Aurora\System\EAV\Entity
+
+use \Aurora\System\Classes\Model;
+
+class GroupEvent extends Model
 {
-	protected $aStaticMap = array(
-		'GroupUUID'	=> array('string', '', true),
-		'ContactUUID'	=> array('string', 0, true),
-	);
+	protected $fillable = [
+		'GroupUUID',
+		'CalendarUUID',
+		'EventUUID'
+	];
 }

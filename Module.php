@@ -7,6 +7,10 @@
 
 namespace Aurora\Modules\Contacts;
 
+use Aurora\Modules\Contacts\Models\Contact;
+use Aurora\Modules\Contacts\Models\Group;
+use Illuminate\Database\Eloquent\Builder;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -40,18 +44,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->subscribeEvent('Mail::AfterUseEmails', array($this, 'onAfterUseEmails'));
 		$this->subscribeEvent('Mail::GetBodyStructureParts', array($this, 'onGetBodyStructureParts'));
 		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
-		$this->subscribeEvent('Core::CreateTables::after', array($this, 'onAfterCreateTables'));
 
 		$this->subscribeEvent('Calendar::CreateEvent', array($this, 'onCreateOrUpdateEvent'));
 		$this->subscribeEvent('Calendar::UpdateEvent', array($this, 'onCreateOrUpdateEvent'));
-
-
-		\Aurora\Modules\Core\Classes\User::extend(
-			self::GetName(),
-			[
-				'ContactsPerPage' => array('int', $this->getConfig('ContactsPerPage', 20)),
-			]
-		);
 	}
 
 	/***** public functions *****/
@@ -258,7 +253,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			if ($oUser->isNormalOrTenant())
 			{
-				$oUser->{self::GetName().'::ContactsPerPage'} = $ContactsPerPage;
+				$oUser->setExtendedProp(self::GetName().'::ContactsPerPage', $ContactsPerPage);
 				return \Aurora\Modules\Core\Module::Decorator()->UpdateUserObject($oUser);
 			}
 			if ($oUser->Role === \Aurora\System\Enums\UserRole::SuperAdmin)
@@ -325,7 +320,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param string $GroupUUID UUID of group that should contain contacts for export.
 	 * @param array $ContactUUIDs List of UUIDs of contacts that should be exported.
 	 */
-	public function Export($UserId, $Storage, $Format, $Filters = [], $GroupUUID = '', $ContactUUIDs = [])
+	public function Export($UserId, $Storage, $Format, Builder $Filters = null, $GroupUUID = '', $ContactUUIDs = [])
 	{
 		$this->CheckAccess($UserId);
 
@@ -340,9 +335,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 			{
 				$oVCard = new \Sabre\VObject\Component\VCard();
 				\Aurora\Modules\Contacts\Classes\VCard\Helper::UpdateVCardFromGroup($oGroup, $oVCard);
-				foreach ($oGroup->GroupContacts as $oGroupContact)
+				foreach ($oGroup->Contacts as $oContact)
 				{
-					$oContact = \Aurora\System\Managers\Eav::getInstance()->getEntity($oGroupContact->ContactUUID, \Aurora\Modules\Contacts\Classes\Contact::class);
 					if ($oContact)
 					{
 						$sVCardUID = null;
@@ -368,53 +362,42 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 		}
 
-		$aPreparedFilters = $this->prepareFiltersFromStorage($UserId, $Storage);
-		$aFilters = \Aurora\System\EAV\Query::prepareWhere($aPreparedFilters);
+		$oQuery = ($Filters instanceof Builder) ? $Filters : Models\Contact::query();
+		$oQuery->where(function ($query) use ($UserId, $Storage, $oQuery) {
+			$oQuery = $this->prepareFiltersFromStorage($UserId, $Storage, Enums\SortField::Name, $query);
+		});
+		// $aFilters = \Aurora\System\EAV\Query::prepareWhere($aPreparedFilters);
 
 		if (empty($ContactUUIDs) && !empty($GroupUUID))
 		{
-			$aGroupContact = $this->getManager()->getGroupContacts($GroupUUID);
-			foreach ($aGroupContact as $oGroupContact)
-			{
-				$ContactUUIDs[] = $oGroupContact->ContactUUID;
-			}
-			if (empty($ContactUUIDs))
-			{
-				$ContactUUIDs = array();
+			$oGroup = Group::firstWhere('UUID', $GroupUUID);
+			if ($oGroup) {
+				$oQuery->whereHas('Groups', function ($oSubQuery) use ($oGroup) {
+					return $oSubQuery->where('Groups.Id', $oGroup->Id);
+				});
 			}
 		}
 		if (count($ContactUUIDs) > 0)
 		{
-			foreach ($aFilters as $sKey => $mValue)
-			{
-				if (stripos($sKey, '$AND'))
-				{
-					$aFilters[$sKey]['UUID'] = [$ContactUUIDs, 'IN'];
-				}
-			}
+			$oQuery->whereIn('UUID', $ContactUUIDs);
 		}
 
-		$aFilters = ['$OR' => $aFilters];
+		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $oQuery);
 
-		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters);
-
-		if (is_array($aContacts))
+		switch ($Format)
 		{
-			switch ($Format)
-			{
-				case 'csv':
-					$oSync = new Classes\Csv\Sync();
-					$sOutput = $oSync->Export($aContacts);
-					break;
-				case 'vcf':
-					foreach ($aContacts as $oContact)
-					{
-						$oContact->GroupsContacts = $this->getManager()->getGroupContacts(null, $oContact->UUID);
+			case 'csv':
+				$oSync = new Classes\Csv\Sync();
+				$sOutput = $oSync->Export($aContacts);
+				break;
+			case 'vcf':
+				foreach ($aContacts as $oContact)
+				{
+//						$oContact->GroupsContacts = $this->getManager()->getGroupContacts(null, $oContact->UUID);
 
-						$sOutput .= self::Decorator()->GetContactAsVCF($UserId, $oContact);
-					}
-					break;
-			}
+					$sOutput .= self::Decorator()->GetContactAsVCF($UserId, $oContact);
+				}
+				break;
 		}
 
 		if (is_string($sOutput) && !empty($sOutput))
@@ -492,7 +475,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$this->CheckAccess($UserId);
 
-		return $this->getManager()->getGroups($UserId);
+		return $this->getManager()->getGroups($UserId)->toArray();
 	}
 
 	/**
@@ -667,101 +650,63 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param bool $WithoutTeamContactsDuplicates Do not show a contact from the global address book if the contact with the same email address already exists in personal address book
 	 * @return array
 	 */
-	public function GetContacts($UserId, $Storage = '', $Offset = 0, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', $Filters = array(), $WithGroups = false, $WithoutTeamContactsDuplicates = false)
+	public function GetContacts($UserId, $Storage = '', $Offset = 0, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', Builder $Filters = null, $WithGroups = false, $WithoutTeamContactsDuplicates = false)
 	{
 		// $Storage is used by subscribers to prepare filters.
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		$this->CheckAccess($UserId);
+		$oQuery = ($Filters instanceof Builder) ? $Filters : Models\Contact::query();
+		$oQuery->where(function ($query) use ($UserId, $Storage, $SortField, $oQuery) {
+			$oQuery = $this->prepareFiltersFromStorage($UserId, $Storage, $SortField, $query);
+		});
 
-		$aPreparedFilters = $this->prepareFiltersFromStorage($UserId, $Storage, $SortField);
-		$aFilters = array_merge($aPreparedFilters, $Filters);
-		$aFilters = \Aurora\System\EAV\Query::prepareWhere($aFilters);
-
-		$aContactUUIDs = array();
 		$aGroupUsersList = [];
 		if (!empty($GroupUUID))
 		{
-			$aGroupContact = $this->getManager()->getGroupContacts($GroupUUID);
-			foreach ($aGroupContact as $oGroupContact)
-			{
-				$aContactUUIDs[] = $oGroupContact->ContactUUID;
-			}
-			if (empty($aContactUUIDs))
-			{
-				$aContactUUIDs = array();
-			}
-			if (count($aContactUUIDs) > 0)
-			{
-				foreach ($aFilters as $sKey => $mValue)
-				{
-					if (stripos($sKey, '$AND'))
-					{
-						$aFilters[$sKey]['UUID'] = [$aContactUUIDs, 'IN'];
-					}
-				}
+			$oGroup = Group::firstWhere('UUID', $GroupUUID);
+			if ($oGroup) {
+				$oQuery->whereHas('Groups', function ($oSubQuery) use ($oGroup) {
+					return $oSubQuery->where('Groups.Id', $oGroup->Id);
+				});
 			}
 		}
-
 		if (!empty($Search))
 		{
-			$aSearchFilters = [];
 			if ($SortField === Enums\SortField::Frequency)
 			{
-				$aSearchFilters = [
-					'FullName' => ['%'.$Search.'%', 'LIKE'],
-					'ViewEmail' => ['%'.$Search.'%', 'LIKE'],
-					'BusinessCompany' => ['%'.$Search.'%', 'LIKE']
-				];
+				$oQuery = $oQuery->where(function($query) use ($Search) {
+					$query->orWhere('FullName', 'LIKE', '%'.$Search.'%')
+					->orWhere('ViewEmail', 'LIKE', '%'.$Search.'%')
+					->orWhere('BusinessCompany', 'LIKE', '%'.$Search.'%');
+				});
 			}
 			else
 			{
-				$aSearchFilters = [
-					'FullName' => ['%'.$Search.'%', 'LIKE'],
-					'ViewEmail' => ['%'.$Search.'%', 'LIKE'],
-					'PersonalEmail' => ['%'.$Search.'%', 'LIKE'],
-					'BusinessEmail' => ['%'.$Search.'%', 'LIKE'],
-					'OtherEmail' => ['%'.$Search.'%', 'LIKE'],
-					'BusinessCompany' => ['%'.$Search.'%', 'LIKE']
-				];
+				$oQuery = $oQuery->where(function($query) use ($Search) {
+					$query->where('FullName', 'LIKE', '%'.$Search.'%')
+					->orWhere('ViewEmail', 'LIKE', '%'.$Search.'%')
+					->orWhere('PersonalEmail', 'LIKE', '%'.$Search.'%')
+					->orWhere('BusinessEmail', 'LIKE', '%'.$Search.'%')
+					->orWhere('OtherEmail', 'LIKE', '%'.$Search.'%')
+					->orWhere('BusinessCompany', 'LIKE', '%'.$Search.'%');
+				});
 			}
 
-			if (count($aFilters) > 0)
-			{
-				$aFilters = [
-					'$AND' => [
-						'1$OR' => $aFilters,
-						'2$OR' => $aSearchFilters
-					]
-				];
-			}
-			else
-			{
-				$aFilters = [
-					'$OR' => $aSearchFilters
-				];
-			}
 			if ($WithGroups)
 			{
 				$oUser = \Aurora\System\Api::getAuthenticatedUser();
-				if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+				if ($oUser instanceof \Aurora\Modules\Core\Models\User)
 				{
-					$aGroups = $this->getManager()->getGroups($oUser->EntityId, ['Name' => ['%' . $Search . '%', 'LIKE']]);
+					$aGroups = $this->getManager()->getGroups($oUser->Id, ['Name' => ['%' . $Search . '%', 'LIKE']]);
 					if ($aGroups)
 					{
 						foreach ($aGroups as $oGroup)
 						{
-							$aGroupContactsEmails = [];
-							$aGroupContacts = $this->getManager()->getGroupContacts($oGroup->UUID);
+							$aGroupContactsEmails = $oGroup->Contacts->map(function ($oContact) {
+								return $oContact->FullName ? "\"{$oContact->FullName}\" <{$oContact->ViewEmail}>" : $oContact->ViewEmail;
+							})->toArray();
 
-							foreach ($aGroupContacts as $oGroupContact)
-							{
-								$oContact = $this->getManager()->getContact($oGroupContact->ContactUUID);
-								if ($oContact)
-								{
-									$aGroupContactsEmails[] = $oContact->FullName ? "\"{$oContact->FullName}\" <{$oContact->ViewEmail}>" : $oContact->ViewEmail;
-								}
-							}
 							$aGroupUsersList[] = [
 								'UUID' => $oGroup->UUID,
 								'IdUser' => $oGroup->IdUser,
@@ -779,38 +724,25 @@ class Module extends \Aurora\System\Module\AbstractModule
 				}
 			}
 		}
-		elseif (count($aFilters) > 1)
-		{
-			$aFilters = ['$OR' => $aFilters];
-		}
 
 		if ($SortField === Enums\SortField::Frequency)
 		{
-			$aFilters['Frequency'] = ['-1', '!='];
-			$aFilters = [
-				'$AND' => $aFilters
-			];
+			$oQuery = $oQuery->where('Frequency', '!=', -1);
 		}
 
-		$aContacts = array();
-		$iCount = 0;
-		if ((!empty($GroupUUID) && count($aContactUUIDs) > 0) || empty($GroupUUID))
-		{
-			$iCount = $this->getManager()->getContactsCount($aFilters);
-			$aContacts = $this->getManager()->getContactsAsArray($SortField, $SortOrder, $Offset, $Limit, $aFilters);
-		}
-		if ($Storage === 'all' && $WithoutTeamContactsDuplicates)
-		{
-			$aPersonalContactEmails = array_map(function($oContact) {
-				if ($oContact->Storage === 'personal')
-				{
-					return $oContact->ViewEmail;
+		$iCount = $this->getManager()->getContactsCount($oQuery);
+		$aContacts = $this->getManager()->getContactsAsArray($SortField, $SortOrder, $Offset, $Limit, $oQuery);
+
+		if ($Storage === 'all' && $WithoutTeamContactsDuplicates) {
+			$aPersonalContactEmails = array_map(function($aContact) {
+				if ($aContact['Storage'] === 'personal') {
+					return $aContact['ViewEmail'];
 				}
 			}, $aContacts);
 			$aUniquePersonalContactEmails = array_unique(array_diff($aPersonalContactEmails, [null]));
 			foreach ($aContacts as $key => $aContact)
 			{
-				if ($oContact->Storage === 'team' && in_array($aContact['ViewEmail'], $aUniquePersonalContactEmails))
+				if ($aContact['Storage'] === 'team' && in_array($aContact['ViewEmail'], $aUniquePersonalContactEmails))
 				{
 					unset($aContacts[$key]);
 				}
@@ -854,95 +786,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 			'ContactCount' => 0,
 			'List' => []
 		);
-		$aArgs = [
-			'UserId' => $UserId,
-			'Storage' => $Storage,
- 			'Limit' => $Limit,
-			'SortField' => $SortField,
-			'SortOrder' => $SortOrder,
-			'Search' => $Search
-		];
-		$aContacts = [];
-		$this->broadcastEvent('GetContactSuggestions', $aArgs, $aContacts);
-		$aResultList = [];
-		foreach ($aContacts as $sStorage => $aStorageContacts)
-		{
-			$aResultList = array_merge(
-				$aResultList,
-				$aStorageContacts['List']
-			);
-		}
 
-		$aPersonalContactEmails = [];
-		if (isset($aContacts['personal'])) {
-			$aPersonalContactEmails = array_map(function($aContact) {
-				return $aContact['ViewEmail'];
-			}, $aContacts['personal']['List']);
-		}
+		$aContacts = $this->GetContacts($UserId,  $Storage, 0, $Limit, $SortField, $SortOrder, $Search, '', null, $WithGroups, $WithoutTeamContactsDuplicates);
+		$aResultList = $aContacts['List'];
 
-		$aUniquePersonalContactEmails = array_unique(array_diff($aPersonalContactEmails, [null]));
-		foreach ($aResultList as $key => $aContact)
-		{
-			if ($aContact['Storage'] === 'team' && in_array($aContact['ViewEmail'], $aUniquePersonalContactEmails))
-			{
-				unset($aResultList[$key]);
-			}
-		}
-
-		usort(
-			$aResultList,
-			function($a, $b){
-				if ($a['AgeScore'] == $b['AgeScore']) 
-				{
-					return 0;
-				}
-				return ($a['AgeScore'] > $b['AgeScore']) ? +1 : -1;
-			}
-		);
-
-		$aGroupUsersList = [];
-		if ($WithGroups)
-		{
-			$oUser = \Aurora\System\Api::getAuthenticatedUser();
-			if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
-			{
-				$aGroups = $this->getManager()->getGroups($oUser->EntityId, ['Name' => ['%' . $Search . '%', 'LIKE']]);
-				if ($aGroups)
-				{
-					foreach ($aGroups as $oGroup)
-					{
-						$aGroupContactsEmails = [];
-						$aGroupContacts = $this->getManager()->getGroupContacts($oGroup->UUID);
-
-						foreach ($aGroupContacts as $oGroupContact)
-						{
-							$oContact = $this->getManager()->getContact($oGroupContact->ContactUUID);
-							if ($oContact)
-							{
-								$aGroupContactsEmails[] = $oContact->FullName ? "\"{$oContact->FullName}\" <{$oContact->ViewEmail}>" : $oContact->ViewEmail;
-							}
-						}
-						$aGroupUsersList[] = [
-							'UUID' => $oGroup->UUID,
-							'IdUser' => $oGroup->IdUser,
-							'FullName' => $oGroup->Name,
-							'FirstName' => '',
-							'LastName' => '',
-							'ViewEmail' => implode(', ', $aGroupContactsEmails),
-							'Storage' => '',
-							'Frequency' => 0,
-							'DateModified' => '',
-							'IsGroup' => true,
-						];
-					}
-				}
-			}
-		}
-
-		$aResultList = array_slice($aResultList, 0, $Limit);
-		$aResultList = array_merge($aResultList, $aGroupUsersList);
 		$aResult['List'] = $aResultList;
-		$aResult['ContactCount'] = count($aResult['List']);
+		$aResult['ContactCount'] = count($aResultList);
 		return $aResult;
 	}
 
@@ -963,13 +812,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		if ($UserId === null)
 		{
-			$iUserId = $oAuthenticatedUser->EntityId;
+			$iUserId = $oAuthenticatedUser->Id;
 		}
 		else
 		{
 			$iUserId = (int) $UserId;
 
-			$iUserRole = $oAuthenticatedUser instanceof \Aurora\Modules\Core\Classes\User ? $oAuthenticatedUser->Role : \Aurora\System\Enums\UserRole::Anonymous;
+			$iUserRole = $oAuthenticatedUser instanceof \Aurora\Modules\Core\Models\User ? $oAuthenticatedUser->Role : \Aurora\System\Enums\UserRole::Anonymous;
 			switch ($iUserRole)
 			{
 				case (\Aurora\System\Enums\UserRole::SuperAdmin):
@@ -980,7 +829,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				case (\Aurora\System\Enums\UserRole::TenantAdmin):
 					// everything is allowed for TenantAdmin
 					$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUser($iUserId);
-					if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+					if ($oUser instanceof \Aurora\Modules\Core\Models\User)
 					{
 						if ($oAuthenticatedUser->IdTenant === $oUser->IdTenant)
 						{
@@ -991,7 +840,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 					break;
 				case (\Aurora\System\Enums\UserRole::NormalUser):
 					// User identifier shoud be checked
-					if ($iUserId === $oAuthenticatedUser->EntityId)
+					if ($iUserId === $oAuthenticatedUser->Id)
 					{
 						$UserId = $iUserId;
 						$bAccessDenied = false;
@@ -1079,7 +928,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$mResult = false;
 
-		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+		if ($oUser instanceof \Aurora\Modules\Core\Models\User)
 		{
 			$oContact = $this->getManager()->getContact($UUID);
 			if (self::Decorator()->CheckAccessToObject($oUser, $oContact))
@@ -1153,49 +1002,22 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $Emails List of emails of contacts to return.
 	 * @return array
 	 */
-	public function GetContactsByEmails($UserId, $Storage, $Emails, $Filters = array())
+	public function GetContactsByEmails($UserId, $Storage, $Emails, $Filters = null)
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		$this->CheckAccess($UserId);
-
-		$aPreparedFilters = $this->prepareFiltersFromStorage($UserId, $Storage);
-		$aFilters = array_merge($aPreparedFilters, $Filters);
-		$aFilters = \Aurora\System\EAV\Query::prepareWhere($aFilters);
-
-		if (!empty($aFilters))
+		$oQuery = ($Filters instanceof Builder) ? $Filters : Contact::query();
+		$oQuery->where(function ($query) use ($UserId, $Storage, $oQuery) {
+			$oQuery = $this->prepareFiltersFromStorage($UserId, $Storage, Enums\SortField::Name, $query);
+		});
+		$oQuery = $oQuery->whereIn('ViewEmail', $Emails);
+		if ($Storage !== \Aurora\Modules\Contacts\Enums\StorageType::All)
 		{
-			$aFilters = [
-				'$AND' => [
-					'$OR' => $aFilters,
-					'ViewEmail' => [$Emails, 'IN']
-				]
-			];
-			if ($Storage !== \Aurora\Modules\Contacts\Enums\StorageType::All)
-			{
-				$aFilters['$AND']['Storage'] = $Storage;
-			}
-		}
-		else
-		{
-			if ($Storage !== \Aurora\Modules\Contacts\Enums\StorageType::All)
-			{
-				$aFilters = [
-					'$AND' => [
-						'Storage' => $Storage,
-						'ViewEmail' => [$Emails, 'IN']
-					]
-				];
-			}
-			else
-			{
-				$aFilters = [
-					'ViewEmail' => [$Emails, 'IN']
-				];
-			}
+			$oQuery = $oQuery->where('Storage', $Storage);
 		}
 
-		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters);
+		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $oQuery);
 
 		return $aContacts;
 	}
@@ -1251,7 +1073,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $Uids List of emails of contacts to return.
 	 * @return array
 	 */
-	public function GetContactsInfo($Storage, $UserId = null, $Filters = [])
+	public function GetContactsInfo($Storage, $UserId = null, Builder $Filters = null)
 	{
 		$aResult = [
 			'CTag' => $this->GetCTag($UserId, $Storage),
@@ -1261,19 +1083,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$this->CheckAccess($UserId);
 
-		$aPreparedFilters = $this->prepareFiltersFromStorage($UserId, $Storage);
-		$aFilters = array_merge($aPreparedFilters, $Filters);
-		$aFilters = \Aurora\System\EAV\Query::prepareWhere($aFilters);
+		$oQuery = ($Filters instanceof Builder) ? $Filters : Models\Contact::query();
+		$oQuery->where(function ($query) use ($UserId, $Storage, $oQuery) {
+			$oQuery = $this->prepareFiltersFromStorage($UserId, $Storage, Enums\SortField::Name, $query);
+		});
 
-		// if (count($aFilters) > 1)
-		// {
-		// 	$aFilters = ['$OR' => $aFilters];
-		// }
-		$aContacts = (new \Aurora\System\EAV\Query())
-			->select(['UUID', 'ETag', 'Storage', 'Auto'])
-			->whereType(Classes\Contact::class)
-			->where($aFilters)
-			->exec();
+		$aContacts = $oQuery->get(['UUID', 'ETag', 'Auto', 'Storage']);
 
 		foreach ($aContacts as $oContact)
 		{
@@ -1358,16 +1173,21 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$mResult = false;
 
-		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+		if ($oUser instanceof \Aurora\Modules\Core\Models\User)
 		{
-			$oContact = new Classes\Contact(self::GetName());
-			$oContact->IdUser = $oUser->EntityId;
+			$oContact = new Models\Contact();
+			$oContact->IdUser = $oUser->Id;
 			$oContact->IdTenant = $oUser->IdTenant;
 			$oContact->populate($Contact, true);
 
-			$oContact->Frequency = $this->getAutocreatedContactFrequencyAndDeleteIt($oUser->EntityId, $oContact->ViewEmail);
+			$oContact->Frequency = $this->getAutocreatedContactFrequencyAndDeleteIt($oUser->Id, $oContact->ViewEmail);
 			if ($this->getManager()->createContact($oContact))
 			{
+				$oContact->addGroups(
+					isset($Contact['GroupUUIDs']) ? $Contact['GroupUUIDs'] : null,
+					isset($Contact['GroupNames']) ? $Contact['GroupNames'] : null,
+					true
+				);
 				$mResult = ['UUID' => $oContact->UUID, 'ETag' => $oContact->ETag];
 			}
 		}
@@ -1387,20 +1207,18 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$iFrequency = 0;
 		$sStorage = 'personal';
-		$aFilters = [
-			'$AND' => [
-				'ViewEmail' => [$sViewEmail, '='],
-				'IdUser' => [$UserId, '='],
-				'Auto' => [true, '='],
-				'Storage' => $sStorage
-			]
-		];
+		$oQuery = Contact::where([
+			['ViewEmail', '=', $sViewEmail],
+			['IdUser', '=',  $UserId],
+			['Auto', '=', true],
+			['Storage', '=', $sStorage]
+		]);
 		$oAutocreatedContacts = $this->getManager()->getContacts(
 			\Aurora\Modules\Contacts\Enums\SortField::Name,
 			\Aurora\System\Enums\SortOrder::ASC,
 			0,
 			1,
-			$aFilters
+			$oQuery
 		);
 		if (is_array($oAutocreatedContacts) && isset($oAutocreatedContacts[0]))
 		{
@@ -1483,6 +1301,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$oContact->populate($Contact, true);
 			if ($this->UpdateContactObject($oContact))
 			{
+				$oContact->addGroups(
+					isset($Contact['GroupUUIDs']) ? $Contact['GroupUUIDs'] : null,
+					isset($Contact['GroupNames']) ? $Contact['GroupNames'] : null,
+					true
+				);
 				return [
 					'UUID' => $oContact->UUID,
 					'ETag' => $oContact->ETag
@@ -1638,12 +1461,25 @@ class Module extends \Aurora\System\Module\AbstractModule
 				'Name'	=>	'required'
 			]);
 
-			$oGroup = new Classes\Group(self::GetName());
+			$oGroup = new Models\Group();
 			$oGroup->IdUser = (int) $UserId;
 
 			$oGroup->populate($Group);
 
 			$this->getManager()->createGroup($oGroup);
+
+			if (isset($Group['Contacts']) && is_array($Group['Contacts']))
+			{
+				$oGroup->Contacts()->sync(
+					$oGroup->Contacts->merge(
+						Models\Contact::whereIn('UUID', $Group['Contacts'])->get()
+					)
+					->map(function($oContact) {
+						return $oContact->Id;
+					})
+				);
+			}
+
 			return $oGroup ? $oGroup->UUID : false;
 		}
 		else
@@ -2018,10 +1854,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 				{
 					case 'csv':
 						$oSync = new Classes\Csv\Sync();
-						$aImportResult = $oSync->Import($oUser->EntityId, $sTempFilePath, $GroupUUID);
+						$aImportResult = $oSync->Import($oUser->Id, $sTempFilePath, $GroupUUID);
 						break;
 					case 'vcf':
-						$aImportResult = $this->importVcf($oUser->EntityId, $sTempFilePath);
+						$aImportResult = $this->importVcf($oUser->Id, $sTempFilePath);
 						break;
 				}
 
@@ -2092,7 +1928,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oApiFileCache = new \Aurora\System\Managers\Filecache();
 
 		$sTempFilePath = $oApiFileCache->generateFullFilePath($oUser->UUID, $File); // Temp files with access from another module should be stored in System folder
-		$aImportResult = $this->importVcf($oUser->EntityId, $sTempFilePath);
+		$aImportResult = $this->importVcf($oUser->Id, $sTempFilePath);
 
 		return $aImportResult;
 	}
@@ -2103,9 +1939,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserUnchecked($UserId);
 
 		$iResult = 0;
-		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+		if ($oUser instanceof \Aurora\Modules\Core\Models\User)
 		{
-			$iUserId = $Storage === 'personal' || $Storage === 'collected' ? $oUser->EntityId : $oUser->IdTenant;
+			$iUserId = $Storage === 'personal' || $Storage === 'collected' ? $oUser->Id : $oUser->IdTenant;
 
 			$oCTag = $this->getManager()->getCTag($iUserId, $Storage);
 			if ($oCTag instanceof Classes\CTag)
@@ -2194,18 +2030,17 @@ class Module extends \Aurora\System\Module\AbstractModule
 		return $aImportResult;
 	}
 
-	private function prepareFiltersFromStorage($UserId, $Storage = '', $SortField = Enums\SortField::Name)
+	private function prepareFiltersFromStorage($UserId, $Storage = '', $SortField = Enums\SortField::Name, $oQuery = null)
 	{
 		$aArgs = [
 			'UserId' => $UserId,
 			'Storage' => $Storage,
 			'SortField' => $SortField
 		];
-		$aPreparedFilters = [];
 
-		$this->broadcastEvent('PrepareFiltersFromStorage', $aArgs, $aPreparedFilters);
+		$this->broadcastEvent('PrepareFiltersFromStorage', $aArgs, $oQuery);
 
-		return $aPreparedFilters;
+		return $oQuery;
 	}
 
 	public function onAfterUseEmails($Args, &$Result)
@@ -2255,27 +2090,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		$aGroups = $this->getManager()->getGroups($aArgs['UserId']);
-		if (count($aGroups) > 0)
-		{
-			$aGroupUUIDs = [];
-			foreach ($aGroups as $oGroup)
-			{
-				$aGroupUUIDs[] = $oGroup->UUID;
-			}
-			$this->getManager()->deleteGroups($aGroupUUIDs);
-		}
+		$aGroupUUIDs = $aGroups->map(function ($oGroup) {
+			return $oGroup->UUID;
+		})->toArray();
+		$this->getManager()->deleteGroups($aGroupUUIDs);
 		$this->getManager()->deleteCTagsByUserId($aArgs['UserId'], 'personal');
 		$this->getManager()->deleteCTagsByUserId($aArgs['UserId'], 'collected');
-	}
-
-	/**
-	 *
-	 */
-	public function onAfterCreateTables(&$aData, &$mResult)
-	{
-		\Aurora\System\Managers\Db::getInstance()->executeSqlFile(
-			dirname(__FILE__) . '/Sql/update_contact_notes_field_type.sql'
-		);
 	}
 
 	public function onCreateOrUpdateEvent(&$aArgs)
@@ -2288,18 +2108,18 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$aGroups = array_merge($aGroups, $aGroupsLocation);
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 
-		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+		if ($oUser instanceof \Aurora\Modules\Core\Models\User)
 		{
 			foreach ($aGroups as $sGroup)
 			{
 				$sGroupName = ltrim($sGroup, '#');
-				$oGroup = $this->Decorator()->GetGroupByName($sGroupName, $oUser->EntityId);
+				$oGroup = $this->Decorator()->GetGroupByName($sGroupName, $oUser->Id);
 				if (!$oGroup)
 				{
-					$sGroupUUID = $this->Decorator()->CreateGroup(['Name' => $sGroupName], $oUser->EntityId);
+					$sGroupUUID = $this->Decorator()->CreateGroup(['Name' => $sGroupName], $oUser->Id);
 					if ($sGroupUUID)
 					{
-						$oGroup = $this->GetGroup($oUser->EntityId, $sGroupUUID);
+						$oGroup = $this->GetGroup($oUser->Id, $sGroupUUID);
 					}
 				}
 

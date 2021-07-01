@@ -18,11 +18,11 @@ namespace Aurora\Modules\Contacts\Classes\VCard;
  */
 class Helper
 {
-	
+
 	public static function GetContactDataFromVcard($oVCard, $sUUID = '')
 	{
 		$aContact = [];
-		
+
 		if (!empty($sUUID))
 		{
 			$aContact['UUID'] = (string) $sUUID;
@@ -260,7 +260,7 @@ class Helper
 		{
 			$aContact['UseFriendlyName'] = '1' === (string) $oVCard->{'X-USE-FRIENDLY-NAME'};
 		}
-		
+
 		return $aContact;
 	}
 
@@ -294,7 +294,7 @@ class Helper
 		if (isset($oVCard->MEMBER))
 		{
 			$aMembers = $oVCard->MEMBER;
-		} 
+		}
 		else if (isset($oVCard->{'X-ADDRESSBOOKSERVER-MEMBER'}))
 		{
 			$aMembers = $oVCard->{'X-ADDRESSBOOKSERVER-MEMBER'};
@@ -309,7 +309,7 @@ class Helper
 		return $aGroup;
 	}
 
-	
+
 	/**
 	* @param \Aurora\Modules\Contacts\Classes\Contact $oContact
 	* @param \Sabre\VObject\Component $oVCard
@@ -502,7 +502,7 @@ class Helper
 							$oEmail->setValue($oContact->OtherEmail);
 						}
 					}
-						
+
 				}
 				if (isset($oEmail))
 				{
@@ -510,7 +510,7 @@ class Helper
 				}
 			}
 		}
-		
+
 		if ($bFindHome)
 		{
 			$aTypes = array('HOME');
@@ -535,7 +535,7 @@ class Helper
 			if ($oContact->PrimaryEmail == \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other)
 			{
 				$aTypes[] = 'PREF';
-			}			
+			}
 			$oEmail = $oVCard->add('EMAIL', $oContact->OtherEmail, array('TYPE' => $aTypes));
 		}
 	}
@@ -772,7 +772,7 @@ class Helper
 			$oContact->BusinessCompany,
 			$oContact->BusinessDepartment
 		);
-		
+
 		$aCategories = [];
 		foreach ($oContact->GroupsContacts as $oGroupsContact)
 		{
@@ -783,7 +783,7 @@ class Helper
 				$aCategories[] = $oGroup->Name;
 			}
 		}
-		
+
 		unset($oVCard->CATEGORIES);
 		if (count($aCategories) > 0)
 		{
@@ -821,5 +821,5 @@ class Helper
 		{
 			$oVCard->add('X-ADDRESSBOOKSERVER-MEMBER', 'urn:uuid:' . $oGroupContact->ContactUUID);
 		}
-	}	
+	}
 }
