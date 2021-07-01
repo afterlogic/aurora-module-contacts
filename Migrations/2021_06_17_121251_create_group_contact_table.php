@@ -15,6 +15,7 @@ class CreateGroupContactTable extends Migration
     {
         Capsule::schema()->create('group_contact', function (Blueprint $table) {
             $table->increments('Id');
+            $table->string('UUID')->default('');
             $table->integer('GroupId')->unsigned()->index();
             $table->foreign('GroupId')->references('Id')->on('groups')->onDelete('cascade');
             $table->integer('ContactId')->unsigned()->index();
