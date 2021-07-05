@@ -309,13 +309,13 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 *
 	 * @return array|bool
 	 */
-	public function getContactUids($oFilters)
+	public function getContactUids(Builder $oFilters)
 	{
 		return $oFilters->get()->map(
 			function($oContact) {
 				return $oContact->UUID;
 			}
-		);
+		)->toArray();
 	}
 
 	/**
