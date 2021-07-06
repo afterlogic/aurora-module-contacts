@@ -18,6 +18,42 @@ namespace Aurora\Modules\Contacts\Classes\VCard;
  */
 class Helper
 {
+	public static function AddPhoneToNotes(&$aContact, $sPhone)
+	{
+		if (isset($aContact['Notes'])) {
+			$aContact['Notes'] = "\r\n Phone: " . $sPhone;
+		}
+	}
+
+	public static function SetPersonalPhone(&$aContact, $sPhone, $bFullBusinessList = false)
+	{
+		if (!isset($aContact['PersonalMobile'])) {
+			$aContact['PersonalMobile'] = $sPhone;
+		} else if (!isset($aContact['PersonalPhone'])) {
+			$aContact['PersonalPhone'] = $sPhone;
+		} else if (!isset($aContact['PersonalPhone'])) {
+			$aContact['PersonalPhone'] = $sPhone;
+		} else if (!isset($aContact['PersonalFax'])) {
+			$aContact['PersonalFax'] = $sPhone;
+		} else if (!$bFullBusinessList) {
+			self::SetBusinessPhone($aContact, $sPhone, true);
+		} else {
+			self::AddPhoneToNotes($aContact, $sPhone);
+		}
+	}
+
+	public static function SetBusinessPhone(&$aContact, $sPhone, $bFullPersonalList = false)
+	{
+		if (!isset($aContact['BusinessPhone'])) {
+			$aContact['BusinessPhone'] = $sPhone;
+		} else if (!isset($aContact['BusinessFax'])) {
+			$aContact['BusinessFax'] = $sPhone;
+		} else if (!$bFullPersonalList) {
+			self::SetPersonalPhone($aContact, $sPhone, true);
+		} else {
+			self::AddPhoneToNotes($aContact, $sPhone);
+		}
+	}
 	
 	public static function GetContactDataFromVcard($oVCard, $sUUID = '')
 	{
@@ -220,32 +256,38 @@ class Helper
 					{
 						if ($oTypes->has('HOME'))
 						{
-							$aContact['PersonalFax'] = (string) $oTel;
+							self::SetPersonalPhone($aContact, (string) $oTel);
+//							$aContact['PersonalFax'] = (string) $oTel;
 						}
 						if ($oTypes->has('WORK'))
 						{
-							$aContact['BusinessFax'] = (string) $oTel;
+							self::SetBusinessPhone($aContact, (string) $oTel);
+//							$aContact['BusinessFax'] = (string) $oTel;
 						}
 					}
 					else
 					{
 						if ($oTypes->has('CELL'))
 						{
-							$aContact['PersonalMobile'] = (string) $oTel;
+							self::SetPersonalPhone($aContact, (string) $oTel);
+//							$aContact['PersonalMobile'] = (string) $oTel;
 						}
 						else if ($oTypes->has('HOME'))
 						{
-							$aContact['PersonalPhone'] = (string) $oTel;
+							self::SetPersonalPhone($aContact, (string) $oTel);
+//							$aContact['PersonalPhone'] = (string) $oTel;
 						}
 						else if ($oTypes->has('WORK'))
 						{
-							$aContact['BusinessPhone'] = (string) $oTel;
+							self::SetBusinessPhone($aContact, (string) $oTel);
+//							$aContact['BusinessPhone'] = (string) $oTel;
 						}
 					}
 				}
 				else
 				{
-					$aContact['PersonalPhone'] = (string) $oTel;
+					self::SetPersonalPhone($aContact, (string) $oTel);
+//					$aContact['PersonalPhone'] = (string) $oTel;
 				}
 			}
 		}
