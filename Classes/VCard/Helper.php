@@ -44,8 +44,6 @@ class Helper
 		}
 		$aContact['GroupNames'] = $aGroupNames;
 
-		$aContact['FullName'] = isset($oVCard->FN) ? (string) $oVCard->FN : '';
-
 		if (isset($oVCard->N))
 		{
 			$aNames = $oVCard->N->getParts();
@@ -55,6 +53,7 @@ class Helper
 				$aContact['FirstName'] = !empty($aNames[1]) ? (string) $aNames[1] : '';
 			}
 		}
+		$aContact['FullName'] = !empty((string) $oVCard->FN) ? (string) $oVCard->FN : $aContact['FirstName'] . (!empty($aContact['FirstName']) ? ' ' : '') . $aContact['LastName'];
 
 		$aContact['NickName'] = isset($oVCard->NICKNAME) ? (string) $oVCard->NICKNAME : '';
 		$aContact['Notes'] = isset($oVCard->NOTE) ? (string) $oVCard->NOTE : '';
