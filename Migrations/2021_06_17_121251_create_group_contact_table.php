@@ -20,7 +20,8 @@ class CreateGroupContactTable extends Migration
             $table->foreign('GroupId')->references('Id')->on('groups')->onDelete('cascade');
             $table->integer('ContactId')->unsigned()->index();
             $table->foreign('ContactId')->references('Id')->on('contacts')->onDelete('cascade');
-            $table->timestamps();
+            $table->timestamp(\Aurora\System\Classes\Model::CREATED_AT)->nullable();
+            $table->timestamp(\Aurora\System\Classes\Model::UPDATED_AT)->nullable();
         });
     }
 

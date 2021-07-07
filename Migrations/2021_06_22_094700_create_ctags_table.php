@@ -19,7 +19,8 @@ class CreateCtagsTable extends Migration
             $table->string('Storage')->default('');
             $table->integer('CTag')->default(0);
 
-            $table->timestamps();
+            $table->timestamp(\Aurora\System\Classes\Model::CREATED_AT)->nullable();
+            $table->timestamp(\Aurora\System\Classes\Model::UPDATED_AT)->nullable();
         });
     }
 
