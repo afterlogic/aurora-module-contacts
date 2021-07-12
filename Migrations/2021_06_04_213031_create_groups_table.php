@@ -15,6 +15,7 @@ class CreateGroupsTable extends Migration
     {
         Capsule::schema()->create('groups', function (Blueprint $table) {
             $table->increments('Id');
+            $table->string('UUID')->default('');
             $table->integer('IdUser')->default(0);
             $table->string('Name')->default('');
             $table->boolean('IsOrganization')->default(false);
