@@ -386,7 +386,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 */
 	public function deleteContacts($iIdUser, $sStorage, $aContactUUIDs)
 	{
-		$mResult = Contact::whereIn('UUID', $aContactUUIDs)->delete();
+		$mResult = !!Contact::whereIn('UUID', $aContactUUIDs)->delete();
 
 		if ($mResult) {
 			$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserUnchecked($iIdUser);
