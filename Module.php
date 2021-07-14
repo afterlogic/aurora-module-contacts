@@ -667,7 +667,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$oGroup = Group::firstWhere('UUID', $GroupUUID);
 			if ($oGroup) {
 				$oQuery->whereHas('Groups', function ($oSubQuery) use ($oGroup) {
-					return $oSubQuery->where('Groups.Id', $oGroup->Id);
+					return $oSubQuery->where('groups.Id', $oGroup->Id);
 				});
 			}
 		}
