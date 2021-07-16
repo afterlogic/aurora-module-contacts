@@ -1463,7 +1463,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 			$oGroup = new Models\Group();
 			$oGroup->IdUser = (int) $UserId;
-
+			
 			$oGroup->populate($Group);
 
 			$this->getManager()->createGroup($oGroup);
@@ -1555,7 +1555,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			if (isset($Group['Contacts']) && is_array($Group['Contacts']))
 			{
 				$aGroupContactUUIDs = [];
-				foreach ($oGroup->GroupContacts as $oGroupContact)
+				foreach ($oGroup->Contacts as $oGroupContact)
 				{
 					$aGroupContactUUIDs[] = $oGroupContact->UUID;
 				}
@@ -2142,11 +2142,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$mResult = false;
 		try
 		{
-			$mResult = (new \Aurora\System\EAV\Query(Classes\GroupEvent::class))
-				->select()
-				->where(['GroupUUID' => $sGroupUUID])
-				->exec();
-
+			// $mResult = (new \Aurora\System\EAV\Query(Classes\GroupEvent::class))
+			// 	->select()
+			// 	->where(['GroupUUID' => $sGroupUUID])
+			// 	->exec();
+			$mResult = \Aurora\Modules\Contacts\Models\GroupEvent::where(['GroupUUID' => $sGroupUUID])->get();
 		}
 		catch (\Aurora\System\Exceptions\BaseException $oException)
 		{

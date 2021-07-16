@@ -30,6 +30,7 @@ class CreateGroupsTable extends Migration
             $table->string('Fax')->default('');
             $table->string('Web')->default('');
             $table->string('Events')->default('');
+            $table->json('Properties')->nullable();
             $table->timestamp(\Aurora\System\Classes\Model::CREATED_AT)->nullable();
             $table->timestamp(\Aurora\System\Classes\Model::UPDATED_AT)->nullable();
         });

@@ -817,9 +817,9 @@ class Helper
 		$oVCard->FN = $oGroup->Name;
 		$oVCard->{'X-ADDRESSBOOKSERVER-KIND'} = 'GROUP';
 		unset($oVCard->{'X-ADDRESSBOOKSERVER-MEMBER'});
-		foreach ($oGroup->GroupContacts as $oGroupContact)
+		foreach ($oGroup->Contacts as $oGroupContact)
 		{
-			$oVCard->add('X-ADDRESSBOOKSERVER-MEMBER', 'urn:uuid:' . $oGroupContact->ContactUUID);
+			$oVCard->add('X-ADDRESSBOOKSERVER-MEMBER', 'urn:uuid:' . $oGroupContact->UUID);
 		}
 	}
 }

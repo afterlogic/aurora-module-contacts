@@ -27,6 +27,10 @@ class Group extends Model
 		'Events'
 	];
 
+	protected $casts = [
+        'Properties' => 'array',
+    ];
+
 	public function populate($aGroup)
 	{
 		parent::populate($aGroup);
