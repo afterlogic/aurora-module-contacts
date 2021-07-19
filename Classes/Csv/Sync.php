@@ -44,16 +44,13 @@ class Sync
 	{
 		$sResult = '';
 		
-		if (is_array($aContacts))
+		foreach ($aContacts as $oContact)
 		{
-			foreach ($aContacts as $oContact)
+			if ($oContact)
 			{
-				if ($oContact)
-				{
-					$this->oFormatter->setContainer($oContact);
-					$this->oFormatter->form();
-					$sResult .= $this->oFormatter->getValue();
-				}
+				$this->oFormatter->setContainer($oContact);
+				$this->oFormatter->form();
+				$sResult .= $this->oFormatter->getValue();
 			}
 		}
 
