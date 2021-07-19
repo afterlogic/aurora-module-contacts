@@ -421,7 +421,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 				$oContact->save();
 			}
 		}
-		return $oQuery->delete();
+		return !!$oQuery->delete();
 	}
 
 	/**
