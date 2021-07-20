@@ -249,7 +249,7 @@ class Contact extends Model
 	 */
 	public function toResponseArray()
 	{
-		$this->calculateETag();
+//		$this->calculateETag();
 
 		$aRes = parent::toResponseArray();
 
@@ -274,10 +274,7 @@ class Contact extends Model
 
 	public function calculateETag()
 	{
-		if (empty($this->ETag))
-		{
-			$this->ETag = \md5(\json_encode($this));
-		}
+		$this->ETag = \md5(\json_encode($this));
 	}
 
 	public function Groups()
