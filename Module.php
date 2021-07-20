@@ -2233,7 +2233,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				->one()
 				->exec();
 
-			if ($mResult instanceof Classes\GroupEvent)
+			if ($mResult instanceof Models\GroupEvent)
 			{
 				$mResult = $mResult->delete();
 			}

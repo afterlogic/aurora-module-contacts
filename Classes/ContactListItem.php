@@ -184,7 +184,7 @@ class ContactListItem
 				}
 				if (isset($oVCard->{'X-AFTERLOGIC-USE-FREQUENCY'}))
 				{
-					$this->Frequency = (int)$oVCard->{'X-AFTERLOGIC-USE-FREQUENCY'}->getValue();
+					$this->Frequency = (int)$oVCard->{'X-AFTERLOGIC-USE-FREQUENCY'};
 				}
 
 				$this->UseFriendlyName = true;
