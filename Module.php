@@ -1048,7 +1048,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 			foreach ($aContacts as $oContact)
 			{
-				if ($oContact instanceof \Aurora\Modules\Contacts\Classes\Contact)
+				if ($oContact instanceof \Aurora\Modules\Contacts\Models\Contact)
 				{
 					if (self::Decorator()->CheckAccessToObject($oUser, $oContact))
 					{
@@ -1944,7 +1944,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$iUserId = $Storage === 'personal' || $Storage === 'collected' ? $oUser->Id : $oUser->IdTenant;
 
 			$oCTag = $this->getManager()->getCTag($iUserId, $Storage);
-			if ($oCTag instanceof Classes\CTag)
+			if ($oCTag instanceof Models\CTag)
 			{
 				$iResult = $oCTag->CTag;
 			}
@@ -2123,7 +2123,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 					}
 				}
 
-				if ($oGroup instanceof Classes\Group)
+				if ($oGroup instanceof Models\Group)
 				{
 					$this->removeEventFromGroup($oGroup->UUID, $oEvent->IdCalendar, $oEvent->Id);
 					$this->addEventToGroup($oGroup->UUID, $oEvent->IdCalendar, $oEvent->Id);
@@ -2196,7 +2196,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$bResult = false;
 		try
 		{
-			$oGroupEvent = new Classes\GroupEvent($this->GetName());
+			$oGroupEvent = new Models\GroupEvent();
 			$oGroupEvent->GroupUUID = $sGroupUUID;
 			$oGroupEvent->CalendarUUID = $sCalendarUUID;
 			$oGroupEvent->EventUUID = $sEventUUID;
