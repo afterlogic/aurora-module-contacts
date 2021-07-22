@@ -1043,7 +1043,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				\Aurora\System\Enums\SortOrder::ASC,
 				0,
 				0,
-				['UUID' => [$Uids, 'IN']]
+				Contact::whereIn('UUID', $Uids)
 			);
 
 			foreach ($aContacts as $oContact)
@@ -1052,7 +1052,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				{
 					if (self::Decorator()->CheckAccessToObject($oUser, $oContact))
 					{
-						$oContact->GroupsContacts = $this->getManager()->getGroupContacts(null, $oContact->UUID);
+//						$oContact->GroupsContacts = $this->getManager()->getGroupContacts(null, $oContact->UUID);
 						$oContact->Storage = ($oContact->Auto) ? 'collected' : $oContact->Storage;
 						$aResult[] = $oContact;
 					}
