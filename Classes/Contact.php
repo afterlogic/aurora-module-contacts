@@ -237,7 +237,7 @@ class Contact extends \Aurora\System\EAV\Entity
 	public function InitFromVCardStr($iUserId, $sData, $sUid = '')
 	{
 		$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserUnchecked($iUserId);
-		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+		if ($oUser instanceof \Aurora\Modules\Core\Models\User)
 		{
 			$this->IdUser = $oUser->EntityId;
 			$this->IdTenant = $oUser->IdTenant;

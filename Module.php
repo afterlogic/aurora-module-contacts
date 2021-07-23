@@ -2142,10 +2142,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$mResult = false;
 		try
 		{
-			// $mResult = (new \Aurora\System\EAV\Query(Classes\GroupEvent::class))
-			// 	->select()
-			// 	->where(['GroupUUID' => $sGroupUUID])
-			// 	->exec();
 			$mResult = \Aurora\Modules\Contacts\Models\GroupEvent::where(['GroupUUID' => $sGroupUUID])->get();
 		}
 		catch (\Aurora\System\Exceptions\BaseException $oException)
@@ -2166,16 +2162,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$mResult = false;
 		try
 		{
-			$mResult = (new \Aurora\System\EAV\Query(Classes\GroupEvent::class))
-				->select()
-				->where([
-					'$AND' => [
-						'CalendarUUID' => $sCalendarUUID,
-						'EventUUID' => $sEventUUID
-					]
-				])
-				->one()
-				->exec();
+			$mResult = \Aurora\Modules\Contacts\Models\GroupEvent::where('CalendarUUID', $sCalendarUUID)
+				->where('EventUUID', $sEventUUID)->first();
 		}
 		catch (\Aurora\System\Exceptions\BaseException $oException)
 		{
@@ -2221,17 +2209,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$mResult = false;
 		try
 		{
-			$mResult = (new \Aurora\System\EAV\Query(Classes\GroupEvent::class))
-				->select()
-				->where([
-					'$AND' => [
-						'GroupUUID' => $sGroupUUID,
-						'CalendarUUID' => $sCalendarUUID,
-						'EventUUID' => $sEventUUID
-					]
-				])
-				->one()
-				->exec();
+			$mResult = \Aurora\Modules\Contacts\Models\GroupEvent::where('GroupUUID', $sGroupUUID)
+				->where('CalendarUUID', $sCalendarUUID)
+				->where('EventUUID', $sEventUUID)->first();
 
 			if ($mResult instanceof Models\GroupEvent)
 			{
@@ -2256,21 +2236,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$mResult = false;
 		try
 		{
-			$mResult = (new \Aurora\System\EAV\Query(Classes\GroupEvent::class))
-				->select()
-				->where([
-					'$AND' => [
-						'CalendarUUID' => $sCalendarUUID,
-						'EventUUID' => $sEventUUID
-					]
-				])
-				->exec();
+			$mResult = \Aurora\Modules\Contacts\Models\GroupEvent::where('CalendarUUID', $sCalendarUUID)
+				->where('EventUUID', $sEventUUID)->first();
 
 			if (is_array($mResult))
 			{
 				foreach ($mResult as $oGroupEvent)
 				{
-					if ($mResult instanceof Classes\GroupEvent)
+					if ($mResult instanceof Models\GroupEvent)
 					{
 						$mResult->delete();
 					}
