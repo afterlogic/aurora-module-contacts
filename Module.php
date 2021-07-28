@@ -47,6 +47,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$this->subscribeEvent('Calendar::CreateEvent', array($this, 'onCreateOrUpdateEvent'));
 		$this->subscribeEvent('Calendar::UpdateEvent', array($this, 'onCreateOrUpdateEvent'));
+
+		\Aurora\Modules\Core\Classes\User::extend(
+			self::GetName(),
+			[
+				'ContactsPerPage' => array('int', $this->getConfig('ContactsPerPage', 20)),
+			]
+		);
 	}
 
 	/***** public functions *****/
