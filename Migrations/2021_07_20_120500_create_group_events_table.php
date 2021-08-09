@@ -13,7 +13,7 @@ class CreateGroupEventsTable extends Migration
      */
     public function up()
     {
-        Capsule::schema()->create('group_events', function (Blueprint $table) {
+        Capsule::schema()->create('contacts_group_events', function (Blueprint $table) {
             $table->increments('Id');
             $table->string('GroupUUID')->default('');
             $table->string('CalendarUUID')->default('');
@@ -30,6 +30,6 @@ class CreateGroupEventsTable extends Migration
      */
     public function down()
     {
-        Capsule::schema()->dropIfExists('group_events');
+        Capsule::schema()->dropIfExists('contacts_group_events');
     }
 }

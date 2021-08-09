@@ -23,7 +23,7 @@ use \Aurora\System\Classes\Model;
 
 class GroupContact extends Model
 {
-    public $table = 'group_contact';
+    public $table = 'contacts_group_contact';
 
 	protected $fillable = [
 		'Id',

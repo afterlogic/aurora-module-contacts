@@ -13,7 +13,7 @@ class CreateGroupsTable extends Migration
      */
     public function up()
     {
-        Capsule::schema()->create('groups', function (Blueprint $table) {
+        Capsule::schema()->create('contacts_groups', function (Blueprint $table) {
             $table->increments('Id');
             $table->string('UUID')->default('');
             $table->integer('IdUser')->default(0);
@@ -43,6 +43,6 @@ class CreateGroupsTable extends Migration
      */
     public function down()
     {
-        Capsule::schema()->dropIfExists('groups');
+        Capsule::schema()->dropIfExists('contacts_groups');
     }
 }

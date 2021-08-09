@@ -280,6 +280,6 @@ class Contact extends Model
 
 	public function Groups()
 	{
-		return $this->belongsToMany(Group::class, 'group_contact', 'ContactId', 'GroupId');
+		return $this->belongsToMany(Group::class, 'contacts_group_contact', 'ContactId', 'GroupId');
 	}
 }

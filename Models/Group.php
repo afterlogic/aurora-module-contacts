@@ -5,6 +5,8 @@ namespace Aurora\Modules\Contacts\Models;
 use \Aurora\System\Classes\Model;
 class Group extends Model
 {
+	protected $table = 'contacts_groups';
+
 	public $Events = array();
 
 	public $GroupContacts = array();
@@ -64,6 +66,6 @@ class Group extends Model
 
 	public function Contacts()
 	{
-		return $this->belongsToMany(Contact::class, 'group_contact', 'GroupId', 'ContactId');
+		return $this->belongsToMany(Contact::class, 'contacts_group_contact', 'GroupId', 'ContactId');
 	}
 }
