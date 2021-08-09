@@ -78,6 +78,8 @@ class Contact extends Model
 
 	protected $casts = [
         'Properties' => 'array',
+		'Auto' => 'boolean',
+		'UseFriendlyName' => 'boolean'
     ];
 
 	protected $appends = [

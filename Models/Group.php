@@ -32,6 +32,8 @@ class Group extends Model
 
 	protected $casts = [
         'Properties' => 'array',
+
+		'IsOrganization' => 'boolean'
     ];
 
 	public function populate($aGroup)
