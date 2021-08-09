@@ -18,6 +18,7 @@ class Contact extends Model
 	public $ExtendedInformation = array();
 
 	protected $fillable = [
+		'Id',
 		'UUID',
 		'IdUser',
 		'IdTenant',

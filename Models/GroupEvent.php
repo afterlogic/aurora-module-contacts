@@ -24,6 +24,7 @@ use \Aurora\System\Classes\Model;
 class GroupEvent extends Model
 {
 	protected $fillable = [
+		'Id',
 		'GroupUUID',
 		'CalendarUUID',
 		'EventUUID'

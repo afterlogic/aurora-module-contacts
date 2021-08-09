@@ -10,6 +10,7 @@ class Group extends Model
 	public $GroupContacts = array();
 
 	protected $fillable = [
+		'Id',
 		'IdUser',
 		'UUID',
 		'Name',

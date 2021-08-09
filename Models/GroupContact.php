@@ -26,6 +26,7 @@ class GroupContact extends Model
     public $table = 'group_contact';
 
 	protected $fillable = [
+		'Id',
 		'UUID',
 		'GroupId',
 		'ContactId'
