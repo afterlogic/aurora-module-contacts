@@ -13,7 +13,7 @@ class CreateCtagsTable extends Migration
      */
     public function up()
     {
-        Capsule::schema()->create('ctags', function (Blueprint $table) {
+        Capsule::schema()->create('contacts_ctags', function (Blueprint $table) {
             $table->increments('Id');
             $table->integer('UserId')->default(0);
             $table->string('Storage')->default('');
@@ -31,6 +31,6 @@ class CreateCtagsTable extends Migration
      */
     public function down()
     {
-        Capsule::schema()->dropIfExists('ctags');
+        Capsule::schema()->dropIfExists('contacts_ctags');
     }
 }

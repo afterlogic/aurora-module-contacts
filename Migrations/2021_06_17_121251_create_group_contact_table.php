@@ -13,11 +13,11 @@ class CreateGroupContactTable extends Migration
      */
     public function up()
     {
-        Capsule::schema()->create('group_contact', function (Blueprint $table) {
+        Capsule::schema()->create('contacts_group_contact', function (Blueprint $table) {
             $table->increments('Id');
             $table->string('UUID')->default('');
             $table->integer('GroupId')->unsigned()->index();
-            $table->foreign('GroupId')->references('Id')->on('groups')->onDelete('cascade');
+            $table->foreign('GroupId')->references('Id')->on('contacts_groups')->onDelete('cascade');
             $table->integer('ContactId')->unsigned()->index();
             $table->foreign('ContactId')->references('Id')->on('contacts')->onDelete('cascade');
             $table->timestamp(\Aurora\System\Classes\Model::CREATED_AT)->nullable();
@@ -32,6 +32,6 @@ class CreateGroupContactTable extends Migration
      */
     public function down()
     {
-        Capsule::schema()->dropIfExists('group_contact');
+        Capsule::schema()->dropIfExists('contacts_group_contact');
     }
 }
