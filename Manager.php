@@ -493,7 +493,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 
 	public function getCTags($iUserId, $Storage)
 	{
-		return Models\Ctag::where([
+		return Models\CTag::where([
 			['UserId', '=', $iUserId],
 			['Storage', '=', $Storage]
 		])->get();
@@ -502,7 +502,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 
 	public function getCTag($iUserId, $Storage)
 	{
-		return Models\Ctag::firstWhere([
+		return Models\CTag::firstWhere([
 			['UserId', '=', $iUserId],
 			['Storage', '=', $Storage]
 		]);
@@ -512,10 +512,10 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	public function updateCTag($iUserId, $Storage)
 	{
 		$oCTag = $this->getCTag($iUserId, $Storage);
-		if ($oCTag instanceof Models\Ctag) {
+		if ($oCTag instanceof Models\CTag) {
 			$oCTag->increment('CTag');
 		} else {
-			$oCTag = new Models\Ctag();
+			$oCTag = new Models\CTag();
 			$oCTag->UserId = $iUserId;
 			$oCTag->Storage = $Storage;
 			$oCTag->CTag = 1;
@@ -525,7 +525,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 
 	public function deleteCTagsByUserId($iUserId, $Storage)
 	{
-		Models\Ctag::where([
+		Models\CTag::where([
 			['UserId', '=', $iUserId],
 			['Storage', '=', $Storage]
 		])->delete();
