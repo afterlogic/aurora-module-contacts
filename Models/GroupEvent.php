@@ -23,6 +23,7 @@ use \Aurora\System\Classes\Model;
 
 class GroupEvent extends Model
 {
+	public $table = 'contacts_group_events';
 	protected $fillable = [
 		'Id',
 		'GroupUUID',
