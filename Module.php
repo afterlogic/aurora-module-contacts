@@ -135,31 +135,34 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function GetSettings()
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-
-		$aStorages = self::Decorator()->GetStorages();
-
-		$aStorageNames = \array_map(function($oStorage) {
-			return $oStorage['Id'];
-		}, $aStorages);
-
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
-		$ContactsPerPage = $this->getConfig('ContactsPerPage', 20);
-		if ($oUser && $oUser->isNormalOrTenant() && isset($oUser->{self::GetName().'::ContactsPerPage'}))
-		{
-			$ContactsPerPage = $oUser->{self::GetName().'::ContactsPerPage'};
-		}
-
-		return array(
-			'ContactsPerPage' => $ContactsPerPage,
+		$aResult = [
 			'ImportContactsLink' => $this->getConfig('ImportContactsLink', ''),
-			'Storages' => $aStorageNames,
 			'PrimaryEmail' => (new Enums\PrimaryEmail)->getMap(),
 			'PrimaryPhone' => (new Enums\PrimaryPhone)->getMap(),
 			'PrimaryAddress' => (new Enums\PrimaryAddress)->getMap(),
 			'SortField' => (new Enums\SortField)->getMap(),
 			'ImportExportFormats' => $this->aImportExportFormats,
-			'SaveVcfServerModuleName' => \Aurora\System\Api::GetModuleManager()->ModuleExists('DavContacts') ? 'DavContacts' : ''
-		);
+			'SaveVcfServerModuleName' => \Aurora\System\Api::GetModuleManager()->ModuleExists('DavContacts') ? 'DavContacts' : '',
+			'ContactsPerPage' => $this->getConfig('ContactsPerPage', 20)
+		];
+
+		if ($oUser && $oUser->isNormalOrTenant())
+		{
+			if (isset($oUser->{self::GetName().'::ContactsPerPage'}))
+			{
+				$aResult['ContactsPerPage'] = $oUser->{self::GetName().'::ContactsPerPage'};
+			}
+
+			$aStorages = self::Decorator()->GetStorages();
+			
+			$aStorageNames = \array_map(function($oStorage) {
+				return $oStorage['Id'];
+			}, $aStorages);
+			$aResult['Storages'] = $aStorageNames;
+		}
+
+		return $aResult;
 	}
 
 	public function IsDisplayedStorage($Storage)
@@ -263,7 +266,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$oUser->setExtendedProp(self::GetName().'::ContactsPerPage', $ContactsPerPage);
 				return \Aurora\Modules\Core\Module::Decorator()->UpdateUserObject($oUser);
 			}
-			if ($oUser->Role === \Aurora\System\Enums\UserRole::SuperAdmin)
+			if ($oUser->isAdmin())
 			{
 				$this->setConfig('ContactsPerPage', $ContactsPerPage);
 				$bResult = $this->saveModuleConfig();
