@@ -190,16 +190,15 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	public function getContactsCount($Filters = null, $sGroupUUID = '')
 	{
 		$oQuery = ($Filters instanceof Builder) ? $Filters : Contact::query();
-		if (!empty($GroupUUID))
+		if (!empty($sGroupUUID))
 		{
-			$oGroup = Group::firstWhere('UUID', $GroupUUID);
+			$oGroup = Group::firstWhere('UUID', $sGroupUUID);
 			if ($oGroup) {
 				$oQuery->whereHas('Groups', function ($oSubQuery) use ($oGroup) {
 					return $oSubQuery->where('Groups.Id', $oGroup->Id);
 				});
 			}
 		}
-
 		return $oQuery->count();
 	}
 
