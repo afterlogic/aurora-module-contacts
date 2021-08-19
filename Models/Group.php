@@ -6,6 +6,8 @@ use \Aurora\System\Classes\Model;
 class Group extends Model
 {
 	protected $table = 'contacts_groups';
+	protected $foreignModel = 'Aurora\Modules\Core\Models\User';
+	protected $foreignModelIdColumn = 'IdUser'; // Column that refers to an external table
 
 	public $Events = array();
 

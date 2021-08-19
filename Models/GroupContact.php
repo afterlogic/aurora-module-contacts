@@ -24,6 +24,8 @@ use \Aurora\System\Classes\Model;
 class GroupContact extends Model
 {
     public $table = 'contacts_group_contact';
+	protected $foreignModel = 'Aurora\Modules\Contacts\Models\Group';
+	protected $foreignModelIdColumn = 'GroupId'; // Column that refers to an external table
 
 	protected $fillable = [
 		'Id',
