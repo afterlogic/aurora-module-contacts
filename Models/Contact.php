@@ -10,6 +10,7 @@ namespace Aurora\Modules\Contacts\Models;
 use \Aurora\System\Classes\Model;
 use Aurora\Modules\Contacts\Classes\VCard\Helper;
 use Aurora\Modules\Contacts\Models\Group;
+use Aurora\Modules\Core\Models\User;
 
 class Contact extends Model
 {
@@ -17,7 +18,7 @@ class Contact extends Model
 
 	public $ExtendedInformation = array();
 
-	protected $foreignModel = 'Aurora\Modules\Core\Models\User';
+	protected $foreignModel = User::class;
 	protected $foreignModelIdColumn = 'IdUser'; // Column that refers to an external table
 
 	protected $fillable = [
