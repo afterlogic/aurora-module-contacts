@@ -660,15 +660,15 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param bool $WithoutTeamContactsDuplicates Do not show a contact from the global address book if the contact with the same email address already exists in personal address book
 	 * @return array
 	 */
-	public function GetContacts($UserId, $Storage = '', $Offset = 0, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', Builder $Filters = null, $WithGroups = false, $WithoutTeamContactsDuplicates = false)
+	public function GetContacts($UserId, $Storage = '', $Offset = 0, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', Builder $Filters = null, $WithGroups = false, $WithoutTeamContactsDuplicates = false, $Suggestions = false)
 	{
 		// $Storage is used by subscribers to prepare filters.
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		$this->CheckAccess($UserId);
 		$oQuery = ($Filters instanceof Builder) ? $Filters : Models\Contact::query();
-		$oQuery->where(function ($query) use ($UserId, $Storage, $SortField, $oQuery) {
-			$oQuery = $this->prepareFiltersFromStorage($UserId, $Storage, $SortField, $query);
+		$oQuery->where(function ($query) use ($UserId, $Storage, $SortField, $oQuery, $Suggestions) {
+			$oQuery = $this->prepareFiltersFromStorage($UserId, $Storage, $SortField, $query, $Suggestions);
 		});
 
 		$aGroupUsersList = [];
@@ -797,7 +797,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			'List' => []
 		);
 
-		$aContacts = $this->GetContacts($UserId,  $Storage, 0, $Limit, $SortField, $SortOrder, $Search, '', null, $WithGroups, $WithoutTeamContactsDuplicates);
+		$aContacts = $this->GetContacts($UserId,  $Storage, 0, $Limit, $SortField, $SortOrder, $Search, '', null, $WithGroups, $WithoutTeamContactsDuplicates, true);
 		$aResultList = $aContacts['List'];
 
 		$aResult['List'] = $aResultList;
@@ -2040,12 +2040,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 		return $aImportResult;
 	}
 
-	private function prepareFiltersFromStorage($UserId, $Storage = '', $SortField = Enums\SortField::Name, $oQuery = null)
+	private function prepareFiltersFromStorage($UserId, $Storage = '', $SortField = Enums\SortField::Name, $oQuery = null, $bSuggesions = false)
 	{
 		$aArgs = [
 			'UserId' => $UserId,
 			'Storage' => $Storage,
-			'SortField' => $SortField
+			'SortField' => $SortField,
+			'Suggestions' => $bSuggesions
 		];
 
 		$this->broadcastEvent('PrepareFiltersFromStorage', $aArgs, $oQuery);
