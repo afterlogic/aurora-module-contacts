@@ -797,7 +797,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			'List' => []
 		);
 
-		$aContacts = $this->GetContacts($UserId,  $Storage, 0, $Limit, $SortField, $SortOrder, $Search, '', null, $WithGroups, $WithoutTeamContactsDuplicates, true);
+		$aContacts = $this->Decorator()->GetContacts($UserId,  $Storage, 0, $Limit, $SortField, $SortOrder, $Search, '', null, $WithGroups, $WithoutTeamContactsDuplicates, true);
 		$aResultList = $aContacts['List'];
 
 		$aResult['List'] = $aResultList;
