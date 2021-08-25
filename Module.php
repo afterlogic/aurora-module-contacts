@@ -2049,7 +2049,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 		];
 
 		$this->broadcastEvent('PrepareFiltersFromStorage', $aArgs, $oQuery);
-
 		return $oQuery;
 	}
 
@@ -2106,6 +2105,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->getManager()->deleteGroups($aGroupUUIDs);
 		$this->getManager()->deleteCTagsByUserId($aArgs['UserId'], 'personal');
 		$this->getManager()->deleteCTagsByUserId($aArgs['UserId'], 'collected');
+		$this->getManager()->deleteContactsByUserId($aArgs['UserId'], 'personal');
+		$this->getManager()->deleteContactsByUserId($aArgs['UserId'], 'collected');
+		$this->getManager()->deleteContactsByUserId($aArgs['UserId'], 'team');
 	}
 
 	public function onCreateOrUpdateEvent(&$aArgs)

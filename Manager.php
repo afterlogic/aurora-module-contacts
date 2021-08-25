@@ -522,6 +522,14 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		}
 	}
 
+	public function deleteContactsByUserId($iUserId, $Storage)
+	{
+		Models\Contact::where([
+			['IdUser', '=', $iUserId],
+			['Storage', '=', $Storage]
+		])->delete();
+	}
+
 	public function deleteCTagsByUserId($iUserId, $Storage)
 	{
 		Models\CTag::where([
