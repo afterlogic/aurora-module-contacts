@@ -1686,6 +1686,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		foreach ($aAddressBooks as $oAddressBook) {
 			$aResult[] = [
 				'Id' => 'addressbook' . $oAddressBook->EntityId,
+				'EntityId' => $oAddressBook->EntityId,
 				'CTag' => $this->Decorator()->GetCTag($UserId, $oAddressBook->Name),
 				'Display' => true,
 				'Order' => 1,
