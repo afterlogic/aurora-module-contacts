@@ -139,10 +139,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$aStorages = self::Decorator()->GetStorages();
 
-		$aStorageNames = \array_map(function($oStorage) {
-			return $oStorage['Id'];
-		}, $aStorages);
-
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		$ContactsPerPage = $this->getConfig('ContactsPerPage', 20);
 		if ($oUser && $oUser->isNormalOrTenant() && isset($oUser->{self::GetName().'::ContactsPerPage'}))
@@ -153,7 +149,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		return array(
 			'ContactsPerPage' => $ContactsPerPage,
 			'ImportContactsLink' => $this->getConfig('ImportContactsLink', ''),
-			'Storages' => $aStorageNames,
+			'Storages' => $aStorages,
 			'PrimaryEmail' => (new Enums\PrimaryEmail)->getMap(),
 			'PrimaryPhone' => (new Enums\PrimaryPhone)->getMap(),
 			'PrimaryAddress' => (new Enums\PrimaryAddress)->getMap(),
