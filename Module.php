@@ -825,6 +825,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			foreach ($aContacts as $aContact)
 			{
+				if ($aContact['Storage'] === 'addressbook')
+				{
+					$aContact['Storage'] = $aContact['Storage'] . $aContact['AddressBookId'];
+				}
 				$aList[] = array(
 					'UUID' => $aContact['UUID'],
 					'IdUser' => $aContact['IdUser'],
@@ -1690,7 +1694,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oAddressBook->IdUser = (int) $UserId;
 		$oAddressBook->Name = $AddressBookName;
 
-		$oAddressBook->save();
+		return $oAddressBook->save();
 	}
 
 	public function UpdateAddressBook($EntityId, $AddressBookName, $UserId = null)
