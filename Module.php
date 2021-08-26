@@ -1517,6 +1517,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		$this->CheckAccessToObject($oUser, $Contact);
 
+		if (strlen($Contact->Storage) > 11 && substr($Contact->Storage, 0, 11) === 'addressbook') {
+			$Contact->AddressBookId = (int) substr($Contact->Storage, 11);
+			$Contact->Storage = 'addressbook';
+		}
+
 		return $this->getManager()->updateContact($Contact);
 	}
 
@@ -1579,6 +1584,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->CheckAccess($UserId);
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		
+		if (strlen($Storage) > 11 && substr($Storage, 0, 11) === 'addressbook') {
+			$Storage = 'addressbook';
+		}
 
 		return $this->getManager()->deleteContacts($UserId, $Storage, $UUIDs);
 	}

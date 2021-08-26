@@ -267,7 +267,7 @@ class Contact extends \Aurora\System\EAV\Entity
 	public function populate($aContact, $bCreateNonExistingGroups = false)
 	{
 		$aNonExistingGroups = [];
-		if (substr($aContact['Storage'], 0, 11) === 'addressbook') {
+		if (strlen($aContact['Storage']) > 11 && substr($aContact['Storage'], 0, 11) === 'addressbook') {
 			$aContact['AddressBookId'] = (int) substr($aContact['Storage'], 11);
 			$aContact['Storage'] = 'addressbook';
 		}
