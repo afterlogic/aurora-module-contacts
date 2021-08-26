@@ -1087,9 +1087,16 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 		{
 			$oContact = $this->getManager()->getContact($UUID);
-			if (self::Decorator()->CheckAccessToObject($oUser, $oContact))
+			if ($oContact)
 			{
-				$mResult = $oContact;
+				if ($oContact->Storage === 'addressbook') 
+				{
+					$oContact->Storage = $oContact->Storage . $oContact->AddressBookId;
+				}
+				if (self::Decorator()->CheckAccessToObject($oUser, $oContact))
+				{
+					$mResult = $oContact;
+				}
 			}
 		}
 
