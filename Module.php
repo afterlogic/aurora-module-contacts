@@ -7,6 +7,9 @@
 
 namespace Aurora\Modules\Contacts;
 
+use Aurora\System\EAV\Query;
+use Aurora\System\Managers\Eav;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -187,11 +190,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 				'Id' => $sStorageName,
 				'CTag' => $this->Decorator()->GetCTag($iUserId, $sStorageName),
 				'Display' => $this->Decorator()->IsDisplayedStorage($sStorageName),
-				'Order' => $iIndex
+				'Order' => $iIndex,
+				'DisplayName' => $sStorageName
 			];
 		}
 
-		return $aStorages;
+		return array_merge($aStorages, $this->GetAddressBooks());
 	}
 
 	/**
@@ -968,45 +972,46 @@ class Module extends \Aurora\System\Module\AbstractModule
 		else
 		{
 			$iUserId = (int) $UserId;
+		}
 
-			$iUserRole = $oAuthenticatedUser instanceof \Aurora\Modules\Core\Classes\User ? $oAuthenticatedUser->Role : \Aurora\System\Enums\UserRole::Anonymous;
-			switch ($iUserRole)
-			{
-				case (\Aurora\System\Enums\UserRole::SuperAdmin):
-					// everything is allowed for SuperAdmin
-					$UserId = $iUserId;
-					$bAccessDenied = false;
-					break;
-				case (\Aurora\System\Enums\UserRole::TenantAdmin):
-					// everything is allowed for TenantAdmin
-					$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUser($iUserId);
-					if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
-					{
-						if ($oAuthenticatedUser->IdTenant === $oUser->IdTenant)
-						{
-							$UserId = $iUserId;
-							$bAccessDenied = false;
-						}
-					}
-					break;
-				case (\Aurora\System\Enums\UserRole::NormalUser):
-					// User identifier shoud be checked
-					if ($iUserId === $oAuthenticatedUser->EntityId)
+		$iUserRole = $oAuthenticatedUser instanceof \Aurora\Modules\Core\Classes\User ? $oAuthenticatedUser->Role : \Aurora\System\Enums\UserRole::Anonymous;
+		switch ($iUserRole)
+		{
+			case (\Aurora\System\Enums\UserRole::SuperAdmin):
+				// everything is allowed for SuperAdmin
+				$UserId = $iUserId;
+				$bAccessDenied = false;
+				break;
+			case (\Aurora\System\Enums\UserRole::TenantAdmin):
+				// everything is allowed for TenantAdmin
+				$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUser($iUserId);
+				if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+				{
+					if ($oAuthenticatedUser->IdTenant === $oUser->IdTenant)
 					{
 						$UserId = $iUserId;
 						$bAccessDenied = false;
 					}
-					break;
-				case (\Aurora\System\Enums\UserRole::Customer):
-				case (\Aurora\System\Enums\UserRole::Anonymous):
-					// everything is forbidden for Customer and Anonymous users
-					break;
-			}
-			if ($bAccessDenied)
-			{
-				throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::AccessDenied);
-			}
+				}
+				break;
+			case (\Aurora\System\Enums\UserRole::NormalUser):
+				// User identifier shoud be checked
+				if ($iUserId === $oAuthenticatedUser->EntityId)
+				{
+					$UserId = $iUserId;
+					$bAccessDenied = false;
+				}
+				break;
+			case (\Aurora\System\Enums\UserRole::Customer):
+			case (\Aurora\System\Enums\UserRole::Anonymous):
+				// everything is forbidden for Customer and Anonymous users
+				break;
 		}
+		if ($bAccessDenied)
+		{
+			throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::AccessDenied);
+		}
+
 	}
 
 	/**
@@ -1650,6 +1655,104 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			return false;
 		}
+	}
+
+	public function GetAddressBooks($UserId = null)
+	{
+		$aResult = [];
+
+		$this->CheckAccess($UserId);
+
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		
+		$aAddressBooks = (new Query(Classes\AddressBook::class))->where(['IdUser' => $UserId])->exec();
+
+		foreach ($aAddressBooks as $oAddressBook) {
+			$aResult[] = [
+				'Id' => 'addressbook' . $oAddressBook->EntityId,
+				'CTag' => $this->Decorator()->GetCTag($UserId, $oAddressBook->Name),
+				'Display' => true,
+				'Order' => 1,
+				'DisplayName' => $oAddressBook->Name
+			];
+		}
+
+		return $aResult;
+	}
+
+	public function CreateAddressBook($AddressBookName, $UserId = null)
+	{
+		$this->CheckAccess($UserId);
+
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		
+		$oAddressBook = new Classes\AddressBook(self::GetName());
+		$oAddressBook->IdUser = (int) $UserId;
+		$oAddressBook->Name = $AddressBookName;
+
+		$oAddressBook->save();
+	}
+
+	public function UpdateAddressBook($EntityId, $AddressBookName, $UserId = null)
+	{
+		$mResult = false;
+
+		$this->CheckAccess($UserId);
+
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		
+		$oAddressBook = (new Query(Classes\AddressBook::class))->where([
+			'IdUser' => $UserId,
+			'EntityId' => $EntityId
+		])->one()->exec();
+
+		if ($oAddressBook) {
+			$oAddressBook->Name = $AddressBookName;
+
+			$mResult = $oAddressBook->save();
+		}
+
+		return $mResult;
+	}
+
+	public function DeleteAddressBook($EntityId, $UserId = null)
+	{
+		$mResult = false;
+
+		$this->CheckAccess($UserId);
+
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		
+		$oAddressBook = (new Query(Classes\AddressBook::class))->where([
+			'IdUser' => $UserId,
+			'EntityId' => $EntityId
+		])->one()->exec();
+
+		$oAddressBook = Eav::getInstance()->getEntity($EntityId, Classes\AddressBook::class);
+		if ($oAddressBook) {
+			$mResult = $oAddressBook->delete();
+		}
+
+		return $mResult;
+	}
+
+	public function DeleteUsersAddressBooks($UserId = null)
+	{
+		$mResult = false;
+
+		$this->CheckAccess($UserId);
+
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		
+		$oAddressBook = (new Query(Classes\AddressBook::class))->where([
+			'IdUser' => $UserId
+		])->one()->exec();
+
+		if ($oAddressBook) {
+			$mResult = $oAddressBook->delete();
+		}
+
+		return $mResult;
 	}
 
 	/**

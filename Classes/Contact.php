@@ -130,6 +130,8 @@ class Contact extends \Aurora\System\EAV\Entity
 			'DateModified'		=> array('datetime', null, true),
 
 			'AgeScore'			=> array('nodb', 0),
+
+			'AddressBookId' => array('int', 0, true),
 		);
 		parent::__construct($sModule);
 	}
@@ -265,6 +267,10 @@ class Contact extends \Aurora\System\EAV\Entity
 	public function populate($aContact, $bCreateNonExistingGroups = false)
 	{
 		$aNonExistingGroups = [];
+		if (substr($aContact['Storage'], 0, 11) === 'addressbook') {
+			$aContact['AddressBookId'] = (int) substr($aContact['Storage'], 11);
+			$aContact['Storage'] = 'addressbook';
+		}
 		parent::populate($aContact);
 
 		if(!empty($aContact['UUID']))
