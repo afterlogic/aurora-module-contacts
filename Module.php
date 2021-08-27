@@ -1745,8 +1745,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 			'EntityId' => $EntityId
 		])->one()->exec();
 
-		$oAddressBook = Eav::getInstance()->getEntity($EntityId, Classes\AddressBook::class);
 		if ($oAddressBook) {
+			$aUuids = (new \Aurora\System\EAV\Query())
+				->select(['UUID'])
+				->whereType(Classes\Contact::class)
+				->where(['AddressBookId' => $EntityId])
+				->onlyUUIDs()
+				->exec();
+			$this->Decorator()->DeleteContacts($UserId, 'addressbook',  $aUuids);
 			$mResult = $oAddressBook->delete();
 		}
 
