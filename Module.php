@@ -1697,7 +1697,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		return $aResult;
 	}
 
-	public function CreateAddressBook($AddressBookName, $UserId = null)
+	public function CreateAddressBook($AddressBookName, $UserId = null, $UUID = null)
 	{
 		$this->CheckAccess($UserId);
 
@@ -1706,6 +1706,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oAddressBook = new Classes\AddressBook(self::GetName());
 		$oAddressBook->IdUser = (int) $UserId;
 		$oAddressBook->Name = $AddressBookName;
+
+		if (isset($UUID))
+		{
+			$oAddressBook->UUID = $UUID;
+		}
 
 		return $oAddressBook->save();
 	}
