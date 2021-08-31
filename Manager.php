@@ -349,7 +349,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			->where($aFilters)
 			->offset($iOffset)
 			->limit($iLimit)
-			->orderBy([$sSortField])
+			->orderBy([$sSortField, 'ViewEmail'])
 			->sortOrder($iSortOrder)
 			->asArray()
 			->exec();
