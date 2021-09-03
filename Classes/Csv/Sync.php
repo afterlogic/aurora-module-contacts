@@ -67,7 +67,7 @@ class Sync
 	 * @param type $sGroupUUID
 	 * @return boolean
 	 */
-	public function Import($iUserId, $sTempFilePath, $sGroupUUID)
+	public function Import($iUserId, $sTempFilePath, $sGroupUUID, $sStorage = null)
 	{
 		$iCount = -1;
 		$iParsedCount = 0;
@@ -132,6 +132,11 @@ class Sync
 
 					$iParsedCount++;
 					
+					if (isset($sStorage) && strlen($sStorage) > 11 && substr($sStorage, 0, 11) === 'addressbook') {
+						$aContactData['AddressBookId'] = (int) substr($sStorage, 11);
+						$aContactData['Storage'] = 'addressbook';
+					}
+
 					$oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
 					if ($oContactsDecorator && $oContactsDecorator->CreateContact($aContactData, $iUserId))
 					{

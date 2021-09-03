@@ -2122,7 +2122,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @return array
 	 * @throws \Aurora\System\Exceptions\ApiException
 	 */
-	public function Import($UserId, $UploadData, $GroupUUID)
+	public function Import($UserId, $UploadData, $GroupUUID, $Storage = null)
 	{
 		$this->CheckAccess($UserId);
 		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserUnchecked($UserId);
@@ -2149,10 +2149,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 				{
 					case 'csv':
 						$oSync = new Classes\Csv\Sync();
-						$aImportResult = $oSync->Import($oUser->EntityId, $sTempFilePath, $GroupUUID);
+						$aImportResult = $oSync->Import($oUser->EntityId, $sTempFilePath, $GroupUUID, $Storage);
 						break;
 					case 'vcf':
-						$aImportResult = $this->importVcf($oUser->EntityId, $sTempFilePath);
+						$aImportResult = $this->importVcf($oUser->EntityId, $sTempFilePath, $Storage);
 						break;
 				}
 
@@ -2290,7 +2290,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	/***** public functions might be called with web API *****/
 
 	/***** private functions *****/
-	private function importVcf($iUserId, $sTempFilePath)
+	private function importVcf($iUserId, $sTempFilePath, $sStorage = null)
 	{
 		$aImportResult = array(
 			'ParsedCount' => 0,
@@ -2313,6 +2313,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$aImportResult['ParsedCount']++;
 				if (!isset($oContact) || empty($oContact))
 				{
+					if (isset($sStorage) && strlen($sStorage) > 11 && substr($sStorage, 0, 11) === 'addressbook') {
+						$aContactData['AddressBookId'] = (int) substr($sStorage, 11);
+						$aContactData['Storage'] = 'addressbook';
+					}
+
 					$CreatedContactData = $oContactsDecorator->CreateContact($aContactData, $iUserId);
 					if ($CreatedContactData)
 					{
