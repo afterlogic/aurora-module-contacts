@@ -7,6 +7,7 @@
 
 namespace Aurora\Modules\Contacts;
 
+use Aurora\Api;
 use Aurora\Modules\Contacts\Models\Contact;
 use Aurora\Modules\Contacts\Models\Group;
 use Illuminate\Database\Eloquent\Builder;
@@ -816,6 +817,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 	public function CheckAccess(&$UserId)
 	{
+		if (Api::accessCheckIsSkipped()) {
+			return;
+		}
 		$bAccessDenied = true;
 
 		$oAuthenticatedUser = \Aurora\System\Api::getAuthenticatedUser();
