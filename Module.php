@@ -1031,7 +1031,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$oQuery = $oQuery->where('Storage', $Storage);
 		}
 
-		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $oQuery);
+		$aContacts = $this->getManager()->getContactsAsArray(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $oQuery);
 
 		return $aContacts;
 	}
