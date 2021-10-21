@@ -709,7 +709,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$oUser = \Aurora\System\Api::getAuthenticatedUser();
 				if ($oUser instanceof \Aurora\Modules\Core\Models\User)
 				{
-					$aGroups = $this->getManager()->getGroups($oUser->Id, ['Name' => ['%' . $Search . '%', 'LIKE']]);
+					$aGroups = $this->getManager()->getGroups($oUser->Id, Group::where('Name', 'LIKE', "%{$Search}%"));
 					if ($aGroups)
 					{
 						foreach ($aGroups as $oGroup)
