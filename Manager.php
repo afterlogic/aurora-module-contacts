@@ -277,27 +277,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	public function getContactsAsArray($iSortField = \Aurora\Modules\Contacts\Enums\SortField::Name, $iSortOrder = \Aurora\System\Enums\SortOrder::ASC,
 		$iOffset = 0, $iLimit = 20, $oFilters = null, $aViewAttrs = array())
 	{
-		$sSortField = 'FullName';
-		switch ($iSortField)
-		{
-			case \Aurora\Modules\Contacts\Enums\SortField::Email:
-				$sSortField = 'ViewEmail';
-				break;
-			case \Aurora\Modules\Contacts\Enums\SortField::Frequency:
-				$sSortField = 'AgeScore';
-				$oFilters->select(Capsule::schema()->getConnection()->raw('*, (Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, DateModified)/30)) as AgeScore'));
-				break;
-		}
-		if ($iOffset > 0) {
-			$oFilters = $oFilters->offset($iOffset);
-		}
-		if ($iLimit > 0) {
-			$oFilters = $oFilters->limit($iLimit);
-		}
-		return $oFilters
-			->orderBy($sSortField, $iSortOrder === \Aurora\System\Enums\SortOrder::ASC ? 'asc' : 'desc')
-			->get()
-			->toArray();
+		return $this->getContacts($iSortField, $iSortOrder, $iOffset, $iLimit, $oFilters, $aViewAttrs)->toArray();
 	}
 
 	/**

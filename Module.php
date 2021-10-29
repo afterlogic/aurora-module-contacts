@@ -1016,10 +1016,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 * @param array $Emails List of emails of contacts to return.
 	 * @return array
 	 */
-	public function GetContactsByEmails($UserId, $Storage, $Emails, $Filters = null)
+	public function GetContactsByEmails($UserId, $Storage, $Emails, $Filters = null, $AsArray = true)
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-
+		$aContacts = [];
 		$this->CheckAccess($UserId);
 		$oQuery = ($Filters instanceof Builder) ? $Filters : Contact::query();
 		$oQuery->where(function ($query) use ($UserId, $Storage, $oQuery) {
@@ -1031,8 +1031,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$oQuery = $oQuery->where('Storage', $Storage);
 		}
 
-		$aContacts = $this->getManager()->getContactsAsArray(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $oQuery);
-
+		if ($AsArray) {
+			$aContacts = $this->getManager()->getContactsAsArray(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $oQuery);
+		} else {
+			$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $oQuery);
+		}
 		return $aContacts;
 	}
 
