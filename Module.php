@@ -138,6 +138,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		$aResult = [
+			'AllowAddressBooksManagement' => $this->getConfig('AllowAddressBooksManagement', false),
 			'ImportContactsLink' => $this->getConfig('ImportContactsLink', ''),
 			'PrimaryEmail' => (new Enums\PrimaryEmail)->getMap(),
 			'PrimaryPhone' => (new Enums\PrimaryPhone)->getMap(),

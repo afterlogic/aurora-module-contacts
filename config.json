@@ -3,12 +3,16 @@
 		false,
 		"bool"
 	],
-    "ContactsPerPage": [
+	"ContactsPerPage": [
 		20,
 		"int"
 	],
-    "ImportContactsLink": [
+	"ImportContactsLink": [
 		"",
 		"string"
+	],
+	"AllowAddressBooksManagement": [
+		false,
+		"bool"
 	]
 }
