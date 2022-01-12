@@ -2326,6 +2326,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 	public function CreateAddressBook($AddressBookName, $UserId = null, $UUID = null)
 	{
+		$mResult = false;
+
 		$this->CheckAccess($UserId);
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
@@ -2342,8 +2344,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$oAddressBook->UUID = UUIDUtil::getUUID();
 		}
+		if ($oAddressBook->save()) {
+			$mResult = $oAddressBook->Id;
+		}
 
-		return $oAddressBook->save();
+		return $mResult;
 	}
 
 	public function UpdateAddressBook($EntityId, $AddressBookName, $UserId = null)
