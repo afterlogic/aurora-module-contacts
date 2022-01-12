@@ -9,6 +9,7 @@ namespace Aurora\Modules\Contacts\Models;
 
 use \Aurora\System\Classes\Model;
 use Aurora\Modules\Contacts\Classes\VCard\Helper;
+use Aurora\Modules\Contacts\Enums\StorageType;
 use Aurora\Modules\Contacts\Models\Group;
 use Aurora\Modules\Core\Models\User;
 
@@ -237,6 +238,11 @@ class Contact extends Model
 	public function populate($aContact, $bCreateNonExistingGroups = false)
 	{
 		$aNonExistingGroups = [];
+		if (isset($aContact['Storage']) && strlen($aContact['Storage']) > strlen(StorageType::AddressBook) && 
+		substr($aContact['Storage'], 0, strlen(StorageType::AddressBook)) === StorageType::AddressBook) {
+			$aContact['AddressBookId'] = (int) substr($aContact['Storage'], strlen(StorageType::AddressBook));
+			$aContact['Storage'] = StorageType::AddressBook;
+		}
 		parent::populate($aContact);
 
 		if(!empty($aContact['UUID']))

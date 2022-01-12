@@ -13,6 +13,7 @@ use Aurora\Modules\Contacts\Models\AddressBook;
 use Aurora\Modules\Contacts\Models\Contact;
 use Aurora\Modules\Contacts\Models\Group;
 use Illuminate\Database\Eloquent\Builder;
+use Sabre\DAV\UUIDUtil;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -2307,11 +2308,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
-		$aAddressBooks = AddressBook::where('IdUser', $UserId);
+		$aAddressBooks = AddressBook::where('UserId', $UserId)->get();
 
 		foreach ($aAddressBooks as $oAddressBook) {
 			$aResult[] = [
-				'Id' => 'addressbook' . $oAddressBook->Id,
+				'Id' => StorageType::AddressBook . $oAddressBook->Id,
 				'EntityId' => $oAddressBook->Id,
 				'CTag' => $this->Decorator()->GetCTag($UserId, $oAddressBook->Name),
 				'Display' => true,
@@ -2330,12 +2331,16 @@ class Module extends \Aurora\System\Module\AbstractModule
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
 		$oAddressBook = new AddressBook();
-		$oAddressBook->IdUser = (int) $UserId;
+		$oAddressBook->UserId = (int) $UserId;
 		$oAddressBook->Name = $AddressBookName;
 
 		if (isset($UUID))
 		{
 			$oAddressBook->UUID = $UUID;
+		} 
+		else 
+		{
+			$oAddressBook->UUID = UUIDUtil::getUUID();
 		}
 
 		return $oAddressBook->save();
@@ -2349,7 +2354,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
-		$oAddressBook = AddressBook::where('IdUser', $UserId)
+		$oAddressBook = AddressBook::where('UserId', $UserId)
 			->where('Id', $EntityId)->first();
 
 		if ($oAddressBook) {
@@ -2369,7 +2374,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
-		$oAddressBook = AddressBook::where('IdUser', $UserId)
+		$oAddressBook = AddressBook::where('UserId', $UserId)
 			->where('Id', $EntityId)->first();
 
 		if ($oAddressBook) {
@@ -2388,7 +2393,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 		
-		$mResult = AddressBook::where('IdUser', $UserId)->delete();
+		$mResult = AddressBook::where('UserId', $UserId)->delete();
 
 		return $mResult;
 	}
