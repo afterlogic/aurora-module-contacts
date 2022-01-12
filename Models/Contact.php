@@ -27,6 +27,7 @@ class Contact extends Model
 		'IdUser',
 		'IdTenant',
 		'Storage',
+		'AddressBookId',
 		'FullName',
 		'UseFriendlyName',
 		'PrimaryEmail',

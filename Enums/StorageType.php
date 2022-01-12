@@ -9,6 +9,7 @@ class StorageType extends \Aurora\System\Enums\AbstractEnumeration
 	const Team = 'team';
 	const Shared = 'shared';
 	const All = 'all';
+	const AddressBook = 'addressbook';
 
 	/**
 	 * @var array
@@ -18,6 +19,7 @@ class StorageType extends \Aurora\System\Enums\AbstractEnumeration
 		'Collected' => self::Collected,
 		'Team' => self::Team,
 		'Shared' => self::Shared,
-		'All' => self::All
+		'All' => self::All,
+		'AddressBook' => self::AddressBook
 	];
 }

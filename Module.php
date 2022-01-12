@@ -8,6 +8,8 @@
 namespace Aurora\Modules\Contacts;
 
 use Aurora\Api;
+use Aurora\Modules\Contacts\Enums\StorageType;
+use Aurora\Modules\Contacts\Models\AddressBook;
 use Aurora\Modules\Contacts\Models\Contact;
 use Aurora\Modules\Contacts\Models\Group;
 use Illuminate\Database\Eloquent\Builder;
@@ -747,14 +749,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		if ($Storage === 'all' && $WithoutTeamContactsDuplicates) {
 			$aPersonalContactEmails = array_map(function($aContact) {
-				if ($aContact['Storage'] === 'personal') {
+				if ($aContact['Storage'] === StorageType::Personal) {
 					return $aContact['ViewEmail'];
 				}
 			}, $aContacts);
 			$aUniquePersonalContactEmails = array_unique(array_diff($aPersonalContactEmails, [null]));
 			foreach ($aContacts as $key => $aContact)
 			{
-				if ($aContact['Storage'] === 'team' && in_array($aContact['ViewEmail'], $aUniquePersonalContactEmails))
+				if ($aContact['Storage'] === StorageType::Team && in_array($aContact['ViewEmail'], $aUniquePersonalContactEmails))
 				{
 					unset($aContacts[$key]);
 				}
@@ -765,6 +767,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			foreach ($aContacts as $aContact)
 			{
+				if ($aContact['Storage'] === StorageType::AddressBook)
+				{
+					$aContact['Storage'] = $aContact['Storage'] . $aContact['AddressBookId'];
+				}
 				$aList[] = array(
 					'UUID' => $aContact['UUID'],
 					'IdUser' => $aContact['IdUser'],
@@ -946,6 +952,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($oUser instanceof \Aurora\Modules\Core\Models\User)
 		{
 			$oContact = $this->getManager()->getContact($UUID);
+			if ($oContact->Storage === StorageType::AddressBook) 
+			{
+				$oContact->Storage = $oContact->Storage . $oContact->AddressBookId;
+			}
 			if (self::Decorator()->CheckAccessToObject($oUser, $oContact))
 			{
 				$mResult = $oContact;
@@ -1346,6 +1356,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		$this->CheckAccessToObject($oUser, $Contact);
 
+		if (strlen($Contact->Storage) > 11 && substr($Contact->Storage, 0, strlen(StorageType::AddressBook)) === StorageType::AddressBook) {
+			$Contact->AddressBookId = (int) substr($Contact->Storage, strlen(StorageType::AddressBook));
+			$Contact->Storage =  StorageType::AddressBook;
+		}
+
 		return $this->getManager()->updateContact($Contact);
 	}
 
@@ -1408,6 +1423,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$this->CheckAccess($UserId);
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+
+		if (strlen($Storage) > strlen(StorageType::AddressBook) && substr($Storage, 0, strlen(StorageType::AddressBook)) === StorageType::AddressBook) {
+			$Storage = StorageType::AddressBook;
+		}
 
 		return $this->getManager()->deleteContacts($UserId, $Storage, $UUIDs);
 	}
@@ -2279,4 +2298,98 @@ class Module extends \Aurora\System\Module\AbstractModule
 		return $mResult;
 	}
 	/***** private functions *****/
+
+	public function GetAddressBooks($UserId = null)
+	{
+		$aResult = [];
+
+		$this->CheckAccess($UserId);
+
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		
+		$aAddressBooks = AddressBook::where('IdUser', $UserId);
+
+		foreach ($aAddressBooks as $oAddressBook) {
+			$aResult[] = [
+				'Id' => 'addressbook' . $oAddressBook->Id,
+				'EntityId' => $oAddressBook->Id,
+				'CTag' => $this->Decorator()->GetCTag($UserId, $oAddressBook->Name),
+				'Display' => true,
+				'Order' => 1,
+				'DisplayName' => $oAddressBook->Name
+			];
+		}
+
+		return $aResult;
+	}
+
+	public function CreateAddressBook($AddressBookName, $UserId = null, $UUID = null)
+	{
+		$this->CheckAccess($UserId);
+
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		
+		$oAddressBook = new AddressBook();
+		$oAddressBook->IdUser = (int) $UserId;
+		$oAddressBook->Name = $AddressBookName;
+
+		if (isset($UUID))
+		{
+			$oAddressBook->UUID = $UUID;
+		}
+
+		return $oAddressBook->save();
+	}
+
+	public function UpdateAddressBook($EntityId, $AddressBookName, $UserId = null)
+	{
+		$mResult = false;
+
+		$this->CheckAccess($UserId);
+
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		
+		$oAddressBook = AddressBook::where('IdUser', $UserId)
+			->where('Id', $EntityId)->first();
+
+		if ($oAddressBook) {
+			$oAddressBook->Name = $AddressBookName;
+
+			$mResult = $oAddressBook->save();
+		}
+
+		return $mResult;
+	}
+
+	public function DeleteAddressBook($EntityId, $UserId = null)
+	{
+		$mResult = false;
+
+		$this->CheckAccess($UserId);
+
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		
+		$oAddressBook = AddressBook::where('IdUser', $UserId)
+			->where('Id', $EntityId)->first();
+
+		if ($oAddressBook) {
+			Contact::where('AddressBookId', $EntityId)->delete();
+			$mResult = $oAddressBook->delete();
+		}
+
+		return $mResult;
+	}
+
+	public function DeleteUsersAddressBooks($UserId = null)
+	{
+		$mResult = false;
+
+		$this->CheckAccess($UserId);
+
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+		
+		$mResult = AddressBook::where('IdUser', $UserId)->delete();
+
+		return $mResult;
+	}
 }
