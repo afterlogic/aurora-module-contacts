@@ -99,7 +99,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		$res = $oContact->save();
 		if ($res)
 		{
-			if ($oContact->Storage === 'personal')
+			if ($oContact->Storage === 'personal' || $oContact->Storage === 'addressbook')
 			{
 				$this->updateCTag($oContact->IdUser, $oContact->Storage);
 			}
@@ -325,7 +325,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 
 		if ($res)
 		{
-			if ($oContact->Storage === 'personal')
+			if ($oContact->Storage === 'personal' || $oContact->Storage === 'addressbook')
 			{
 				$this->updateCTag($oContact->IdUser, $oContact->Storage);
 			}
@@ -370,7 +370,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		if ($mResult) {
 			$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserUnchecked($iIdUser);
 			if ($oUser instanceof \Aurora\Modules\Core\Models\User) {
-				$iIdUser = $sStorage === 'personal' ? $oUser->Id : $oUser->IdTenant;
+				$iIdUser = $sStorage === 'personal' || $sStorage === 'addressbook' ? $oUser->Id : $oUser->IdTenant;
 			}
 			$this->updateCTag($iIdUser, $sStorage);
 		}
@@ -390,7 +390,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		$aGroups = $oQuery->get();
 		foreach ($aGroups as $oGroup) {
 			foreach ($oGroup->Contacts as $oContact) {
-				if ($oContact->Storage === 'personal') {
+				if ($oContact->Storage === 'personal' || $oContact->Storage === 'addressbook') {
 					$this->updateCTag($oContact->IdUser, $oContact->Storage);
 				} else {
 					$this->updateCTag($oContact->IdTenant, $oContact->Storage);
@@ -425,7 +425,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			})
 		);
 		$aContacts->each(function ($oContact) {
-			if ($oContact->Storage === 'personal') {
+			if ($oContact->Storage === 'personal' || $oContact->Storage === 'addressbook') {
 				$this->updateCTag($oContact->IdUser, $oContact->Storage);
 			} else {
 				$this->updateCTag($oContact->IdTenant, $oContact->Storage);
@@ -456,7 +456,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		});
 		$oGroup->Contacts()->detach($aContactIds);
 		$aContacts->each(function ($oContact) {
-			if ($oContact->Storage === 'personal') {
+			if ($oContact->Storage === 'personal' || $oContact->Storage === 'addressbook') {
 				$this->updateCTag($oContact->IdUser, $oContact->Storage);
 			} else {
 				$this->updateCTag($oContact->IdTenant, $oContact->Storage);
@@ -502,19 +502,25 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		}
 	}
 
-	public function deleteContactsByUserId($iUserId, $Storage)
+	public function deleteContactsByUserId($iUserId, $Storage = null)
 	{
-		Models\Contact::where([
-			['IdUser', '=', $iUserId],
-			['Storage', '=', $Storage]
-		])->delete();
+		$aFilter = [
+			['IdUser', '=', $iUserId]
+		];
+		if (isset($Storage)) {
+			$aFilter[] = ['Storage', '=', $Storage];
+		}
+		Models\Contact::where($aFilter)->delete();
 	}
 
-	public function deleteCTagsByUserId($iUserId, $Storage)
+	public function deleteCTagsByUserId($iUserId, $Storage = null)
 	{
-		Models\CTag::where([
-			['UserId', '=', $iUserId],
-			['Storage', '=', $Storage]
-		])->delete();
+		$aFilter = [
+			['UserId', '=', $iUserId]
+		];
+		if (isset($Storage)) {
+			$aFilter[] = ['Storage', '=', $Storage];
+		}
+		Models\CTag::where($aFilter)->delete();
 	}
 }

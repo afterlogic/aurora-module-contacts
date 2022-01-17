@@ -2132,11 +2132,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 			return $oGroup->UUID;
 		})->toArray();
 		$this->getManager()->deleteGroups($aGroupUUIDs);
-		$this->getManager()->deleteCTagsByUserId($aArgs['UserId'], 'personal');
-		$this->getManager()->deleteCTagsByUserId($aArgs['UserId'], 'collected');
-		$this->getManager()->deleteContactsByUserId($aArgs['UserId'], 'personal');
-		$this->getManager()->deleteContactsByUserId($aArgs['UserId'], 'collected');
-		$this->getManager()->deleteContactsByUserId($aArgs['UserId'], 'team');
+		$this->getManager()->deleteCTagsByUserId($aArgs['UserId']);
+		$this->getManager()->deleteContactsByUserId($aArgs['UserId']);
+		$this->DeleteUsersAddressBooks($aArgs['UserId']);
 	}
 
 	public function onCreateOrUpdateEvent(&$aArgs)
@@ -2299,6 +2297,17 @@ class Module extends \Aurora\System\Module\AbstractModule
 		return $mResult;
 	}
 	/***** private functions *****/
+
+	public function GetAddressBook($UserId, $UUID)
+	{
+		$this->CheckAccess($UserId);
+
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+
+		return AddressBook::where('UserId', $UserId)
+			->where('UUID', $UUID)->first();
+
+	}
 
 	public function GetAddressBooks($UserId = null)
 	{
