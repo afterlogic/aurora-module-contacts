@@ -112,10 +112,15 @@ class Contact extends Model
 			{
 				foreach($aGroupNames as $sGroupName)
 				{
-					$oGroup = $oApiContactsManager->getGroups($this->IdUser, Group::firstWhere('Name', $sGroupName));
-					if ($oGroup)
+					$oGroups = $oApiContactsManager->getGroups($this->IdUser, Group::firstWhere('Name', $sGroupName));
+					if ($oGroups && count($oGroups) > 0)
 					{
-						$this->Groups()->sync([$oGroup->Id], false);
+						$this->Groups()->sync(
+							$oGroups->map(function ($oGroup) {
+								return $oGroup->Id;
+							})->toArray(), 
+							false
+						);
 					}
 
 					// Group shouldn't be created here.
