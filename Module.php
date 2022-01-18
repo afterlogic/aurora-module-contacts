@@ -1509,10 +1509,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 			if (isset($Group['Contacts']) && is_array($Group['Contacts']))
 			{
 				$oGroup->Contacts()->sync(
-					$oGroup->Contacts->merge(
-						Models\Contact::whereIn('UUID', $Group['Contacts'])->get()
-					)
-					->map(function($oContact) {
+					Models\Contact::whereIn('UUID', $Group['Contacts'])->get()
+					 ->map(function($oContact) {
 						return $oContact->Id;
 					})
 				);
@@ -1600,8 +1598,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 					})
 				);
 			}
-
-			return $oGroup->save();
 		}
 
 		return false;
