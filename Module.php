@@ -201,7 +201,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			];
 		}
 
-		return $aStorages;
+		return array_merge($aStorages, $this->GetAddressBooks($iUserId));
 	}
 
 	/**
@@ -1590,18 +1590,18 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oGroup = $this->getManager()->getGroup($Group['UUID']);
 		if ($oGroup)
 		{
+			$oGroup->populate($Group);
 			if (isset($Group['Contacts']) && is_array($Group['Contacts']))
 			{
-				$aGroupContactUUIDs = [];
-				foreach ($oGroup->Contacts as $oGroupContact)
-				{
-					$aGroupContactUUIDs[] = $oGroupContact->UUID;
-				}
-				\Aurora\System\Managers\Eav::getInstance()->deleteEntities($aGroupContactUUIDs);
+				$oGroup->Contacts()->sync(
+					Models\Contact::whereIn('UUID', $Group['Contacts'])->get()
+					 ->map(function($oContact) {
+						return $oContact->Id;
+					})
+				);
 			}
 
-			$oGroup->populate($Group);
-			return $this->getManager()->updateGroup($oGroup);
+			return $oGroup->save();
 		}
 
 		return false;
