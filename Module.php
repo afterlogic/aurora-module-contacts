@@ -1532,15 +1532,16 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($oGroup)
 		{
 			$oGroup->populate($Group);
-			if (isset($Group['Contacts']) && is_array($Group['Contacts']))
-			{
-				$oGroup->Contacts()->sync(
-					Models\Contact::whereIn('UUID', $Group['Contacts'])->get()
-					 ->map(function($oContact) {
-						return $oContact->Id;
-					})
-				);
-			}
+
+			$aUuids = (isset($Group['Contacts']) && is_array($Group['Contacts'])) ? $Group['Contacts'] : [];
+			$oGroup->Contacts()->sync(
+				Models\Contact::whereIn('UUID', $aUuids)->get()
+					->map(function($oContact) {
+					return $oContact->Id;
+				})
+			);
+
+			return $oGroup->save();
 		}
 
 		return false;
