@@ -97,6 +97,15 @@ class Contact extends Model
 		return 0;
 	}
 
+	public function getNotesAttribute()
+	{
+        if(is_null($this->Notes)) {
+			return '';
+	   }
+
+	   return $this->Notes;
+	}
+
 	/**
 	 * Adds groups to contact. Groups are specified by names.
 	 * @param array $aGroupNames List of group names.
