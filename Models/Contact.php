@@ -280,7 +280,9 @@ class Contact extends Model
 //		$this->calculateETag();
 
 		$aRes = parent::toResponseArray();
-
+        if (is_null($aRes['Notes'])) {
+            $aRes['Notes'] = '';
+        }
 		$aRes['GroupUUIDs'] = $this->Groups->map(function ($oGroup) {
 			return $oGroup->UUID;
 		});
