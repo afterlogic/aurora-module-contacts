@@ -99,11 +99,11 @@ class Contact extends Model
 
 	public function getNotesAttribute()
 	{
-        if(is_null($this->Notes)) {
-			return '';
+        if(is_null($this->attributes['Notes'])) {
+			$this->attributes['Notes'] = '';
 	   }
 
-	   return $this->Notes;
+	   return $this->attributes['Notes'];
 	}
 
 	/**
