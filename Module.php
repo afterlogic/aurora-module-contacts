@@ -2070,11 +2070,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
-		$aGroups = $this->getManager()->getGroups($aArgs['UserId']);
-		$aGroupUUIDs = $aGroups->map(function ($oGroup) {
-			return $oGroup->UUID;
-		})->toArray();
-		$this->getManager()->deleteGroups($aGroupUUIDs);
+		$this->getManager()->deleteGroupsByUserId($aArgs['UserId']);
 		$this->getManager()->deleteCTagsByUserId($aArgs['UserId']);
 		$this->getManager()->deleteContactsByUserId($aArgs['UserId']);
 		$this->DeleteUsersAddressBooks($aArgs['UserId']);

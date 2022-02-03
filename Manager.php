@@ -403,6 +403,11 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		return !!$oQuery->delete();
 	}
 
+	public function deleteGroupsByUserId($iUserId)
+	{
+		return !!Group::where('IdUser', $iUserId)->delete();
+	}
+
 	/**
 	 * Adds one or multiple contacts to the specific group.
 	 *
