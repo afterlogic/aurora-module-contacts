@@ -8,6 +8,7 @@
 namespace Aurora\Modules\Contacts;
 
 use Aurora\Modules\Contacts\Classes\CTag;
+use Aurora\Modules\Contacts\Enums\StorageType;
 use Aurora\Modules\Contacts\Models\Group;
 use Aurora\Modules\Contacts\Models\Contact;
 use Illuminate\Database\Eloquent\Builder;
@@ -313,32 +314,44 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	/**
 	 * The method is used for saving created contact to the database.
 	 *
-	 * @param \Aurora\Modules\Contacts\Classes\Contact $oContact
+	 * @param \Aurora\Modules\Contacts\Models\Contact $oContact
 	 *
 	 * @return bool
 	 */
 	public function createContact($oContact)
 	{
-		$oContact->DateModified = date('Y-m-d H:i:s');
-		$oContact->calculateETag();
-		$res = $oContact->save();
+		$res = false;
+		
+		$oQuery = Contact::where('IdUser', $oContact->IdUser)
+			->where('UUID', $oContact->UUID);
 
-		if ($res)
-		{
-			if ($oContact->Storage === 'personal' || $oContact->Storage === 'addressbook')
-			{
-				$this->updateCTag($oContact->IdUser, $oContact->Storage);
-			}
-			else
-			{
-				$this->updateCTag($oContact->IdTenant, $oContact->Storage);
-			}
+		if (!$oContact->Storage === StorageType::AddressBook) {
+			$oQuery = $oQuery->where('AddressBookId', $oContact->AddressBookId);
+		}
 
-			// foreach ($oContact->GroupsContacts as $oGroupContact)
-			// {
-			// 	$oGroupContact->ContactUUID = $oContact->UUID;
-			// 	$oGroupContact->save();
-			// }
+		if (!$oQuery->exists()) {
+
+			$oContact->DateModified = date('Y-m-d H:i:s');
+			$oContact->calculateETag();
+			$res = $oContact->save();
+
+			if ($res)
+			{
+				if ($oContact->Storage === 'personal' || $oContact->Storage === 'addressbook')
+				{
+					$this->updateCTag($oContact->IdUser, $oContact->Storage);
+				}
+				else
+				{
+					$this->updateCTag($oContact->IdTenant, $oContact->Storage);
+				}
+
+				// foreach ($oContact->GroupsContacts as $oGroupContact)
+				// {
+				// 	$oGroupContact->ContactUUID = $oContact->UUID;
+				// 	$oGroupContact->save();
+				// }
+			}
 		}
 
 		return $res;
