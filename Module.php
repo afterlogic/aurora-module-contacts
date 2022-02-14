@@ -12,6 +12,8 @@ use Aurora\Modules\Contacts\Enums\StorageType;
 use Aurora\Modules\Contacts\Models\AddressBook;
 use Aurora\Modules\Contacts\Models\Contact;
 use Aurora\Modules\Contacts\Models\Group;
+use Aurora\System\Exceptions\ApiException;
+use Aurora\System\Notifications;
 use Illuminate\Database\Eloquent\Builder;
 use Sabre\DAV\UUIDUtil;
 
@@ -2021,10 +2023,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 			'UserId' => $UserId,
 			'Storage' => $Storage,
 			'SortField' => $SortField,
-			'Suggestions' => $bSuggesions
+			'Suggestions' => $bSuggesions,
+			'IsValid' => false,
 		];
 
 		$this->broadcastEvent('PrepareFiltersFromStorage', $aArgs, $oQuery);
+		if (!$aArgs['IsValid']) {
+			throw new ApiException(Notifications::InvalidInputParameter);
+		}
 		return $oQuery;
 	}
 
