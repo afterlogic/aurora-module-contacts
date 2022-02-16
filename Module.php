@@ -1198,6 +1198,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			$iFrequency = $oAutocreatedContacts[0]->Frequency;
 			$this->getManager()->deleteContacts($UserId, $sStorage, [$oAutocreatedContacts[0]->UUID]);
+			$this->getManager()->updateCTag($UserId, $sStorage);
 		}
 		return $iFrequency;
 	}
@@ -1366,15 +1367,22 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function DeleteContacts($UserId, $Storage, $UUIDs)
 	{
+		$mResult = false;
 		Api::CheckAccess($UserId);
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
+		$sStorage = $Storage;
 		if (strlen($Storage) > strlen(StorageType::AddressBook) && substr($Storage, 0, strlen(StorageType::AddressBook)) === StorageType::AddressBook) {
-			$Storage = StorageType::AddressBook;
+			$sStorage = StorageType::AddressBook;
 		}
 
-		return $this->getManager()->deleteContacts($UserId, $Storage, $UUIDs);
+		if ($this->getManager()->deleteContacts($UserId, $sStorage, $UUIDs)) {
+			$this->getManager()->updateCTag($UserId, $Storage);
+			$mResult = true;
+		}
+
+		return $mResult;
 	}
 
 	/**
@@ -1924,7 +1932,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$iResult = 0;
 		if ($oUser instanceof \Aurora\Modules\Core\Models\User)
 		{
-			$iUserId = $Storage === 'personal' || $Storage === 'collected' ? $oUser->Id : $oUser->IdTenant;
+			$iUserId = $Storage === 'personal' || $Storage === 'collected' || (strlen($Storage) > 11 && substr($Storage, 0, 11) === 'addressbook') ? $oUser->Id : $oUser->IdTenant;
 
 			$oCTag = $this->getManager()->getCTag($iUserId, $Storage);
 			if ($oCTag instanceof Models\CTag)
@@ -2272,7 +2280,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$aResult[] = [
 				'Id' => StorageType::AddressBook . $oAddressBook->Id,
 				'EntityId' => $oAddressBook->Id,
-				'CTag' => $this->Decorator()->GetCTag($UserId, $oAddressBook->Name),
+				'CTag' => $this->Decorator()->GetCTag($UserId, StorageType::AddressBook . $oAddressBook->Id),
 				'Display' => true,
 				'Order' => 1,
 				'DisplayName' => $oAddressBook->Name

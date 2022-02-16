@@ -311,4 +311,12 @@ class Contact extends Model
 	{
 		return $this->belongsToMany(Group::class, 'contacts_group_contact', 'ContactId', 'GroupId');
 	}
+
+	public function getStorageWithId() {
+		if ($this->Storage === StorageType::AddressBook) {
+			return $this->Storage . $this->AddressBookId;
+		} else {
+			return $this->Storage;
+		}
+	}
 }
