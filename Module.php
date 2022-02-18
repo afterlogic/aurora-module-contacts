@@ -1069,7 +1069,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$aResult['Info'][] = [
 				'UUID' => $oContact->UUID,
 				'ETag' => $oContact->ETag,
-				'Storage' => $oContact->Auto ? 'collected' : $oContact->Storage
+				'Storage' => $oContact->Auto ? 'collected' : $oContact->getStorageWithId()
 			];
 		}
 
