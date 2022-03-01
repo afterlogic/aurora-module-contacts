@@ -12,6 +12,7 @@ use Aurora\Modules\Contacts\Enums\StorageType;
 use Aurora\Modules\Contacts\Models\AddressBook;
 use Aurora\Modules\Contacts\Models\Contact;
 use Aurora\Modules\Contacts\Models\Group;
+use Aurora\Modules\Core\Module as CoreModule;
 use Aurora\System\Exceptions\ApiException;
 use Aurora\System\Notifications;
 use Illuminate\Database\Eloquent\Builder;
@@ -809,6 +810,26 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$aResult['List'] = $aResultList;
 		$aResult['ContactCount'] = count($aResultList);
+		return $aResult;
+	}
+
+	public function GetContactSuggestionsWithSystemGroups($UserId,  $Storage, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $WithGroups = false, $WithoutTeamContactsDuplicates = false)
+	{
+		$aResult = $this->Decorator()->GetContactSuggestions($UserId,  $Storage, $Limit, $SortField, $SortOrder, $Search, $WithGroups, $WithoutTeamContactsDuplicates);
+
+		$oUser = CoreModule::Decorator()->GetUserUnchecked($UserId);
+		if ($oUser) {
+			$aGroups = CoreModule::Decorator()->GetGroups($oUser->IdTenant, $Search);
+			foreach ($aGroups as $oGroup) {
+				$aResult['List'][] = [
+					'Id' => $oGroup->Id,
+					'Name' => $oGroup->Name,
+					'IsGroup' => true
+				];
+				$aResult['ContactCount']++;
+			}
+		}
+		
 		return $aResult;
 	}
 
