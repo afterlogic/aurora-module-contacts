@@ -820,10 +820,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oUser = CoreModule::Decorator()->GetUserUnchecked($UserId);
 		if ($oUser) {
 			$aGroups = CoreModule::Decorator()->GetGroups($oUser->IdTenant, $Search);
-			foreach ($aGroups as $oGroup) {
+			foreach ($aGroups['Items'] as $aGroup) {
 				$aResult['List'][] = [
-					'Id' => $oGroup->Id,
-					'Name' => $oGroup->Name,
+					'Id' => $aGroup['Id'],
+					'Name' => $aGroup['Name'],
 					'IsGroup' => true
 				];
 				$aResult['ContactCount']++;
