@@ -793,7 +793,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		);
 	}
 
-	public function GetContactSuggestions($UserId,  $Storage, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $WithGroups = false, $WithoutTeamContactsDuplicates = false)
+	protected function _getContactSuggestions($UserId,  $Storage, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $WithGroups = false, $WithoutTeamContactsDuplicates = false)
 	{
 		// $Storage is used by subscribers to prepare filters.
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
@@ -813,19 +813,17 @@ class Module extends \Aurora\System\Module\AbstractModule
 		return $aResult;
 	}
 
-	public function GetContactSuggestionsWithSystemGroups($UserId,  $Storage, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $WithGroups = false, $WithoutTeamContactsDuplicates = false)
+	public function GetContactSuggestions($UserId,  $Storage, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $WithGroups = false, $WithoutTeamContactsDuplicates = false, $WithUserGroups = false)
 	{
-		$aResult = $this->Decorator()->GetContactSuggestions($UserId,  $Storage, $Limit, $SortField, $SortOrder, $Search, $WithGroups, $WithoutTeamContactsDuplicates);
+		$aResult = $this->_getContactSuggestions($UserId,  $Storage, $Limit, $SortField, $SortOrder, $Search, $WithGroups, $WithoutTeamContactsDuplicates);
 
 		$oUser = CoreModule::Decorator()->GetUserUnchecked($UserId);
 		if ($oUser) {
 			$aGroups = CoreModule::Decorator()->GetGroups($oUser->IdTenant, $Search);
 			foreach ($aGroups['Items'] as $aGroup) {
-				$aResult['List'][] = [
-					'Id' => $aGroup['Id'],
-					'Name' => $aGroup['Name'],
-					'IsGroup' => true
-				];
+				$aGroup['IsGroup'] = true;
+				$aResult['List'][] = $aGroup;
+
 				$aResult['ContactCount']++;
 			}
 		}
