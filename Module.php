@@ -705,38 +705,39 @@ class Module extends \Aurora\System\Module\AbstractModule
 					->orWhere('BusinessCompany', 'LIKE', '%'.$Search.'%');
 				});
 			}
+		}
 
-			if ($WithGroups)
+		if ($WithGroups)
+		{
+			$oUser = \Aurora\System\Api::getAuthenticatedUser();
+			if ($oUser instanceof \Aurora\Modules\Core\Models\User)
 			{
-				$oUser = \Aurora\System\Api::getAuthenticatedUser();
-				if ($oUser instanceof \Aurora\Modules\Core\Models\User)
+				$aGroups = $this->getManager()->getGroups($oUser->Id, Group::where('Name', 'LIKE', "%{$Search}%"));
+				if ($aGroups)
 				{
-					$aGroups = $this->getManager()->getGroups($oUser->Id, Group::where('Name', 'LIKE', "%{$Search}%"));
-					if ($aGroups)
+					foreach ($aGroups as $oGroup)
 					{
-						foreach ($aGroups as $oGroup)
-						{
-							$aGroupContactsEmails = $oGroup->Contacts->map(function ($oContact) {
-								return $oContact->FullName ? "\"{$oContact->FullName}\" <{$oContact->ViewEmail}>" : $oContact->ViewEmail;
-							})->toArray();
+						$aGroupContactsEmails = $oGroup->Contacts->map(function ($oContact) {
+							return $oContact->FullName ? "\"{$oContact->FullName}\" <{$oContact->ViewEmail}>" : $oContact->ViewEmail;
+						})->toArray();
 
-							$aGroupUsersList[] = [
-								'UUID' => $oGroup->UUID,
-								'IdUser' => $oGroup->IdUser,
-								'FullName' => $oGroup->Name,
-								'FirstName' => '',
-								'LastName' => '',
-								'ViewEmail' => implode(', ', $aGroupContactsEmails),
-								'Storage' => '',
-								'Frequency' => 0,
-								'DateModified' => '',
-								'IsGroup' => true,
-							];
-						}
+						$aGroupUsersList[] = [
+							'UUID' => $oGroup->UUID,
+							'IdUser' => $oGroup->IdUser,
+							'FullName' => $oGroup->Name,
+							'FirstName' => '',
+							'LastName' => '',
+							'ViewEmail' => implode(', ', $aGroupContactsEmails),
+							'Storage' => '',
+							'Frequency' => 0,
+							'DateModified' => '',
+							'IsGroup' => true,
+						];
 					}
 				}
 			}
 		}
+
 
 		if ($SortField === Enums\SortField::Frequency)
 		{
@@ -817,14 +818,17 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		$aResult = $this->_getContactSuggestions($UserId,  $Storage, $Limit, $SortField, $SortOrder, $Search, $WithGroups, $WithoutTeamContactsDuplicates);
 
-		$oUser = CoreModule::Decorator()->GetUserUnchecked($UserId);
-		if ($oUser) {
-			$aGroups = CoreModule::Decorator()->GetGroups($oUser->IdTenant, $Search);
-			foreach ($aGroups['Items'] as $aGroup) {
-				$aGroup['IsGroup'] = true;
-				$aResult['List'][] = $aGroup;
+		if ($WithUserGroups) {
 
-				$aResult['ContactCount']++;
+			$oUser = CoreModule::Decorator()->GetUserUnchecked($UserId);
+			if ($oUser) {
+				$aGroups = CoreModule::Decorator()->GetGroups($oUser->IdTenant, $Search);
+				foreach ($aGroups['Items'] as $aGroup) {
+					$aGroup['IsGroup'] = true;
+					$aResult['List'][] = $aGroup;
+
+					$aResult['ContactCount']++;
+				}
 			}
 		}
 		
