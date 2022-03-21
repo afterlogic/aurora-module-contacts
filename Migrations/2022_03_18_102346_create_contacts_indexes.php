@@ -16,6 +16,7 @@ class CreateContactsIndexes extends Migration
         Capsule::schema()->table('contacts', function(Blueprint $table)
         {
             $table->index('IdUser');
+            $table->index('IdTenant');
         });
 
         Capsule::schema()->table('contacts_groups', function(Blueprint $table)
