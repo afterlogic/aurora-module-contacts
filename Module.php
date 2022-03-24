@@ -1481,6 +1481,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$oGroup->populate($Group);
 
 			$this->getManager()->createGroup($oGroup);
+			$this->getManager()->updateCTag($UserId, 'personal');
 
 			if (isset($Group['Contacts']) && is_array($Group['Contacts']))
 			{
