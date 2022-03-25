@@ -17,6 +17,7 @@ class CreateContactsIndexes extends Migration
         {
             $table->index('IdUser');
             $table->index('IdTenant');
+            $table->index('UUID');
         });
 
         Capsule::schema()->table('contacts_groups', function(Blueprint $table)
@@ -45,6 +46,8 @@ class CreateContactsIndexes extends Migration
         Capsule::schema()->table('contacts', function (Blueprint $table)
         {
             $table->dropIndex(['IdUser']);
+            $table->dropIndex(['IdTenant']);
+            $table->dropIndex(['UUID']);
         });
 
         Capsule::schema()->table('contacts_groups', function (Blueprint $table)
