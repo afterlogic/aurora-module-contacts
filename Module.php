@@ -2228,6 +2228,43 @@ class Module extends \Aurora\System\Module\AbstractModule
 		return $aImportResult;
 	}
 
+	public function MoveContacts($UserId, $FromStorage, $ToStorage, $ContactUUIDs)
+	{
+		$this->CheckAccess($UserId);
+
+		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+
+//		$aPreparedFilters = $this->prepareFiltersFromStorage($UserId, $FromStorage);
+//		$aFilters = \Aurora\System\EAV\Query::prepareWhere($aPreparedFilters);
+//		if (count($ContactUUIDs) > 0)
+//		{
+//			foreach ($aFilters as $sKey => $mValue)
+//			{
+//				if (stripos($sKey, '$AND'))
+//				{
+//					$aFilters[$sKey]['UUID'] = [$ContactUUIDs, 'IN'];
+//				}
+//			}
+//		}
+//
+//		$aFilters = ['$OR' => $aFilters];
+//
+//		$aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $aFilters);
+//
+//		if (is_array($aContacts))
+//		{
+//			foreach ($aContacts as $oContact)
+//			{
+//				$oContact->Storage = $ToStorage;
+//				$this->UpdateContactObject($oContact);
+//			}
+//		}
+
+//		return true;
+		
+		return false;
+	}
+
 	public function GetCTag($UserId, $Storage)
 	{
 		$this->CheckAccess($UserId);
