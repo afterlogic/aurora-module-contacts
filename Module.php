@@ -2255,8 +2255,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			foreach ($aContacts as $oContact)
 			{
-				if ($ToStorage === 'collected') {
-					$oContact->Storage = 'personal';
+				if ($ToStorage === Enums\StorageType::Collected) {
+					$oContact->Storage = Enums\StorageType::Personal;
 					$oContact->Auto = true;
 				} else {
 					$oContact->Storage = $ToStorage;
