@@ -136,6 +136,9 @@ class Sync
 						$aContactData['AddressBookId'] = (int) substr($sStorage, 11);
 						$aContactData['Storage'] = 'addressbook';
 					}
+					if (isset($sStorage) && $sStorage === 'collected') {
+						$aContactData['Storage'] = 'collected';
+					}
 
 					$oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
 					if ($oContactsDecorator && $oContactsDecorator->CreateContact($aContactData, $iUserId))

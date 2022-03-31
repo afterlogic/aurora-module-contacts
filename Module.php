@@ -2317,6 +2317,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 						$aContactData['AddressBookId'] = (int) substr($sStorage, 11);
 						$aContactData['Storage'] = 'addressbook';
 					}
+					if (isset($sStorage) && $sStorage === 'collected') {
+						$aContactData['Storage'] = 'collected';
+					}
 
 					$CreatedContactData = $oContactsDecorator->CreateContact($aContactData, $iUserId);
 					if ($CreatedContactData)
