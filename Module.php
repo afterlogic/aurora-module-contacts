@@ -8,6 +8,7 @@
 namespace Aurora\Modules\Contacts;
 
 use Aurora\Api;
+use Aurora\Modules\Contacts\Enums\Access;
 use Aurora\Modules\Contacts\Enums\StorageType;
 use Aurora\Modules\Contacts\Models\AddressBook;
 use Aurora\Modules\Contacts\Models\Contact;
@@ -199,7 +200,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			];
 		}
 
-		return array_merge($aStorages, $this->GetAddressBooks($iUserId));
+		return array_merge($aStorages, $this->Decorator()->GetAddressBooks($iUserId));
 	}
 
 	/**
@@ -674,12 +675,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$oQuery = $this->prepareFiltersFromStorage($UserId, $Storage, $SortField, $query, $Suggestions);
 		});
 
-		$aGroupUsersList = [];
 		if (!empty($GroupUUID))
 		{
 			$oGroup = Group::firstWhere('UUID', $GroupUUID);
 			if ($oGroup) {
-				$oQuery->whereHas('Groups', function ($oSubQuery) use ($oGroup) {
+				$oQuery = $oQuery->whereHas('Groups', function ($oSubQuery) use ($oGroup) {
 					return $oSubQuery->where('contacts_groups.Id', $oGroup->Id);
 				});
 			}
@@ -706,6 +706,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 				});
 			}
 		}
+
+
+		$aGroupUsersList = [];
 
 		if ($WithGroups)
 		{
@@ -839,7 +842,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		This method used as trigger for subscibers. Check these modules: PersonalContacts, SharedContacts, TeamContacts
 	*/
 
-	public function CheckAccessToObject($User, $Contact)
+	public function CheckAccessToObject($User, $Contact, $Access = null)
 	{
 		return true;
 	}
@@ -920,7 +923,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$oContact = $this->getManager()->getContact($UUID);
 			if ($oContact->Storage === StorageType::AddressBook) 
 			{
-				$oContact->Storage = $oContact->Storage . $oContact->AddressBookId;
+				$oContact->Storage = $oContact->Storage . '-' . $oContact->AddressBookId;
 			}
 			if (self::Decorator()->CheckAccessToObject($oUser, $oContact))
 			{
@@ -1177,15 +1180,17 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$oContact->IdTenant = $oUser->IdTenant;
 			$oContact->populate($Contact, true);
 
-			$oContact->Frequency = $this->getAutocreatedContactFrequencyAndDeleteIt($oUser->Id, $oContact->ViewEmail);
-			if ($this->getManager()->createContact($oContact))
-			{
-				$oContact->addGroups(
-					isset($Contact['GroupUUIDs']) ? $Contact['GroupUUIDs'] : null,
-					isset($Contact['GroupNames']) ? $Contact['GroupNames'] : null,
-					true
-				);
-				$mResult = ['UUID' => $oContact->UUID, 'ETag' => $oContact->ETag];
+			if (self::Decorator()->CheckAccessToObject($oUser, $oContact, Access::Write)) {
+				$oContact->Frequency = $this->getAutocreatedContactFrequencyAndDeleteIt($oUser->Id, $oContact->ViewEmail);
+				if ($this->getManager()->createContact($oContact))
+				{
+					$oContact->addGroups(
+						isset($Contact['GroupUUIDs']) ? $Contact['GroupUUIDs'] : null,
+						isset($Contact['GroupNames']) ? $Contact['GroupNames'] : null,
+						true
+					);
+					$mResult = ['UUID' => $oContact->UUID, 'ETag' => $oContact->ETag];
+				}
 			}
 		}
 
@@ -1320,18 +1325,23 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 	public function UpdateContactObject($Contact)
 	{
+		$mResult = false;
 		// $iUserId = $Contact->IdUser;
 		// Api::CheckAccess($UserId);;
 
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
-		$this->CheckAccessToObject($oUser, $Contact);
+		if ($this->CheckAccessToObject($oUser, $Contact, Enums\Access::Write)) {
 
-		if (strlen($Contact->Storage) > 11 && substr($Contact->Storage, 0, strlen(StorageType::AddressBook)) === StorageType::AddressBook) {
-			$Contact->AddressBookId = (int) substr($Contact->Storage, strlen(StorageType::AddressBook));
-			$Contact->Storage =  StorageType::AddressBook;
+			$aStorageParts = \explode('-', $Contact->Storage);
+			if (isset($aStorageParts[0]) && $aStorageParts[0] === StorageType::AddressBook) {
+				$Contact->AddressBookId = (int) $aStorageParts[1];
+				$Contact->Storage =  StorageType::AddressBook;
+			}
+
+			$mResult = $this->getManager()->updateContact($Contact);
 		}
 
-		return $this->getManager()->updateContact($Contact);
+		return $mResult;
 	}
 
 
@@ -1392,15 +1402,26 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		$mResult = false;
 		Api::CheckAccess($UserId);
+		$oUser = Api::getUserById($UserId);
 
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
 		$sStorage = $Storage;
-		if (strlen($Storage) > strlen(StorageType::AddressBook) && substr($Storage, 0, strlen(StorageType::AddressBook)) === StorageType::AddressBook) {
+		$aStorageParts = \explode('-', $sStorage);
+		if (isset($aStorageParts[0]) && $aStorageParts[0] === StorageType::AddressBook) {
 			$sStorage = StorageType::AddressBook;
 		}
 
-		if ($this->getManager()->deleteContacts($UserId, $sStorage, $UUIDs)) {
+		$aContacts = Contact::whereIn('UUID', $UUIDs)->get();
+		$bCheck = true;
+		foreach ($aContacts as $oContact) {
+			if (!self::Decorator()->CheckAccessToObject($oUser, $oContact, Enums\Access::Write)) {
+				$bCheck = false;
+				break;
+			}
+		}
+
+		if ($bCheck && $this->getManager()->deleteContacts($UserId, $sStorage, $UUIDs)) {
 			$this->getManager()->updateCTag($UserId, $Storage);
 			$mResult = true;
 		}
@@ -1956,7 +1977,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$iResult = 0;
 		if ($oUser instanceof \Aurora\Modules\Core\Models\User)
 		{
-			$iUserId = $Storage === 'personal' || $Storage === 'collected' || (strlen($Storage) > 11 && substr($Storage, 0, 11) === 'addressbook') ? $oUser->Id : $oUser->IdTenant;
+			$aStorageParts = \explode('-', $Storage);
+			$iUserId = $Storage === StorageType::Personal || $Storage === StorageType::Collected || (isset($aStorageParts[0]) && $aStorageParts[0] === StorageType::AddressBook) ? $oUser->Id : $oUser->IdTenant;
 
 			$oCTag = $this->getManager()->getCTag($iUserId, $Storage);
 			if ($oCTag instanceof Models\CTag)
@@ -2033,9 +2055,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$aImportResult['ParsedCount']++;
 				if (!isset($oContact) || empty($oContact))
 				{
-					if (isset($sStorage) && strlen($sStorage) > 11 && substr($sStorage, 0, 11) === 'addressbook') {
-						$aContactData['AddressBookId'] = (int) substr($sStorage, 11);
-						$aContactData['Storage'] = 'addressbook';
+					if (isset($sStorage)) {
+						$aStorageParts = \explode('-', $sStorage);
+						if (count($aStorageParts) === 2 && $aStorageParts[0] === StorageType::AddressBook) {
+							$aContactData['Storage'] = StorageType::AddressBook;
+							$aContactData['AddressBookId'] = $aStorageParts[1];
+						}
 					}
 					$CreatedContactData = $oContactsDecorator->CreateContact($aContactData, $iUserId);
 					if ($CreatedContactData)
@@ -2302,14 +2327,21 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		foreach ($aAddressBooks as $oAddressBook) {
 			$aResult[] = [
-				'Id' => StorageType::AddressBook . $oAddressBook->Id,
+				'Id' => StorageType::AddressBook . '-' . $oAddressBook->Id,
 				'EntityId' => $oAddressBook->Id,
-				'CTag' => $this->Decorator()->GetCTag($UserId, StorageType::AddressBook . $oAddressBook->Id),
+				'CTag' => $this->Decorator()->GetCTag($UserId, StorageType::AddressBook . '-' . $oAddressBook->Id),
 				'Display' => true,
 				'Order' => 1,
 				'DisplayName' => $oAddressBook->Name
 			];
 		}
+
+		// $abRoot = new \Afterlogic\DAV\CardDAV\AddressBookRoot(
+		// 	\Afterlogic\DAV\Backend::Carddav(),
+		// 	\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . Api::getUserPublicIdById($UserId)
+		// );
+
+		// $addressbooks = $abRoot->getChildren();
 
 		return $aResult;
 	}

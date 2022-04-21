@@ -12,6 +12,7 @@ use Aurora\Modules\Contacts\Classes\VCard\Helper;
 use Aurora\Modules\Contacts\Enums\StorageType;
 use Aurora\Modules\Contacts\Models\Group;
 use Aurora\Modules\Core\Models\User;
+use Aurora\System\EventEmitter;
 
 class Contact extends Model
 {
@@ -252,9 +253,9 @@ class Contact extends Model
 	public function populate($aContact, $bCreateNonExistingGroups = false)
 	{
 		$aNonExistingGroups = [];
-		if (isset($aContact['Storage']) && strlen($aContact['Storage']) > strlen(StorageType::AddressBook) && 
-		substr($aContact['Storage'], 0, strlen(StorageType::AddressBook)) === StorageType::AddressBook) {
-			$aContact['AddressBookId'] = (int) substr($aContact['Storage'], strlen(StorageType::AddressBook));
+		$aStorageParts = \explode('-', $aContact['Storage']);
+		if (isset($aStorageParts[0]) && $aStorageParts[0] === StorageType::AddressBook) {
+			$aContact['AddressBookId'] = (int) $aStorageParts[1];
 			$aContact['Storage'] = StorageType::AddressBook;
 		}
 		parent::populate($aContact);
@@ -268,6 +269,8 @@ class Contact extends Model
 			$this->UUID = \Sabre\DAV\UUIDUtil::getUUID();
 		}
 		$this->SetViewEmail();
+
+		EventEmitter::getInstance()->emit('Contacts', 'PopulateContactModel', $this);
 	}
 
 

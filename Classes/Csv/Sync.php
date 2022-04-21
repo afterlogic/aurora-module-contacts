@@ -7,6 +7,8 @@
 
 namespace Aurora\Modules\Contacts\Classes\Csv;
 
+use Aurora\Modules\Contacts\Enums\StorageType;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -129,9 +131,12 @@ class Sync
 
 					$iParsedCount++;
 
-					if (isset($sStorage) && strlen($sStorage) > 11 && substr($sStorage, 0, 11) === 'addressbook') {
-						$aContactData['AddressBookId'] = (int) substr($sStorage, 11);
-						$aContactData['Storage'] = 'addressbook';
+					if (isset($sStorage)) {
+						$aStorageParts = \explode('-', $sStorage);
+						if (count($aStorageParts) === 2 && $aStorageParts[0] === StorageType::AddressBook) {
+							$aContactData['Storage'] = StorageType::AddressBook;
+							$aContactData['AddressBookId'] = $aStorageParts[1];
+						}
 					}
 					
 					$oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
