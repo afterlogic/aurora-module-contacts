@@ -1333,7 +1333,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		if ($this->CheckAccessToObject($oUser, $Contact, Enums\Access::Write)) {
 
 			$aStorageParts = \explode('-', $Contact->Storage);
-			if (isset($aStorageParts[0]) && $aStorageParts[0] === StorageType::AddressBook) {
+			if (isset($aStorageParts[0], $aStorageParts[1]) && $aStorageParts[0] === StorageType::AddressBook) {
 				$Contact->AddressBookId = (int) $aStorageParts[1];
 				$Contact->Storage =  StorageType::AddressBook;
 			}
