@@ -7,6 +7,8 @@
 
 namespace Aurora\Modules\Contacts\Classes\VCard;
 
+use Aurora\Modules\Contacts\Enums\StorageType;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -260,6 +262,7 @@ class Helper
 		{
 			$aContact['UseFriendlyName'] = '1' === (string) $oVCard->{'X-USE-FRIENDLY-NAME'};
 		}
+		$aContact['Storage'] = StorageType::Personal;
 
 		return $aContact;
 	}
