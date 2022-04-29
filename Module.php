@@ -741,11 +741,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 		}
 
-
-		if ($SortField === Enums\SortField::Frequency)
-		{
-			$oQuery = $oQuery->where('Frequency', '!=', -1);
-		}
+		// if ($SortField === Enums\SortField::Frequency)
+		// {
+		// 	$oQuery = $oQuery->where('Frequency', '!=', -1);
+		// }
 
 		$iCount = $this->getManager()->getContactsCount($oQuery);
 		$aContacts = $this->getManager()->getContactsAsArray($SortField, $SortOrder, $Offset, $Limit, $oQuery);
