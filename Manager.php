@@ -8,6 +8,7 @@
 namespace Aurora\Modules\Contacts;
 
 use Aurora\Modules\Contacts\Classes\CTag;
+use Aurora\Modules\Contacts\Enums\SortField;
 use Aurora\Modules\Contacts\Enums\StorageType;
 use Aurora\Modules\Contacts\Models\Group;
 use Aurora\Modules\Contacts\Models\Contact;
@@ -226,25 +227,25 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 *
 	 * @return array|bool
 	 */
-	public function getContacts($iSortField = \Aurora\Modules\Contacts\Enums\SortField::Name, $iSortOrder = \Aurora\System\Enums\SortOrder::ASC,
+	public function getContacts($iSortField = SortField::Name, $iSortOrder = \Aurora\System\Enums\SortOrder::ASC,
 		$iOffset = 0, $iLimit = 20, $oFilters = null, $aViewAttrs = array())
 	{
 		$sSortField = 'FullName';
 		switch ($iSortField)
 		{
-			case \Aurora\Modules\Contacts\Enums\SortField::Email:
+			case SortField::Email:
 				$sSortField = 'ViewEmail';
 				break;
-			case \Aurora\Modules\Contacts\Enums\SortField::Frequency:
+			case SortField::Frequency:
 				$sSortField = 'AgeScore';
-				$oFilters->select(Capsule::schema()->getConnection()->raw('*, (Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, DateModified)/30)) as AgeScore'));
+				$oFilters->select(Capsule::connection()->raw('*, (Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, DateModified)/30)) as AgeScore'));
 				break;
 		}
 		if ($iOffset > 0) {
-			$oFilters = $oFilters->offset($iOffset);
+			$oFilters->offset($iOffset);
 		}
 		if ($iLimit > 0) {
-			$oFilters = $oFilters->limit($iLimit);
+			$oFilters->limit($iLimit);
 		}
 
 		return $oFilters
@@ -275,7 +276,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	 *
 	 * @return array|bool
 	 */
-	public function getContactsAsArray($iSortField = \Aurora\Modules\Contacts\Enums\SortField::Name, $iSortOrder = \Aurora\System\Enums\SortOrder::ASC,
+	public function getContactsAsArray($iSortField = SortField::Name, $iSortOrder = \Aurora\System\Enums\SortOrder::ASC,
 		$iOffset = 0, $iLimit = 20, $oFilters = null, $aViewAttrs = array())
 	{
 		return $this->getContacts($iSortField, $iSortOrder, $iOffset, $iLimit, $oFilters, $aViewAttrs)->toArray();

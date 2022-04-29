@@ -377,10 +377,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 
 		$oQuery = ($Filters instanceof Builder) ? $Filters : Models\Contact::query();
-		$oQuery->where(function ($query) use ($UserId, $Storage, $oQuery) {
-			$oQuery = $this->prepareFiltersFromStorage($UserId, $Storage, Enums\SortField::Name, $query);
+		$oQuery->where(function ($query) use ($UserId, $Storage) {
+			$this->prepareFiltersFromStorage($UserId, $Storage, Enums\SortField::Name, $query);
 		});
-		// $aFilters = \Aurora\System\EAV\Query::prepareWhere($aPreparedFilters);
 
 		if (empty($ContactUUIDs) && !empty($GroupUUID))
 		{
@@ -671,8 +670,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		Api::CheckAccess($UserId);
 
 		$oQuery = ($Filters instanceof Builder) ? $Filters : Models\Contact::query();
-		$oQuery->where(function ($query) use ($UserId, $Storage, $SortField, $oQuery, $Suggestions) {
-			$oQuery = $this->prepareFiltersFromStorage($UserId, $Storage, $SortField, $query, $Suggestions);
+		$oQuery->where(function ($query) use ($UserId, $Storage, $SortField, $Suggestions) {
+			$this->prepareFiltersFromStorage($UserId, $Storage, $SortField, $query, $Suggestions);
 		});
 
 		if (!empty($GroupUUID))
@@ -1003,13 +1002,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 		Api::CheckAccess($UserId);
 
 		$oQuery = ($Filters instanceof Builder) ? $Filters : Contact::query();
-		$oQuery->where(function ($query) use ($UserId, $Storage, $oQuery) {
-			$oQuery = $this->prepareFiltersFromStorage($UserId, $Storage, Enums\SortField::Name, $query);
+		$oQuery->where(function ($query) use ($UserId, $Storage) {
+			$this->prepareFiltersFromStorage($UserId, $Storage, Enums\SortField::Name, $query);
 		});
 		$oQuery = $oQuery->whereIn('ViewEmail', $Emails);
-		if ($Storage !== \Aurora\Modules\Contacts\Enums\StorageType::All)
-		{
-			$oQuery = $oQuery->where('Storage', $Storage);
+		if ($Storage !== StorageType::All) {
+			$oQuery->where('Storage', $Storage);
 		}
 
 		if ($AsArray) {
@@ -1083,8 +1081,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		Api::CheckAccess($UserId);
 
 		$oQuery = ($Filters instanceof Builder) ? $Filters : Models\Contact::query();
-		$oQuery->where(function ($query) use ($UserId, $Storage, $oQuery) {
-			$oQuery = $this->prepareFiltersFromStorage($UserId, $Storage, Enums\SortField::Name, $query);
+		$oQuery->where(function ($query) use ($UserId, $Storage) {
+			$this->prepareFiltersFromStorage($UserId, $Storage, Enums\SortField::Name, $query);
 		});
 
 		$aContacts = $oQuery->get(['UUID', 'ETag', 'Auto', 'Storage']);
