@@ -1,42 +1,42 @@
 {
-  "Disabled": [
-    false,
-    "bool"
-  ],
-  "Disabled_Description": [
-    "",
-    "string"
-  ],
-  "ContactsPerPage": [
-    20,
-    "int"
-  ],
-  "ContactsPerPage_Description": [
-    "",
-    "string"
-  ],
-  "ImportContactsLink": [
-    "",
-    "string"
-  ],
-  "ImportContactsLink_Description": [
-    "",
-    "string"
-  ],
-  "AllowAddressBooksManagement": [
-    false,
-    "bool"
-  ],
-  "AllowAddressBooksManagement_Description": [
-    "",
-    "string"
-  ],
-  "AllowEditTeamContactsByTenantAdmins": [
-    false,
-    "bool"
-  ],
-  "AllowEditTeamContactsByTenantAdmins_Description": [
-    "",
-    "string"
-  ]
+	"Disabled": [
+		false,
+		"bool"
+	],
+	"Disabled_Description": [
+		"",
+		"string"
+	],
+	"ContactsPerPage": [
+		20,
+		"int"
+	],
+	"ContactsPerPage_Description": [
+		"",
+		"string"
+	],
+	"ImportContactsLink": [
+		"",
+		"string"
+	],
+	"ImportContactsLink_Description": [
+		"",
+		"string"
+	],
+	"AllowAddressBooksManagement": [
+		false,
+		"bool"
+	],
+	"AllowAddressBooksManagement_Description": [
+		"",
+		"string"
+	],
+	"AllowEditTeamContactsByTenantAdmins": [
+		false,
+		"bool"
+	],
+	"AllowEditTeamContactsByTenantAdmins_Description": [
+		"",
+		"string"
+	]
 }
