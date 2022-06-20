@@ -790,7 +790,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$aList = array_merge($aList, $aGroupUsersList);
 		return array(
-			'ContactCount' => $iCount,
+			'ContactCount' => $iCount + count($aGroupUsersList),
 			'List' => \Aurora\System\Managers\Response::GetResponseObject($aList)
 		);
 	}
