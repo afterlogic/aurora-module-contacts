@@ -2091,7 +2091,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function onAfterUseEmails($Args, &$Result)
 	{
 		$aAddresses = $Args['Emails'];
-		$iUserId = \Aurora\System\Api::getAuthenticatedUserId();
+		$iUserId = $Args['IdUser'];
 		foreach ($aAddresses as $sEmail => $sName)
 		{
 			$oContact = $this->getManager()->getContactByEmail($iUserId, $sEmail);
