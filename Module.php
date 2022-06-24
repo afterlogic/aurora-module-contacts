@@ -916,15 +916,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$mResult = false;
 
-		if ($oUser instanceof \Aurora\Modules\Core\Models\User)
-		{
+		if ($oUser instanceof \Aurora\Modules\Core\Models\User) {
 			$oContact = $this->getManager()->getContact($UUID);
-			// if ($oContact->Storage === StorageType::AddressBook) 
-			// {
-			// 	$oContact->Storage = $oContact->Storage . '-' . $oContact->AddressBookId;
-			// }
-			if (self::Decorator()->CheckAccessToObject($oUser, $oContact))
-			{
+			if ($oContact->Storage === StorageType::AddressBook) {
+				$oContact->Storage = $oContact->Storage . '-' . $oContact->AddressBookId;
+			}
+			if (self::Decorator()->CheckAccessToObject($oUser, $oContact)) {
 				$mResult = $oContact;
 			}
 		}
@@ -1323,18 +1320,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function UpdateContactObject($Contact)
 	{
 		$mResult = false;
-		// $iUserId = $Contact->IdUser;
-		// Api::CheckAccess($UserId);;
 
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		$aStorageParts = \explode('-', $Contact->Storage);
+		if (isset($aStorageParts[0], $aStorageParts[1]) && $aStorageParts[0] === StorageType::AddressBook) {
+			$Contact->AddressBookId = (int) $aStorageParts[1];
+			$Contact->Storage =  StorageType::AddressBook;
+		}
 		if (self::Decorator()->CheckAccessToObject($oUser, $Contact, Enums\Access::Write)) {
-
-			// $aStorageParts = \explode('-', $Contact->Storage);
-			// if (isset($aStorageParts[0], $aStorageParts[1]) && $aStorageParts[0] === StorageType::AddressBook) {
-			// 	$Contact->AddressBookId = (int) $aStorageParts[1];
-			// 	$Contact->Storage =  StorageType::AddressBook;
-			// }
-
 			$mResult = $this->getManager()->updateContact($Contact);
 		}
 
