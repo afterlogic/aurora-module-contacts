@@ -740,59 +740,57 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 		}
 
-		// if ($SortField === Enums\SortField::Frequency)
-		// {
-		// 	$oQuery = $oQuery->where('Frequency', '!=', -1);
-		// }
-
 		$iCount = $this->getManager()->getContactsCount($oQuery);
-		$aContacts = $this->getManager()->getContactsAsArray($SortField, $SortOrder, $Offset, $Limit, $oQuery);
+		$aContactsCol = $this->getManager()->getContacts($SortField, $SortOrder, $Offset, $Limit, $oQuery);
+		$aContacts = $aContactsCol->toArray();
 
-		if ($Storage === 'all' && $WithoutTeamContactsDuplicates) {
-			$aPersonalContactEmails = array_map(function($aContact) {
-				if ($aContact['Storage'] === StorageType::Personal) {
-					return $aContact['ViewEmail'];
+		if ($Storage === StorageType::All && $WithoutTeamContactsDuplicates) {
+
+			$aPersonalContacsCol = $aContactsCol->map(function($oContact) {
+				if ($oContact->Storage === StorageType::Personal && $oContact->Auto === false) {
+					return $oContact;
 				}
-			}, $aContacts);
-			$aUniquePersonalContactEmails = array_unique(array_diff($aPersonalContactEmails, [null]));
-			foreach ($aContacts as $key => $aContact)
-			{
-				if ($aContact['Storage'] === StorageType::Team && in_array($aContact['ViewEmail'], $aUniquePersonalContactEmails))
-				{
+			});
+
+			foreach ($aContacts as $key => $aContact) {
+				$sViewEmail = $aContact['ViewEmail'];
+				$sStorage = $aContact['Storage'];
+				if ($sStorage === StorageType::Team && $aPersonalContacsCol->unique()->contains('ViewEmail', $sViewEmail)) {
+					unset($aContacts[$key]);
+				} else if ($sStorage === StorageType::Personal && $aContact['Auto'] === true) { // is colllected contact
+					foreach($aContacts as $teamKey => $aTeamContact) {
+						if ($aTeamContact['Storage'] === StorageType::Team && $aTeamContact['ViewEmail'] === $sViewEmail) {
+							$aContacts[$teamKey]['AgeScore'] = $aContacts[$key]['AgeScore'];
+						}
+					}
 					unset($aContacts[$key]);
 				}
 			}
 		}
-		$aList = array();
-		if (is_array($aContacts))
-		{
-			foreach ($aContacts as $aContact)
-			{
-				if ($aContact['Storage'] === StorageType::AddressBook)
-				{
-					$aContact['Storage'] = $aContact['Storage'] . $aContact['AddressBookId'];
-				}
-				$aList[] = array(
-					'UUID' => $aContact['UUID'],
-					'IdUser' => $aContact['IdUser'],
-					'FullName' => $aContact['FullName'],
-					'FirstName' => isset($aContact['FirstName']) ? $aContact['FirstName'] : '',
-					'LastName' => isset($aContact['LastName']) ? $aContact['LastName'] : '',
-					'ViewEmail' => $aContact['ViewEmail'],
-					'Storage' => $aContact['Storage'],
-					'Frequency' => $aContact['Frequency'],
-					'DateModified' => isset($aContact['DateModified']) ? $aContact['DateModified'] : 0,
-					'ETag' => isset($aContact['ETag']) ? $aContact['ETag'] : '',
-					'AgeScore' => isset($aContact['AgeScore']) ? (float) $aContact['AgeScore'] : 0
-				);
+		$aList = array_map(function($aContact) {
+			if ($aContact['Storage'] === StorageType::AddressBook) {
+				$aContact['Storage'] = $aContact['Storage'] . $aContact['AddressBookId'];
 			}
-		}
+			return [
+				'UUID' => $aContact['UUID'],
+				'IdUser' => $aContact['IdUser'],
+				'FullName' => $aContact['FullName'],
+				'FirstName' => isset($aContact['FirstName']) ? $aContact['FirstName'] : '',
+				'LastName' => isset($aContact['LastName']) ? $aContact['LastName'] : '',
+				'ViewEmail' => $aContact['ViewEmail'],
+				'Storage' => $aContact['Storage'],
+				'Frequency' => $aContact['Frequency'],
+				'DateModified' => isset($aContact['DateModified']) ? $aContact['DateModified'] : 0,
+				'ETag' => isset($aContact['ETag']) ? $aContact['ETag'] : '',
+				'AgeScore' => isset($aContact['AgeScore']) ? (float) $aContact['AgeScore'] : 0
+			];
+		}, $aContacts);
 
 		$aList = array_merge($aList, $aGroupUsersList);
-		return array(
+		return [
 			'ContactCount' => $iCount + count($aGroupUsersList),
 			'List' => \Aurora\System\Managers\Response::GetResponseObject($aList)
-		);
+		];
 	}
 
 	protected function _getContactSuggestions($UserId,  $Storage, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $WithGroups = false, $WithoutTeamContactsDuplicates = false)
