@@ -132,11 +132,7 @@ class Sync
 					$iParsedCount++;
 
 					if (isset($sStorage)) {
-						$aStorageParts = \explode('-', $sStorage);
-						if (count($aStorageParts) === 2 && $aStorageParts[0] === StorageType::AddressBook) {
-							$aContactData['Storage'] = StorageType::AddressBook;
-							$aContactData['AddressBookId'] = $aStorageParts[1];
-						}
+					 	$aContactData['Storage'] = $sStorage;
 					}
 					
 					$oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
