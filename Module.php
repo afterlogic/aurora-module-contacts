@@ -758,12 +758,16 @@ class Module extends \Aurora\System\Module\AbstractModule
 				if ($sStorage === StorageType::Team && $aPersonalContacsCol->unique()->contains('ViewEmail', $sViewEmail)) {
 					unset($aContacts[$key]);
 				} else if ($sStorage === StorageType::Personal && $aContact['Auto'] === true) { // is colllected contact
-					foreach($aContacts as $teamKey => $aTeamContact) {
-						if ($aTeamContact['Storage'] === StorageType::Team && $aTeamContact['ViewEmail'] === $sViewEmail) {
-							$aContacts[$teamKey]['AgeScore'] = $aContacts[$key]['AgeScore'];
+					foreach($aContacts as $subKey => $aSubContact) {
+						if ($aSubContact['Storage'] === StorageType::Team && $aSubContact['ViewEmail'] === $sViewEmail) {
+							$aContacts[$subKey]['AgeScore'] = $aContacts[$key]['AgeScore'];
+							unset($aContacts[$key]);
 						}
+						if ($aSubContact['Storage'] === StorageType::Personal && $aSubContact['Auto'] === false && $aSubContact['ViewEmail'] === $sViewEmail) {
+							unset($aContacts[$key]);
+						}
+
 					}
-					unset($aContacts[$key]);
 				}
 			}
 		}
@@ -807,6 +811,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$aContacts = $this->Decorator()->GetContacts($UserId,  $Storage, 0, $Limit, $SortField, $SortOrder, $Search, '', null, $WithGroups, $WithoutTeamContactsDuplicates, true);
 		$aResultList = $aContacts['List'];
+
+		$contactsColl = collect($aContacts['List']);
+
+//		$aViewEmails = $contactsColl->whereIn('Storage', [StorageType::Personal, StorageType::AddressBook])/*->where('Auto', false)*/->all();
 
 		$aResult['List'] = $aResultList;
 		$aResult['ContactCount'] = count($aResultList);
