@@ -848,7 +848,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		);
 	}
 
-	public function GetContactSuggestions($UserId,  $Storage, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $WithGroups, $WithoutTeamContactsDuplicates = false)
+	public function GetContactSuggestions($UserId,  $Storage, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $WithGroups = false, $WithoutTeamContactsDuplicates = false)
 	{
 		// $Storage is used by subscribers to prepare filters.
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
