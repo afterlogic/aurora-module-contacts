@@ -2334,7 +2334,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 			];
 		}
 
-		// $abRoot = new \Afterlogic\DAV\CardDAV\AddressBookRoot(
+		// $abRoot = new \Afterlogic\DAV\CardDAV\AddressBookHome(
 		// 	\Afterlogic\DAV\Backend::Carddav(),
 		// 	\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . Api::getUserPublicIdById($UserId)
 		// );
