@@ -7,6 +7,7 @@
 
 namespace Aurora\Modules\Contacts;
 
+use Aurora\System\Api;
 use Aurora\System\EAV\Query;
 use Aurora\System\Managers\Eav;
 
@@ -836,7 +837,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 					'Frequency' => $aContact['Frequency'],
 					'DateModified' => isset($aContact['DateModified']) ? $aContact['DateModified'] : 0,
 					'ETag' => isset($aContact['ETag']) ? $aContact['ETag'] : '',
-					'AgeScore' => isset($aContact['AgeScore']) ? (float) $aContact['AgeScore'] : 0
+					'AgeScore' => isset($aContact['AgeScore']) ? (float) $aContact['AgeScore'] : 0,
+					'Auto' => isset($aContact['Auto']) ? (bool) $aContact['Auto'] : false,
 				);
 			}
 		}
@@ -885,10 +887,21 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 
 		$aUniquePersonalContactEmails = array_unique(array_diff($aPersonalContactEmails, [null]));
+		$aIgnoreContacts = [];
+		$InformatikProjectsModule = Api::GetModule('InformatikProjects');
+		if ($InformatikProjectsModule) {
+			$internalDomains = $InformatikProjectsModule->getConfig('InternalDomains', []);
+			$aIgnoreContacts = array_map(function($domain) {
+				return 'info@' . $domain;
+			}, $internalDomains);
+		}
 		foreach ($aResultList as $key => $aContact)
 		{
 			if ($aContact['Storage'] === 'team' && in_array($aContact['ViewEmail'], $aUniquePersonalContactEmails))
 			{
+				unset($aResultList[$key]);
+			}
+			if ($aContact['Storage'] === 'personal' && isset($aContact['Auto']) && $aContact['Auto'] && in_array($aContact['ViewEmail'], $aIgnoreContacts)) {
 				unset($aResultList[$key]);
 			}
 		}
