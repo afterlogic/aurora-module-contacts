@@ -24,19 +24,12 @@ use Illuminate\Database\Capsule\Manager as Capsule;
  */
 class Manager extends \Aurora\System\Managers\AbstractManager
 {
-	private $oEavManager = null;
-
 	/**
 	 * @param \Aurora\System\Module\AbstractModule $oModule
 	 */
 	public function __construct(\Aurora\System\Module\AbstractModule $oModule = null)
 	{
 		parent::__construct($oModule);
-
-		if ($oModule instanceof \Aurora\System\Module\AbstractModule)
-		{
-			$this->oEavManager = \Aurora\System\Managers\Eav::getInstance();
-		}
 	}
 
 	/**
@@ -112,42 +105,6 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		}
 
 		return $res;
-	}
-
-	/**
-	 *
-	 * @param type $oContact
-	 */
-	public function updateContactGroups($oContact)
-	{
-		$aGroupContact = $this->getGroupContacts(null, $oContact->UUID);
-
-		$compare_func = function($oGroupContact1, $oGroupContact2) {
-			if ($oGroupContact1->GroupUUID === $oGroupContact2->GroupUUID)
-			{
-				return 0;
-			}
-			if ($oGroupContact1->GroupUUID > $oGroupContact2->GroupUUID)
-			{
-				return -1;
-			}
-			return 1;
-		};
-
-		$aGroupContactToDelete = array_udiff($aGroupContact, $oContact->GroupsContacts, $compare_func);
-		$aGroupContactUUIDsToDelete = array_map(
-			function($oGroupContact) {
-				return $oGroupContact->UUID;
-			},
-			$aGroupContactToDelete
-		);
-		$this->oEavManager->deleteEntities($aGroupContactUUIDsToDelete);
-
-		$aGroupContactToAdd = array_udiff($oContact->GroupsContacts, $aGroupContact, $compare_func);
-		foreach ($aGroupContactToAdd as $oGroupContact)
-		{
-			$this->oEavManager->saveEntity($oGroupContact);
-		}
 	}
 
 	/**
