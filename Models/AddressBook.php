@@ -15,6 +15,8 @@ namespace Aurora\Modules\Contacts\Models;
  * @package Models
  * @subpackage AddressBook
  *
+ * @property int $Id
+ * @property string $UUID
  * @property int $UserId
  * @property string $Name
  */
