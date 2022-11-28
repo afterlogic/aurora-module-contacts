@@ -51,7 +51,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	{
 		$this->subscribeEvent('Mail::AfterUseEmails', array($this, 'onAfterUseEmails'));
 		$this->subscribeEvent('Mail::GetBodyStructureParts', array($this, 'onGetBodyStructureParts'));
-		$this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
+		$this->subscribeEvent('Core::DeleteUser::after', array($this, 'onAfterDeleteUser'));
 
 		$this->subscribeEvent('Calendar::CreateEvent', array($this, 'onCreateOrUpdateEvent'));
 		$this->subscribeEvent('Calendar::UpdateEvent', array($this, 'onCreateOrUpdateEvent'));
@@ -2122,12 +2122,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 	}
 
-	public function onBeforeDeleteUser(&$aArgs, &$mResult)
+	public function onAfterDeleteUser(&$aArgs, &$mResult)
 	{
-		Api::CheckAccess($aArgs['UserId']);
-
-		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-
 		$this->getManager()->deleteGroupsByUserId($aArgs['UserId']);
 		$this->getManager()->deleteCTagsByUserId($aArgs['UserId']);
 		$this->getManager()->deleteContactsByUserId($aArgs['UserId']);
