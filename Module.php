@@ -32,6 +32,15 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 	protected $aImportExportFormats = ['csv', 'vcf'];
 
+	/**
+	 *
+	 * @return Module
+	 */
+	public static function getInstance()
+	{
+		return \Aurora\System\Api::GetModule(self::GetName());
+	}
+
 	public function getManager()
 	{
 		if ($this->oManager === null)
