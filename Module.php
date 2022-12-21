@@ -2086,7 +2086,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		$this->broadcastEvent('PrepareFiltersFromStorage', $aArgs, $oQuery);
 		if (!$aArgs['IsValid']) {
-			throw new ApiException(Notifications::InvalidInputParameter);
+			throw new ApiException(Notifications::InvalidInputParameter, null, 'Invalid Storage parameter value');
 		}
 		return $oQuery;
 	}
