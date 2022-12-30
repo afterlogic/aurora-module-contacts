@@ -44,9 +44,9 @@ class Group extends Model
 	{
 		parent::populate($aGroup);
 
-		if(!empty($aContact['UUID']))
+		if(!empty($aGroup['UUID']))
 		{
-			$this->UUID = $aContact['UUID'];
+			$this->UUID = $aGroup['UUID'];
 		}
 		else if(empty($this->UUID))
 		{

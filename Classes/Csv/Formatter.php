@@ -121,7 +121,7 @@ class Formatter
 	}
 
 	/**
-	 * @return bool
+	 * @return void
 	 */
 	protected function formHeader()
 	{
@@ -146,7 +146,7 @@ class Formatter
 	}
 
 	/**
-	 * @return bool
+	 * @return void
 	 */
 	protected function formTokens()
 	{

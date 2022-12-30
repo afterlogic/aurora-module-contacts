@@ -118,7 +118,7 @@ class Sync
 					{
 						if (strlen($aContactData['BirthYear']) === 2)
 						{
-							$oDt = DateTime::createFromFormat('y', $aContactData['BirthYear']);
+							$oDt = \DateTime::createFromFormat('y', $aContactData['BirthYear']);
 							$aContactData['BirthYear'] = $oDt->format('Y');
 						}
 						$aContactData['BirthYear'] = (int) $aContactData['BirthYear'];

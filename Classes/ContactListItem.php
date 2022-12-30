@@ -62,6 +62,11 @@ class ContactListItem
 	/**
 	 * @var array
 	 */
+	public $Emails;
+
+	/**
+	 * @var array
+	 */
 	public $Phones;
 
 	/**
