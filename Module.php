@@ -1931,7 +1931,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 		{
 			foreach ($aEvents as $oEvent)
 			{
-				$aResult[] = \Aurora\Modules\Calendar\Module::getInstance()->GetBaseEvent($UserId, $oEvent->CalendarUUID, $oEvent->EventUUID);
+				$oCalendarModule = Api::GetModule('Calendar');
+				if ($oCalendarModule) {
+					$aResult[] = $oCalendarModule->GetBaseEvent($UserId, $oEvent->CalendarUUID, $oEvent->EventUUID);
+				}
 			}
 		}
 
@@ -2142,10 +2145,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 	public function onCreateOrUpdateEvent(&$aArgs)
 	{
 		$oEvent = $aArgs['Event'];
-		$aGroups = \Aurora\Modules\Calendar\Classes\Helper::findGroupsHashTagsFromString($oEvent->Name);
-		$aGroupsDescription = \Aurora\Modules\Calendar\Classes\Helper::findGroupsHashTagsFromString($oEvent->Description);
+		$aGroups = self::findGroupsHashTagsFromString($oEvent->Name);
+		$aGroupsDescription = self::findGroupsHashTagsFromString($oEvent->Description);
 		$aGroups = array_merge($aGroups, $aGroupsDescription);
-		$aGroupsLocation = \Aurora\Modules\Calendar\Classes\Helper::findGroupsHashTagsFromString($oEvent->Location);
+		$aGroupsLocation = self::findGroupsHashTagsFromString($oEvent->Location);
 		$aGroups = array_merge($aGroups, $aGroupsLocation);
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 
@@ -2264,6 +2267,25 @@ class Module extends \Aurora\System\Module\AbstractModule
 			$mResult = false;
 		}
 		return $mResult;
+	}
+
+	/** 
+	* @param string $sString
+	*
+	* @return array
+	*/
+	protected static function findGroupsHashTagsFromString($sString)
+	{
+		$aResult = array();
+		
+		preg_match_all("/[#]([^#\s]+)/", $sString, $aMatches);
+		
+		if (\is_array($aMatches) && isset($aMatches[0]) && \is_array($aMatches[0]) && 0 < \count($aMatches[0]))
+		{
+			$aResult = $aMatches[0];
+		}
+		
+		return $aResult;
 	}
 
 	/**
