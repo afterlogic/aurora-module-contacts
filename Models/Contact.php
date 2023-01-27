@@ -7,7 +7,7 @@
 
 namespace Aurora\Modules\Contacts\Models;
 
-use \Aurora\System\Classes\Model;
+use Aurora\System\Classes\Model;
 use Aurora\Modules\Contacts\Classes\VCard\Helper;
 use Aurora\Modules\Contacts\Enums\StorageType;
 use Aurora\Modules\Contacts\Models\Group;
@@ -16,310 +16,298 @@ use Aurora\System\EventEmitter;
 
 class Contact extends Model
 {
-	public $GroupsContacts = array();
+    public $GroupsContacts = array();
 
-	public $ExtendedInformation = array();
+    public $ExtendedInformation = array();
 
-	protected $foreignModel = User::class;
-	protected $foreignModelIdColumn = 'IdUser'; // Column that refers to an external table
+    protected $foreignModel = User::class;
+    protected $foreignModelIdColumn = 'IdUser'; // Column that refers to an external table
 
-	protected $fillable = [
-		'Id',
-		'UUID',
-		'IdUser',
-		'IdTenant',
-		'Storage',
-		'AddressBookId',
-		'FullName',
-		'UseFriendlyName',
-		'PrimaryEmail',
-		'PrimaryPhone',
-		'PrimaryAddress',
-		'ViewEmail',
+    protected $fillable = [
+        'Id',
+        'UUID',
+        'IdUser',
+        'IdTenant',
+        'Storage',
+        'AddressBookId',
+        'FullName',
+        'UseFriendlyName',
+        'PrimaryEmail',
+        'PrimaryPhone',
+        'PrimaryAddress',
+        'ViewEmail',
 
-		'Title',
-		'FirstName',
-		'LastName',
-		'NickName',
-		'Skype',
-		'Facebook',
+        'Title',
+        'FirstName',
+        'LastName',
+        'NickName',
+        'Skype',
+        'Facebook',
 
-		'PersonalEmail',
-		'PersonalAddress',
-		'PersonalCity',
-		'PersonalState',
-		'PersonalZip',
-		'PersonalCountry',
-		'PersonalWeb',
-		'PersonalFax',
-		'PersonalPhone',
-		'PersonalMobile',
+        'PersonalEmail',
+        'PersonalAddress',
+        'PersonalCity',
+        'PersonalState',
+        'PersonalZip',
+        'PersonalCountry',
+        'PersonalWeb',
+        'PersonalFax',
+        'PersonalPhone',
+        'PersonalMobile',
 
-		'BusinessEmail',
-		'BusinessCompany',
-		'BusinessAddress',
-		'BusinessCity',
-		'BusinessState',
-		'BusinessZip',
-		'BusinessCountry',
-		'BusinessJobTitle',
-		'BusinessDepartment',
-		'BusinessOffice',
-		'BusinessPhone',
-		'BusinessFax',
-		'BusinessWeb',
+        'BusinessEmail',
+        'BusinessCompany',
+        'BusinessAddress',
+        'BusinessCity',
+        'BusinessState',
+        'BusinessZip',
+        'BusinessCountry',
+        'BusinessJobTitle',
+        'BusinessDepartment',
+        'BusinessOffice',
+        'BusinessPhone',
+        'BusinessFax',
+        'BusinessWeb',
 
-		'OtherEmail',
-		'Notes',
+        'OtherEmail',
+        'Notes',
 
-		'BirthDay',
-		'BirthMonth',
-		'BirthYear',
+        'BirthDay',
+        'BirthMonth',
+        'BirthYear',
 
-		'ETag',
-		'Auto',
-		'Frequency',
-		'DateModified',
-		'Properties'
-	];
-
-	protected $casts = [
-        'Properties' => 'array',
-		'Auto' => 'boolean',
-		'UseFriendlyName' => 'boolean'
+        'ETag',
+        'Auto',
+        'Frequency',
+        'DateModified',
+        'Properties'
     ];
 
-	protected $appends = [
-		'AgeScore'
-	];
+    protected $casts = [
+        'Properties' => 'array',
+        'Auto' => 'boolean',
+        'UseFriendlyName' => 'boolean'
+    ];
 
-	public function getAgeScoreAttribute()
-	{
-		return 0;
-	}
+    protected $appends = [
+        'AgeScore'
+    ];
 
-	public function getNotesAttribute()
-	{
-        if(is_null($this->attributes['Notes'])) {
-			$this->attributes['Notes'] = '';
-	   }
+    public function getAgeScoreAttribute()
+    {
+        return 0;
+    }
 
-	   return $this->attributes['Notes'];
-	}
+    public function getNotesAttribute()
+    {
+        if (is_null($this->attributes['Notes'])) {
+            $this->attributes['Notes'] = '';
+        }
 
-	/**
-	 * Adds groups to contact. Groups are specified by names.
-	 * @param array $aGroupNames List of group names.
-	 */
-	protected function addGroupsFromNames($aGroupNames)
-	{
-		$aNonExistingGroups = [];
-		if (is_array($aGroupNames) && count($aGroupNames) > 0)
-		{
-			$oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
-			$oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
-			if ($oApiContactsManager)
-			{
-				foreach($aGroupNames as $sGroupName)
-				{
-					$oGroups = $oApiContactsManager->getGroups($this->IdUser, Group::firstWhere('Name', $sGroupName));
-					if ($oGroups && count($oGroups) > 0)
-					{
-						$this->Groups()->sync(
-							$oGroups->map(function ($oGroup) {
-								return $oGroup->Id;
-							})->toArray(), 
-							false
-						);
-					}
+        return $this->attributes['Notes'];
+    }
 
-					// Group shouldn't be created here.
-					// Very often after this populating contact will never be created.
-					// It can be used only for suggestion to create.
-					elseif (!empty($sGroupName))
-					{
-						$oGroup = new Group();
-						$oGroup->IdUser = $this->IdUser;
-						$oGroup->Name = $sGroupName;
-						$aNonExistingGroups[] = $oGroup;
-					}
-				}
-			}
-		}
+    /**
+     * Adds groups to contact. Groups are specified by names.
+     * @param array $aGroupNames List of group names.
+     */
+    protected function addGroupsFromNames($aGroupNames)
+    {
+        $aNonExistingGroups = [];
+        if (is_array($aGroupNames) && count($aGroupNames) > 0) {
+            $oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
+            $oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
+            if ($oApiContactsManager) {
+                foreach ($aGroupNames as $sGroupName) {
+                    $oGroups = $oApiContactsManager->getGroups($this->IdUser, Group::firstWhere('Name', $sGroupName));
+                    if ($oGroups && count($oGroups) > 0) {
+                        $this->Groups()->sync(
+                            $oGroups->map(function ($oGroup) {
+                                return $oGroup->Id;
+                            })->toArray(),
+                            false
+                        );
+                    }
 
-		return $aNonExistingGroups;
-	}
+                    // Group shouldn't be created here.
+                    // Very often after this populating contact will never be created.
+                    // It can be used only for suggestion to create.
+                    elseif (!empty($sGroupName)) {
+                        $oGroup = new Group();
+                        $oGroup->IdUser = $this->IdUser;
+                        $oGroup->Name = $sGroupName;
+                        $aNonExistingGroups[] = $oGroup;
+                    }
+                }
+            }
+        }
 
-	/**
-	 * Add group to contact.
-	 * @param string $sGroupUUID Group UUID.
-	 */
-	public function addGroups($aGroupUUIDs, $aGroupNames, $bCreateNonExistingGroups = false)
-	{
-		if (isset($aGroupUUIDs) && is_array($aGroupUUIDs)) {
-			$this->Groups()->sync(Group::whereIn('UUID', $aGroupUUIDs)
-				->get()->map(function ($oGroup) {
-					return $oGroup->Id;
-				}
-			)->toArray());
-		}
-		$aNonExistingGroups = [];
-		if (isset($aGroupNames))
-		{
-			$aNonExistingGroups = $this->addGroupsFromNames($aGroupNames);
-		}
+        return $aNonExistingGroups;
+    }
 
-		if ($bCreateNonExistingGroups && is_array($aNonExistingGroups) && count($aNonExistingGroups) > 0) {
-			$oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
-			$oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
-			if ($oApiContactsManager) {
-				$oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
-				$oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
-				if ($oApiContactsManager) {
-					$aGroupIds = [];
-					foreach($aNonExistingGroups as $oGroup)
-					{
-						$oApiContactsManager->createGroup($oGroup);
-						$aGroupIds[] = $oGroup->Id;
-					}
-					if (count($aGroupIds) > 0) {
-						$this->Groups()->sync($aGroupIds, false);
-					}
-				}
-			}
-		}
-	}
+    /**
+     * Add group to contact.
+     * @param string $sGroupUUID Group UUID.
+     */
+    public function addGroups($aGroupUUIDs, $aGroupNames, $bCreateNonExistingGroups = false)
+    {
+        if (isset($aGroupUUIDs) && is_array($aGroupUUIDs)) {
+            $this->Groups()->sync(Group::whereIn('UUID', $aGroupUUIDs)
+                ->get()->map(
+                    function ($oGroup) {
+                    return $oGroup->Id;
+                }
+                )->toArray());
+        }
+        $aNonExistingGroups = [];
+        if (isset($aGroupNames)) {
+            $aNonExistingGroups = $this->addGroupsFromNames($aGroupNames);
+        }
 
-	/**
-	 * Returns value of email that is specified as primary.
-	 * @return string
-	 */
-	protected function getViewEmail()
-	{
-		switch ((int) $this->PrimaryEmail)
-		{
-			default:
-			case \Aurora\Modules\Contacts\Enums\PrimaryEmail::Personal:
-				return (string) $this->PersonalEmail;
-			case \Aurora\Modules\Contacts\Enums\PrimaryEmail::Business:
-				return (string) $this->BusinessEmail;
-			case \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other:
-				return (string) $this->OtherEmail;
-		}
-	}
+        if ($bCreateNonExistingGroups && is_array($aNonExistingGroups) && count($aNonExistingGroups) > 0) {
+            $oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
+            $oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
+            if ($oApiContactsManager) {
+                $oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
+                $oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
+                if ($oApiContactsManager) {
+                    $aGroupIds = [];
+                    foreach ($aNonExistingGroups as $oGroup) {
+                        $oApiContactsManager->createGroup($oGroup);
+                        $aGroupIds[] = $oGroup->Id;
+                    }
+                    if (count($aGroupIds) > 0) {
+                        $this->Groups()->sync($aGroupIds, false);
+                    }
+                }
+            }
+        }
+    }
 
-	/**
-	 * Sets ViewEmail field.
-	 */
-	public function SetViewEmail()
-	{
-		$this->ViewEmail = $this->getViewEmail();
-	}
+    /**
+     * Returns value of email that is specified as primary.
+     * @return string
+     */
+    protected function getViewEmail()
+    {
+        switch ((int) $this->PrimaryEmail) {
+            default:
+            case \Aurora\Modules\Contacts\Enums\PrimaryEmail::Personal:
+                return (string) $this->PersonalEmail;
+            case \Aurora\Modules\Contacts\Enums\PrimaryEmail::Business:
+                return (string) $this->BusinessEmail;
+            case \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other:
+                return (string) $this->OtherEmail;
+        }
+    }
 
-	/**
-	 * Inits contacts from Vcard string.
-	 * @param int $iUserId User identifier.
-	 * @param string $sData Vcard string.
-	 * @param string $sUid Contact UUID.
-	 */
-	public function InitFromVCardStr($iUserId, $sData, $sUid = '')
-	{
-		$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserUnchecked($iUserId);
-		if ($oUser instanceof \Aurora\Modules\Core\Models\User)
-		{
-			$this->IdUser = $oUser->Id;
-			$this->IdTenant = $oUser->IdTenant;
-		}
+    /**
+     * Sets ViewEmail field.
+     */
+    public function SetViewEmail()
+    {
+        $this->ViewEmail = $this->getViewEmail();
+    }
 
-		if (!empty($sUid))
-		{
-			$this->UUID = $sUid;
-		}
+    /**
+     * Inits contacts from Vcard string.
+     * @param int $iUserId User identifier.
+     * @param string $sData Vcard string.
+     * @param string $sUid Contact UUID.
+     */
+    public function InitFromVCardStr($iUserId, $sData, $sUid = '')
+    {
+        $oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserUnchecked($iUserId);
+        if ($oUser instanceof \Aurora\Modules\Core\Models\User) {
+            $this->IdUser = $oUser->Id;
+            $this->IdTenant = $oUser->IdTenant;
+        }
 
-		$this->populate(
-			Helper::GetContactDataFromVcard(
-				\Sabre\VObject\Reader::read(
-					$sData,
-					\Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES
-				)
-			)
-		);
-	}
+        if (!empty($sUid)) {
+            $this->UUID = $sUid;
+        }
 
-	/**
-	 * Populate contact with specified data.
-	 * @param array $aContact List of contact data.
-	 */
-	public function populate($aContact, $bCreateNonExistingGroups = false)
-	{
-		$aNonExistingGroups = [];
-		$aStorageParts = \explode('-', $aContact['Storage']);
-		if (isset($aStorageParts[0]) && $aStorageParts[0] === StorageType::AddressBook) {
-			$aContact['AddressBookId'] = (int) $aStorageParts[1];
-			$aContact['Storage'] = StorageType::AddressBook;
-		}
-		parent::populate($aContact);
+        $this->populate(
+            Helper::GetContactDataFromVcard(
+                \Sabre\VObject\Reader::read(
+                    $sData,
+                    \Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES
+                )
+            )
+        );
+    }
 
-		if(!empty($aContact['UUID']))
-		{
-			$this->UUID = $aContact['UUID'];
-		}
-		else if(empty($this->UUID))
-		{
-			$this->UUID = \Sabre\DAV\UUIDUtil::getUUID();
-		}
-		$this->SetViewEmail();
+    /**
+     * Populate contact with specified data.
+     * @param array $aContact List of contact data.
+     */
+    public function populate($aContact, $bCreateNonExistingGroups = false)
+    {
+        $aNonExistingGroups = [];
+        $aStorageParts = \explode('-', $aContact['Storage']);
+        if (isset($aStorageParts[0]) && $aStorageParts[0] === StorageType::AddressBook) {
+            $aContact['AddressBookId'] = (int) $aStorageParts[1];
+            $aContact['Storage'] = StorageType::AddressBook;
+        }
+        parent::populate($aContact);
 
-		EventEmitter::getInstance()->emit('Contacts', 'PopulateContactModel', $this);
-	}
+        if (!empty($aContact['UUID'])) {
+            $this->UUID = $aContact['UUID'];
+        } elseif (empty($this->UUID)) {
+            $this->UUID = \Sabre\DAV\UUIDUtil::getUUID();
+        }
+        $this->SetViewEmail();
+
+        EventEmitter::getInstance()->emit('Contacts', 'PopulateContactModel', $this);
+    }
 
 
-	/**
-	 * Returns array with contact data.
-	 * @return array
-	 */
-	public function toResponseArray()
-	{
-//		$this->calculateETag();
+    /**
+     * Returns array with contact data.
+     * @return array
+     */
+    public function toResponseArray()
+    {
+        //		$this->calculateETag();
 
-		$aRes = parent::toResponseArray();
+        $aRes = parent::toResponseArray();
         if (is_null($aRes['Notes'])) {
             $aRes['Notes'] = '';
         }
-		$aRes['GroupUUIDs'] = $this->Groups->map(function ($oGroup) {
-			return $oGroup->UUID;
-		});
+        $aRes['GroupUUIDs'] = $this->Groups->map(function ($oGroup) {
+            return $oGroup->UUID;
+        });
 
-		foreach ($this->ExtendedInformation as $sKey => $mValue)
-		{
-			$aRes[$sKey] = $mValue;
-		}
+        foreach ($this->ExtendedInformation as $sKey => $mValue) {
+            $aRes[$sKey] = $mValue;
+        }
 
-		$aArgs = ['Contact' => $this];
-		\Aurora\System\Api::GetModule('Core')->broadcastEvent(
-			'Contacts::Contact::ToResponseArray',
-			$aArgs,
-			$aRes
-		);
+        $aArgs = ['Contact' => $this];
+        \Aurora\System\Api::GetModule('Core')->broadcastEvent(
+            'Contacts::Contact::ToResponseArray',
+            $aArgs,
+            $aRes
+        );
 
-		return $aRes;
-	}
+        return $aRes;
+    }
 
-	public function calculateETag()
-	{
-		$this->ETag = \md5(\json_encode($this));
-	}
+    public function calculateETag()
+    {
+        $this->ETag = \md5(\json_encode($this));
+    }
 
-	public function Groups()
-	{
-		return $this->belongsToMany(Group::class, 'contacts_group_contact', 'ContactId', 'GroupId');
-	}
+    public function Groups()
+    {
+        return $this->belongsToMany(Group::class, 'contacts_group_contact', 'ContactId', 'GroupId');
+    }
 
-	public function getStorageWithId() {
-		if ($this->Storage === StorageType::AddressBook) {
-			return $this->Storage . $this->AddressBookId;
-		} else {
-			return $this->Storage;
-		}
-	}
+    public function getStorageWithId()
+    {
+        if ($this->Storage === StorageType::AddressBook) {
+            return $this->Storage . $this->AddressBookId;
+        } else {
+            return $this->Storage;
+        }
+    }
 }

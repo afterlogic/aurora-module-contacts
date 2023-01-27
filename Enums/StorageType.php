@@ -4,22 +4,22 @@ namespace Aurora\Modules\Contacts\Enums;
 
 class StorageType extends \Aurora\System\Enums\AbstractEnumeration
 {
-	const Personal = 'personal';
-	const Collected = 'collected';
-	const Team = 'team';
-	const Shared = 'shared';
-	const All = 'all';
-	const AddressBook = 'addressbook';
+    public const Personal = 'personal';
+    public const Collected = 'collected';
+    public const Team = 'team';
+    public const Shared = 'shared';
+    public const All = 'all';
+    public const AddressBook = 'addressbook';
 
-	/**
-	 * @var array
-	 */
-	protected $aConsts = [
-		'Personal' => self::Personal,
-		'Collected' => self::Collected,
-		'Team' => self::Team,
-		'Shared' => self::Shared,
-		'All' => self::All,
-		'AddressBook' => self::AddressBook
-	];
+    /**
+     * @var array
+     */
+    protected $aConsts = [
+        'Personal' => self::Personal,
+        'Collected' => self::Collected,
+        'Team' => self::Team,
+        'Shared' => self::Shared,
+        'All' => self::All,
+        'AddressBook' => self::AddressBook
+    ];
 }

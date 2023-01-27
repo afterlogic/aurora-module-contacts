@@ -14,9 +14,8 @@ class CreateContactsFulltextIndexes extends Migration
     public function up()
     {
         $prefix = Capsule::connection()->getTablePrefix();
-        
-        Capsule::schema()->table('contacts', function(Blueprint $table) use ($prefix)
-        {
+
+        Capsule::schema()->table('contacts', function (Blueprint $table) use ($prefix) {
             $table->index('Storage');
             $table->index('Frequency');
 
@@ -40,8 +39,7 @@ class CreateContactsFulltextIndexes extends Migration
             );
         });
 
-        Capsule::schema()->table('contacts_groups', function(Blueprint $table) use ($prefix)
-        {
+        Capsule::schema()->table('contacts_groups', function (Blueprint $table) use ($prefix) {
             Capsule::statement(
                 "CREATE FULLTEXT INDEX contacts_groups_name_index ON {$prefix}contacts_groups (Name)"
             );
@@ -55,8 +53,7 @@ class CreateContactsFulltextIndexes extends Migration
      */
     public function down()
     {
-        Capsule::schema()->table('contacts', function (Blueprint $table)
-        {
+        Capsule::schema()->table('contacts', function (Blueprint $table) {
             $table->dropIndex(['Storage']);
             $table->dropIndex(['Frequency']);
             $table->dropIndex(['FullName']);
@@ -67,8 +64,7 @@ class CreateContactsFulltextIndexes extends Migration
             $table->dropIndex(['OtherEmail']);
         });
 
-        Capsule::schema()->table('contacts_groups', function (Blueprint $table)
-        {
+        Capsule::schema()->table('contacts_groups', function (Blueprint $table) {
             $table->dropIndex(['Name']);
         });
     }

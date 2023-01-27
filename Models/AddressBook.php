@@ -22,19 +22,19 @@ namespace Aurora\Modules\Contacts\Models;
  */
 
 use Aurora\Modules\Core\Models\User;
-use \Aurora\System\Classes\Model;
+use Aurora\System\Classes\Model;
 
 class AddressBook extends Model
 {
     public $table = 'contacts_addressbooks';
 
-	protected $foreignModel = User::class;
-	protected $foreignModelIdColumn = 'UserId'; // Column that refers to an external table
+    protected $foreignModel = User::class;
+    protected $foreignModelIdColumn = 'UserId'; // Column that refers to an external table
 
-	protected $fillable = [
-		'Id',
+    protected $fillable = [
+        'Id',
         'UUID',
-		'UserId',
-		'Name'
-	];
+        'UserId',
+        'Name'
+    ];
 }

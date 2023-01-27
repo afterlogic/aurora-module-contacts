@@ -19,15 +19,15 @@ namespace Aurora\Modules\Contacts\Models;
  * @property string $ContactUUID
  */
 
-use \Aurora\System\Classes\Model;
+use Aurora\System\Classes\Model;
 
 class GroupEvent extends Model
 {
-	public $table = 'contacts_group_events';
-	protected $fillable = [
-		'Id',
-		'GroupUUID',
-		'CalendarUUID',
-		'EventUUID'
-	];
+    public $table = 'contacts_group_events';
+    protected $fillable = [
+        'Id',
+        'GroupUUID',
+        'CalendarUUID',
+        'EventUUID'
+    ];
 }

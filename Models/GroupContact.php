@@ -19,19 +19,19 @@ namespace Aurora\Modules\Contacts\Models;
  * @property string $ContactUUID
  */
 
-use \Aurora\System\Classes\Model;
+use Aurora\System\Classes\Model;
 use Aurora\Modules\Contacts\Models\Group;
 
 class GroupContact extends Model
 {
     public $table = 'contacts_group_contact';
-	protected $foreignModel = Group::class;
-	protected $foreignModelIdColumn = 'GroupId'; // Column that refers to an external table
+    protected $foreignModel = Group::class;
+    protected $foreignModelIdColumn = 'GroupId'; // Column that refers to an external table
 
-	protected $fillable = [
-		'Id',
-		'UUID',
-		'GroupId',
-		'ContactId'
-	];
+    protected $fillable = [
+        'Id',
+        'UUID',
+        'GroupId',
+        'ContactId'
+    ];
 }

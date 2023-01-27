@@ -13,25 +13,21 @@ class CreateContactsIndexes extends Migration
      */
     public function up()
     {
-        Capsule::schema()->table('contacts', function(Blueprint $table)
-        {
+        Capsule::schema()->table('contacts', function (Blueprint $table) {
             $table->index('IdUser');
             $table->index('IdTenant');
             $table->index('UUID');
         });
 
-        Capsule::schema()->table('contacts_groups', function(Blueprint $table)
-        {
+        Capsule::schema()->table('contacts_groups', function (Blueprint $table) {
             $table->index('IdUser');
         });
 
-        Capsule::schema()->table('contacts_addressbooks', function(Blueprint $table)
-        {
+        Capsule::schema()->table('contacts_addressbooks', function (Blueprint $table) {
             $table->index('UserId');
         });
 
-        Capsule::schema()->table('contacts_ctags', function(Blueprint $table)
-        {
+        Capsule::schema()->table('contacts_ctags', function (Blueprint $table) {
             $table->index('UserId');
         });
     }
@@ -43,25 +39,21 @@ class CreateContactsIndexes extends Migration
      */
     public function down()
     {
-        Capsule::schema()->table('contacts', function (Blueprint $table)
-        {
+        Capsule::schema()->table('contacts', function (Blueprint $table) {
             $table->dropIndex(['IdUser']);
             $table->dropIndex(['IdTenant']);
             $table->dropIndex(['UUID']);
         });
 
-        Capsule::schema()->table('contacts_groups', function (Blueprint $table)
-        {
+        Capsule::schema()->table('contacts_groups', function (Blueprint $table) {
             $table->dropIndex(['IdUser']);
         });
 
-        Capsule::schema()->table('contacts_addressbooks', function (Blueprint $table)
-        {
+        Capsule::schema()->table('contacts_addressbooks', function (Blueprint $table) {
             $table->dropIndex(['UserId']);
         });
 
-        Capsule::schema()->table('contacts_ctags', function (Blueprint $table)
-        {
+        Capsule::schema()->table('contacts_ctags', function (Blueprint $table) {
             $table->dropIndex(['UserId']);
         });
     }
