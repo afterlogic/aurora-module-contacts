@@ -2058,7 +2058,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $this->getManager()->deleteGroupsByUserId($aArgs['UserId']);
         $this->getManager()->deleteCTagsByUserId($aArgs['UserId']);
         $this->getManager()->deleteContactsByUserId($aArgs['UserId']);
-        $this->DeleteUsersAddressBooks($aArgs['UserId']);
+        AddressBook::where('UserId', $aArgs['UserId'])->delete();
     }
 
     public function onCreateOrUpdateEvent(&$aArgs)
