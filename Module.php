@@ -154,7 +154,8 @@ class Module extends \Aurora\System\Module\AbstractModule
             'SortField' => (new Enums\SortField())->getMap(),
             'ImportExportFormats' => $this->aImportExportFormats,
             'SaveVcfServerModuleName' => \Aurora\System\Api::GetModuleManager()->ModuleExists('DavContacts') ? 'DavContacts' : '',
-            'ContactsPerPage' => $this->getConfig('ContactsPerPage', 20)
+            'ContactsPerPage' => $this->getConfig('ContactsPerPage', 20),
+            'ContactsSortBy' => $this->getConfig('ContactsSortBy', [])
         ];
 
         if ($oUser && $oUser->isNormalOrTenant()) {

@@ -38,5 +38,22 @@
 	"AllowEditTeamContactsByTenantAdmins_Description": [
 		"Setting to true allows tenant admin to edit Team address book entries",
 		"string"
-	]
+	],
+	"ContactsSortBy": [
+        {
+            "Allow": true,
+            "DisplayOptions": [
+                "DisplayName",
+                "Email",
+                "Frequency"
+            ],
+            "DefaultSortBy": "DisplayName",
+            "DefaultSortOrder": "Asc"
+        },
+        "array"
+    ],
+    "ContactsSortBy_Description": [
+        "Defines a set of rules for sorting contacts. DisplayName|Email|Frequency|FirstName|LastName",
+        "string"
+    ]
 }
