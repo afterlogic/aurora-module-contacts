@@ -195,6 +195,15 @@ class Manager extends \Aurora\System\Managers\AbstractManager
                 $sSortField = 'AgeScore';
                 $oFilters->select(Capsule::connection()->raw('*, (Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, DateModified)/30)) as AgeScore'));
                 break;
+            case SortField::FirstName:
+                $sSortField = 'FirstName';
+                break;
+            case SortField::LastName:
+                $sSortField = 'LastName';
+                break;
+            case SortField::DisplayName:
+                $sSortField = 'FullName';
+                break;
         }
         if ($iOffset > 0) {
             $oFilters->offset($iOffset);
