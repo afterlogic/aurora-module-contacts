@@ -9,7 +9,6 @@ class SortField extends \Aurora\System\Enums\AbstractEnumeration
     public const Frequency = 3;
     public const FirstName = 4;
     public const LastName = 5;
-    public const DisplayName = 6;
 
     /**
      * @var array
@@ -19,7 +18,6 @@ class SortField extends \Aurora\System\Enums\AbstractEnumeration
         'Email' => self::Email,
         'Frequency' => self::Frequency,
         'FirstName' => self::FirstName,
-        'LastName' => self::LastName,
-        'DisplayName' => self::DisplayName,
+        'LastName' => self::LastName
     ];
 }
