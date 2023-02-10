@@ -41,19 +41,18 @@
 	],
 	"ContactsSortBy": [
         {
-            "Allow": true,
+            "Allow": false,
             "DisplayOptions": [
-                "DisplayName",
-                "Email",
-                "Frequency"
+                "Name",
+                "Email"
             ],
-            "DefaultSortBy": "DisplayName",
+            "DefaultSortBy": "Name",
             "DefaultSortOrder": "Asc"
         },
         "array"
     ],
     "ContactsSortBy_Description": [
-        "Defines a set of rules for sorting contacts. DisplayName|Email|Frequency|FirstName|LastName",
+        "Defines a set of rules for sorting contacts. Name|Email|Frequency|FirstName|LastName. DefaultSortOrder - Asc|Desc",
         "string"
     ]
 }

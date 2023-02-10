@@ -201,7 +201,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
             case SortField::LastName:
                 $sSortField = 'LastName';
                 break;
-            case SortField::DisplayName:
+            case SortField::Name:
                 $sSortField = 'FullName';
                 break;
         }
