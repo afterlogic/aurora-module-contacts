@@ -663,24 +663,15 @@ class Module extends \Aurora\System\Module\AbstractModule
             }
         }
         if (!empty($Search)) {
-            if ($SortField === Enums\SortField::Frequency) {
-                $oQuery = $oQuery->where(function ($query) use ($Search) {
-                    $query->orWhere('FullName', 'LIKE', '%'.$Search.'%')
-                    ->orWhere('ViewEmail', 'LIKE', '%'.$Search.'%')
-                    ->orWhere('BusinessCompany', 'LIKE', '%'.$Search.'%');
-                });
-            } else {
-                $oQuery = $oQuery->where(function ($query) use ($Search) {
-                    $query->where('FullName', 'LIKE', '%'.$Search.'%')
-                    ->orWhere('ViewEmail', 'LIKE', '%'.$Search.'%')
-                    ->orWhere('PersonalEmail', 'LIKE', '%'.$Search.'%')
-                    ->orWhere('BusinessEmail', 'LIKE', '%'.$Search.'%')
-                    ->orWhere('OtherEmail', 'LIKE', '%'.$Search.'%')
-                    ->orWhere('BusinessCompany', 'LIKE', '%'.$Search.'%');
-                });
-            }
+            $oQuery = $oQuery->where(function ($query) use ($Search) {
+                $query->where('FullName', 'LIKE', '%'.$Search.'%')
+                ->orWhere('ViewEmail', 'LIKE', '%'.$Search.'%')
+                ->orWhere('PersonalEmail', 'LIKE', '%'.$Search.'%')
+                ->orWhere('BusinessEmail', 'LIKE', '%'.$Search.'%')
+                ->orWhere('OtherEmail', 'LIKE', '%'.$Search.'%')
+                ->orWhere('BusinessCompany', 'LIKE', '%'.$Search.'%');
+            });
         }
-
 
         $aGroupUsersList = [];
 
