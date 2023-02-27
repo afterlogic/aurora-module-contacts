@@ -347,7 +347,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
         $mResult = !!Contact::whereIn('UUID', $aContactUUIDs)->delete();
 
         if ($mResult) {
-            $oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserUnchecked($iIdUser);
+            $oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserWithoutRoleCheck($iIdUser);
             if ($oUser instanceof \Aurora\Modules\Core\Models\User) {
                 $iIdUser = $sStorage === StorageType::Personal || $sStorage === StorageType::AddressBook ? $oUser->Id : $oUser->IdTenant;
             }

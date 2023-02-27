@@ -217,7 +217,7 @@ class Contact extends Model
      */
     public function InitFromVCardStr($iUserId, $sData, $sUid = '')
     {
-        $oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserUnchecked($iUserId);
+        $oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserWithoutRoleCheck($iUserId);
         if ($oUser instanceof \Aurora\Modules\Core\Models\User) {
             $this->IdUser = $oUser->Id;
             $this->IdTenant = $oUser->IdTenant;
