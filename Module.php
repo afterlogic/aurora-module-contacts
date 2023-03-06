@@ -1172,9 +1172,10 @@ class Module extends \Aurora\System\Module\AbstractModule
             1,
             $oQuery
         );
-        if (is_array($oAutocreatedContacts) && isset($oAutocreatedContacts[0])) {
-            $iFrequency = $oAutocreatedContacts[0]->Frequency;
-            $this->getManager()->deleteContacts($UserId, $sStorage, [$oAutocreatedContacts[0]->UUID]);
+        $oContact = $oAutocreatedContacts->first();
+        if ($oContact instanceof Contact) {
+            $iFrequency = $oContact->Frequency;
+            $this->getManager()->deleteContacts($UserId, $sStorage, [$oContact->UUID]);
             $this->getManager()->updateCTag($UserId, $sStorage);
         }
         return $iFrequency;
