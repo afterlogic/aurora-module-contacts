@@ -1853,12 +1853,12 @@ class Module extends \Aurora\System\Module\AbstractModule
         Api::CheckAccess($UserId);
 
         $aResult = [];
-        $aEvents = $this->_getGroupEvents($UUID);
-        if (is_array($aEvents) && 0 < count($aEvents)) {
-            foreach ($aEvents as $oEvent) {
+        $oGroupEventsColl = $this->_getGroupEvents($UUID);
+        if ($oGroupEventsColl->count() > 0) {
+            foreach ($oGroupEventsColl as $oGroupEvent) {
                 $oCalendarModule = Api::GetModule('Calendar');
                 if ($oCalendarModule) {
-                    $aResult[] = $oCalendarModule->GetBaseEvent($UserId, $oEvent->CalendarUUID, $oEvent->EventUUID);
+                    $aResult[] = $oCalendarModule->GetBaseEvent($UserId, $oGroupEvent->CalendarUUID, $oGroupEvent->EventUUID);
                 }
             }
         }
@@ -2086,13 +2086,13 @@ class Module extends \Aurora\System\Module\AbstractModule
     /**
      * @param string $sGroupUUID
      *
-     * @return bool
+     * @return mixed
      */
     protected function _getGroupEvents($sGroupUUID)
     {
         $mResult = false;
         try {
-            $mResult = \Aurora\Modules\Contacts\Models\GroupEvent::where(['GroupUUID' => $sGroupUUID])->get();
+            $mResult = Models\GroupEvent::where(['GroupUUID' => $sGroupUUID])->get();
         } catch (\Aurora\System\Exceptions\BaseException $oException) {
             $mResult = false;
         }
@@ -2191,16 +2191,9 @@ class Module extends \Aurora\System\Module\AbstractModule
     {
         $mResult = false;
         try {
-            $mResult = \Aurora\Modules\Contacts\Models\GroupEvent::where('CalendarUUID', $sCalendarUUID)
-                ->where('EventUUID', $sEventUUID)->first();
+            Models\GroupEvent::where('CalendarUUID', $sCalendarUUID)
+                ->where('EventUUID', $sEventUUID)->delete();
 
-            if (is_array($mResult)) {
-                foreach ($mResult as $oGroupEvent) {
-                    if ($mResult instanceof Models\GroupEvent) {
-                        $mResult->delete();
-                    }
-                }
-            }
             $mResult = true;
         } catch (\Aurora\System\Exceptions\BaseException $oException) {
             $mResult = false;
