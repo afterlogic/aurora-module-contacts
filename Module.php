@@ -1435,7 +1435,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         if (is_array($Group)) {
             \Aurora\System\Validator::validate($Group, [
                 'Name'	=>	'required'
-            ]);
+            ], ['required' => 'The :attribute field is required.']);
 
             $oGroup = new Models\Group();
             $oGroup->IdUser = (int) $UserId;
