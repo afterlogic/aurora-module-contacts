@@ -180,6 +180,28 @@ class Module extends \Aurora\System\Module\AbstractModule
         return $this->Decorator()->GetStorages();
     }
 
+    public function GetStorageDisplayName($Storage)
+    {
+        $result = '';
+        
+        switch($Storage) {
+            case Enums\StorageType::All:
+                $result = $this->i18N('LABEL_STORAGE_ALL');
+                break;
+            case Enums\StorageType::Personal:
+                $result = $this->i18N('LABEL_STORAGE_PERSONAL');
+                break;
+            case Enums\StorageType::Team:
+                $result = $this->i18N('LABEL_STORAGE_TEAM');
+                break;
+            case Enums\StorageType::Shared:
+                $result = $this->i18N('LABEL_STORAGE_SHARED');
+                break;
+        }
+
+        return $result;
+    }
+
     public function GetStorages()
     {
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
@@ -196,7 +218,8 @@ class Module extends \Aurora\System\Module\AbstractModule
                 'Id' => $sStorageName,
                 'CTag' => $this->Decorator()->GetCTag($iUserId, $sStorageName),
                 'Display' => $this->Decorator()->IsDisplayedStorage($sStorageName),
-                'Order' => $iIndex
+                'Order' => $iIndex,
+                'DisplayName' => $this->Decorator()->GetStorageDisplayName($sStorageName)
             ];
         }
 
@@ -339,11 +362,15 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $sOutput = '';
 
-        if (empty($GroupUUID) && $Format === 'vcf') {
+        if (empty($GroupUUID) && count($ContactUUIDs) === 0 && $Format === 'vcf') {
             $aGroups = $this->getManager()->getGroups($UserId);
             foreach ($aGroups as $oGroup) {
-                $oVCard = new \Sabre\VObject\Component\VCard();
-                \Aurora\Modules\Contacts\Classes\VCard\Helper::UpdateVCardFromGroup($oGroup, $oVCard);
+                $oVCard = new \Sabre\VObject\Component\VCard(); 
+                $oVCard->VERSION = '3.0';
+                $oVCard->UID = $oGroup->UUID;
+                $oVCard->FN = $oGroup->Name;
+                $oVCard->{'X-ADDRESSBOOKSERVER-KIND'} = 'GROUP';
+
                 foreach ($oGroup->Contacts as $oContact) {
                     if ($oContact) {
                         $sVCardUID = null;
@@ -390,17 +417,25 @@ class Module extends \Aurora\System\Module\AbstractModule
                 break;
             case 'vcf':
                 foreach ($aContacts as $oContact) {
-                    //						$oContact->GroupsContacts = $this->getManager()->getGroupContacts(null, $oContact->UUID);
-
                     $sOutput .= self::Decorator()->GetContactAsVCF($UserId, $oContact);
                 }
                 break;
         }
 
         if (is_string($sOutput) && !empty($sOutput)) {
+
+            $fileName = 'export';
+            $aStorages = self::Decorator()->GetStorages();
+            foreach ($aStorages as $aStorage) {
+                if ($aStorage['Id'] === $Storage) {
+                    $fileName = isset($aStorage['DisplayName']) ? $aStorage['DisplayName'] : $aStorage['Id'];
+                    break;
+                }
+            }
+
             header('Pragma: public');
             header('Content-Type: text/csv');
-            header('Content-Disposition: attachment; filename="export.' . $Format . '";');
+            header('Content-Disposition: attachment; filename="' . $fileName . '.' . $Format . '";');
             header('Content-Transfer-Encoding: binary');
         }
 
@@ -1447,7 +1482,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
             if (isset($Group['Contacts']) && is_array($Group['Contacts'])) {
                 $oGroup->Contacts()->sync(
-                    Models\Contact::whereIn('UUID', $Group['Contacts'])->get()
+                    Models\Contact::where('IdUser', $oGroup->IdUser)->whereIn('UUID', $Group['Contacts'])->get()
                      ->map(function ($oContact) {
                          return $oContact->Id;
                      })
@@ -1970,27 +2005,47 @@ class Module extends \Aurora\System\Module\AbstractModule
         $oContactsDecorator = Module::Decorator();
         $oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
         if ($oApiContactsManager) {
+            $aGroupsData = [];
+            $aContactsData = [];
             while ($oVCard = $oSplitter->getNext()) {
                 set_time_limit(30);
 
-                $aContactData = Classes\VCard\Helper::GetContactDataFromVcard($oVCard);
-                $oContact = isset($aContactData['UUID']) ? $oApiContactsManager->getContact($aContactData['UUID']) : null;
-                $aImportResult['ParsedCount']++;
-                if (!isset($oContact) || empty($oContact)) {
-                    if (isset($sStorage)) {
-                        $aContactData['Storage'] = $sStorage;
-                        // $aStorageParts = \explode('-', $sStorage);
-                        // if (count($aStorageParts) === 2 && $aStorageParts[0] === StorageType::AddressBook) {
-                        // 	$aContactData['Storage'] = StorageType::AddressBook;
-                        // 	$aContactData['AddressBookId'] = $aStorageParts[1];
-                        // }
-                    }
-                    $CreatedContactData = $oContactsDecorator->CreateContact($aContactData, $iUserId);
-                    if ($CreatedContactData) {
-                        $aImportResult['ImportedCount']++;
-                        $aImportResult['ImportedUids'][] = $CreatedContactData['UUID'];
+                if ((isset($oVCard->KIND) && (string) $oVCard->KIND === 'GROUP') ||
+                    (isset($oVCard->{'X-ADDRESSBOOKSERVER-KIND'}) && (string) $oVCard->{'X-ADDRESSBOOKSERVER-KIND'} === 'GROUP')) {
+                    $aGroupsData[] = Classes\VCard\Helper::GetGroupDataFromVcard($oVCard);
+                } else {
+                    $aContactData = Classes\VCard\Helper::GetContactDataFromVcard($oVCard);
+                    $oContact = isset($aContactData['UUID']) ? $oApiContactsManager->getContact($aContactData['UUID']) : null;
+                    $aImportResult['ParsedCount']++;
+                    if (!isset($oContact) || empty($oContact)) {
+                        if (isset($sStorage)) {
+                            $aContactData['Storage'] = $sStorage;
+                        }
+                        $aContactsData[(string) $oVCard->UID] = $aContactData;
                     }
                 }
+            }
+
+            foreach ($aContactsData as $key => $aContactData) {
+                $CreatedContactData = $oContactsDecorator->CreateContact($aContactData, $iUserId);
+                if ($CreatedContactData) {
+                    $aImportResult['ImportedCount']++;
+                    $aImportResult['ImportedUids'][] = $CreatedContactData['UUID'];
+                    $aContactsData[$key]['NewUUID'] = $CreatedContactData['UUID'];
+                }
+            }
+
+            foreach ($aGroupsData as $aGroupData) {
+                if (isset($aGroupData['Contacts'])) {
+                    $aUuids = $aGroupData['Contacts'];
+                    $aGroupData['Contacts'] = [];
+                    foreach ($aUuids as $value) {
+                        if (isset($aContactsData[$value])) {
+                            $aGroupData['Contacts'][] = $aContactsData[$value]['NewUUID'];
+                        }
+                    }
+                }
+                $oContactsDecorator->CreateGroup($aGroupData, $iUserId);
             }
         }
         return $aImportResult;
