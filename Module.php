@@ -183,7 +183,7 @@ class Module extends \Aurora\System\Module\AbstractModule
     public function GetStorageDisplayName($Storage)
     {
         $result = '';
-        
+
         switch($Storage) {
             case Enums\StorageType::All:
                 $result = $this->i18N('LABEL_STORAGE_ALL');
@@ -2075,10 +2075,10 @@ class Module extends \Aurora\System\Module\AbstractModule
         foreach ($aAddresses as $sEmail => $sName) {
             $oContact = $this->getManager()->getContactByEmail($iUserId, $sEmail);
             if ($oContact) {
-                if ($oContact->Frequency !== -1) {
+                // if ($oContact->Frequency !== -1) {
                     $oContact->Frequency = $oContact->Frequency + 1;
                     $this->getManager()->updateContact($oContact);
-                }
+                // }
             } else {
                 self::Decorator()->CreateContact([
                     'FullName' => $sName,
