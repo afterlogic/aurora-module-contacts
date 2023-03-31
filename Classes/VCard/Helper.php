@@ -202,7 +202,6 @@ class Helper
         return $aContact;
     }
 
-
     public static function GetGroupDataFromVcard($oVCard, $sUUID = '')
     {
         $aGroup = [];
