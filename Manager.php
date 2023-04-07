@@ -7,7 +7,6 @@
 
 namespace Aurora\Modules\Contacts;
 
-use Aurora\Modules\Contacts\Classes\CTag;
 use Aurora\Modules\Contacts\Enums\SortField;
 use Aurora\Modules\Contacts\Enums\StorageType;
 use Aurora\Modules\Contacts\Models\Group;
@@ -45,7 +44,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
     /**
      *
      * @param string $sEmail
-     * @return \Aurora\Modules\Contacts\Classes\Contact
+     * @return \Aurora\Modules\Contacts\Models\Contact
      */
     public function getContactByEmail($iUserId, $sEmail)
     {
@@ -72,7 +71,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
      *
      * @param string $sName Group name
      *
-     * @return \Aurora\Modules\Contacts\Classes\Group
+     * @return \Aurora\Modules\Contacts\Models\Group
      */
     public function getGroupByName($sName, $iUserId)
     {
@@ -83,7 +82,6 @@ class Manager extends \Aurora\System\Managers\AbstractManager
      * Updates contact information. Using this method is required to finalize changes made to the contact object.
      *
      * @param \Aurora\Modules\Contacts\Models\Contact $oContact  Contact object to be updated
-     * @param bool $bUpdateFromGlobal
      *
      * @return bool
      */
@@ -106,7 +104,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
     /**
      * Updates group information. Using this method is required to finalize changes made to the group object.
      *
-     * @param \Aurora\Modules\Contacts\Classes\Group $oGroup
+     * @param \Aurora\Modules\Contacts\Models\Group $oGroup
      *
      * @return bool
      */
@@ -131,12 +129,8 @@ class Manager extends \Aurora\System\Managers\AbstractManager
     /**
      * Returns list of contacts which match the specified criteria
      *
-     * @param int $iUserId User ID
-     * @param string $sSearch Search pattern. Default value is empty string.
-     * @param string $sFirstCharacter If specified, will only return contacts with names starting from the specified character. Default value is empty string.
+     * @param Builder $Filters User
      * @param string $sGroupUUID. Default value is **''**.
-     * @param int $iTenantId Group ID. Default value is null.
-     * @param bool $bAll Default value is null
      *
      * @return int
      */
@@ -175,7 +169,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
      * @param Builder $oFilters
      * @param array $aViewAttrs
      *
-     * @return array|bool
+     * @return \Illuminate\Database\Eloquent\Collection|bool
      */
     public function getContacts(
         $iSortField = SortField::Name,
@@ -217,7 +211,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
             ->get();
     }
 
-        /**
+    /**
      * Returns list of contacts within specified range, sorted according to specified requirements.
      *
      * @param int $iSortField Sort field. Accepted values:
@@ -273,8 +267,9 @@ class Manager extends \Aurora\System\Managers\AbstractManager
      * Returns list of user's groups.
      *
      * @param int $iUserId User ID
+     * @param Builder $oFilters
      *
-     * @return array|bool
+     * @return \Illuminate\Database\Eloquent\Collection|bool
      */
     public function getGroups($iUserId, $oFilters = null)
     {
@@ -368,6 +363,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
         $oQuery = Group::whereIn('UUID', $aGroupUUIDs);
         $aGroups = $oQuery->get();
         foreach ($aGroups as $oGroup) {
+            /** @phpstan-ignore-next-line */
             foreach ($oGroup->Contacts as $oContact) {
                 if ($oContact->Storage === StorageType::Personal || $oContact->Storage === StorageType::AddressBook) {
                     $this->updateCTag($oContact->IdUser, $oContact->getStorageWithId());
@@ -475,6 +471,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
     {
         $oCTag = $this->getCTag($iUserId, $Storage);
         if ($oCTag instanceof Models\CTag) {
+            /** @phpstan-ignore-next-line */
             $oCTag->increment('CTag');
         } else {
             $oCTag = new Models\CTag();

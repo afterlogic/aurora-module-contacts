@@ -110,7 +110,7 @@ class ContactListItem
     public $SharedToAll;
 
     /**
-     * @var unt
+     * @var int
      */
     public $LastModified;
 
@@ -152,7 +152,7 @@ class ContactListItem
     }
 
     /**
-     * @param \Sabre\CardDAV\Card $oVCard
+     * @param \Sabre\VObject\Component\VCard $oVCard
      */
     public function InitBySabreCardDAVCard($oVCard)
     {
@@ -169,6 +169,7 @@ class ContactListItem
                 }
 
                 if (isset($oVCard->EMAIL)) {
+                    /** @phpstan-ignore-next-line */
                     $this->Email = (string)$oVCard->EMAIL[0];
                     foreach ($oVCard->EMAIL as $oEmail) {
                         if ($oTypes = $oEmail['TYPE']) {

@@ -8,6 +8,7 @@
 namespace Aurora\Modules\Contacts\Classes\VCard;
 
 use Aurora\Modules\Contacts\Enums\StorageType;
+use Sabre\VObject\Property;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -238,7 +239,7 @@ class Helper
 
 
     /**
-    * @param \Aurora\Modules\Contacts\Classes\Contact $oContact
+    * @param \Aurora\Modules\Contacts\Models\Contact $oContact
     * @param \Sabre\VObject\Component $oVCard
     * @return void
     */
@@ -287,7 +288,7 @@ class Helper
                 if ($oTypes = $oAdr['TYPE']) {
                     if ($oTypes->has('HOME')) {
                         if ($bFindHome) {
-                            unset($oAdr);
+                            continue;
                         } else {
                             $oAdr->setValue($sADRHome);
                             $bFindHome = true;
@@ -295,16 +296,14 @@ class Helper
                     }
                     if ($oTypes->has('WORK')) {
                         if ($bFindWork) {
-                            unset($oAdr);
+                            continue;
                         } else {
                             $oAdr->setValue($sADRWork);
                             $bFindWork = true;
                         }
                     }
                 }
-                if (isset($oAdr)) {
-                    $oVCard->add($oAdr);
-                }
+                $oVCard->add($oAdr);
             }
         }
 
@@ -317,7 +316,7 @@ class Helper
     }
 
     /**
-    * @param \Aurora\Modules\Contacts\Classes\Contact $oContact
+    * @param \Aurora\Modules\Contacts\Models\Contact $oContact
     * @param \Sabre\VObject\Component\VCard $oVCard
     * @return void
     */
@@ -416,7 +415,7 @@ class Helper
     }
 
     /**
-    * @param \Aurora\Modules\Contacts\Classes\Contact $oContact
+    * @param \Aurora\Modules\Contacts\Models\Contact $oContact
     * @param \Sabre\VObject\Component $oVCard
     * @return void
     */
@@ -437,7 +436,7 @@ class Helper
                 if ($oTypes = $oUrl['TYPE']) {
                     if ($oTypes->has('HOME')) {
                         if ($bFindHome) {
-                            unset($oUrl);
+                            continue;
                         } else {
                             $oUrl->setValue($oContact->PersonalWeb);
                             $bFindHome = true;
@@ -445,7 +444,7 @@ class Helper
                     }
                     if ($oTypes->has('WORK')) {
                         if ($bFindWork) {
-                            unset($oUrl);
+                            continue;
                         } else {
                             $oUrl->setValue($oContact->BusinessWeb);
                             $bFindWork = true;
@@ -464,7 +463,7 @@ class Helper
     }
 
     /**
-    * @param \Aurora\Modules\Contacts\Classes\Contact $oContact
+    * @param \Aurora\Modules\Contacts\Models\Contact $oContact
     * @param \Sabre\VObject\Component\VCard $oVCard
     * @return void
     */
@@ -501,7 +500,7 @@ class Helper
                     if ($oTypes->has('VOICE')) {
                         if ($oTypes->has('HOME')) {
                             if ($bFindHome) {
-                                unset($oTel);
+                                continue;
                             } else {
                                 $oTel->setValue($oContact->PersonalPhone);
                                 $bFindHome = true;
@@ -509,7 +508,7 @@ class Helper
                         }
                         if ($oTypes->has('WORK')) {
                             if ($bFindWork) {
-                                unset($oTel);
+                                continue;
                             } else {
                                 $oTel->setValue($oContact->BusinessPhone);
                                 $bFindWork = true;
@@ -517,7 +516,7 @@ class Helper
                         }
                         if ($oTypes->has('CELL')) {
                             if ($bFindCell) {
-                                unset($oTel);
+                                continue;
                             } else {
                                 $oTel->setValue($oContact->PersonalMobile);
                                 $bFindCell = true;
@@ -526,7 +525,7 @@ class Helper
                     } elseif ($oTypes->has('FAX')) {
                         if ($oTypes->has('HOME')) {
                             if ($bFindPersonalFax) {
-                                unset($oTel);
+                                continue;
                             } else {
                                 $oTel->setValue($oContact->PersonalFax);
                                 $bFindPersonalFax = true;
@@ -534,7 +533,7 @@ class Helper
                         }
                         if ($oTypes->has('WORK')) {
                             if ($bFindWorkFax) {
-                                unset($oTel);
+                                continue;
                             } else {
                                 $oTel->setValue($oContact->BusinessFax);
                                 $bFindWorkFax = true;
@@ -566,8 +565,8 @@ class Helper
     }
 
     /**
-    * @param \Aurora\Modules\Contacts\Classes\Contact $oContact
-    * @param \Sabre\VObject\Component $oVCard
+    * @param \Aurora\Modules\Contacts\Models\Contact $oContact
+    * @param \Sabre\VObject\Component\VCard $oVCard
     * @param bool $bIsUpdate = false
     * @return void
     */
@@ -575,6 +574,7 @@ class Helper
     {
         $oVCard->VERSION = '3.0';
 
+        /** @phpstan-ignore-next-line */
         $oVCard->UID = $oContact->{'DavContacts::VCardUID'};
 
         $oVCard->FN = $oContact->FullName;
@@ -598,7 +598,7 @@ class Helper
 
         $aCategories = [];
         foreach ($oContact->GroupsContacts as $oGroupsContact) {
-            $oContactsModule = \Aurora\System\Api::GetModuleDecorator('Contacts');
+            $oContactsModule = \Aurora\Modules\Contacts\Module::Decorator();
             $oGroup = $oContactsModule->GetGroup($oContact->IdUser, $oGroupsContact->GroupUUID);
             if ($oGroup) {
                 $aCategories[] = $oGroup->Name;
@@ -607,7 +607,10 @@ class Helper
 
         unset($oVCard->CATEGORIES);
         if (count($aCategories) > 0) {
-            $oVCard->add('CATEGORIES')->setParts($aCategories);
+            $catProp = $oVCard->add('CATEGORIES');
+            if ($catProp instanceof Property) {
+                $catProp->setParts($aCategories);
+            }
         }
 
         self::UpdateVCardAddressesFromContact($oContact, $oVCard);
@@ -623,8 +626,8 @@ class Helper
     }
 
     /**
-    * @param \Aurora\Modules\Contacts\Classes\Group $oGroup
-    * @param \Sabre\VObject\Component $oVCard
+    * @param \Aurora\Modules\Contacts\Models\Group $oGroup
+    * @param \Sabre\VObject\Component\VCard $oVCard
     * @param bool $bIsUpdate = false
     * @return void
     */

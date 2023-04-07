@@ -14,7 +14,7 @@ class AlterContactsTable extends Migration
     public function up()
     {
         $prefix = Capsule::connection()->getTablePrefix();
-        Capsule::statement("ALTER TABLE {$prefix}contacts ADD AddressBookId int(11) AFTER Storage");
+        Capsule::connection()->statement("ALTER TABLE {$prefix}contacts ADD AddressBookId int(11) AFTER Storage");
     }
 
     /**
@@ -25,6 +25,6 @@ class AlterContactsTable extends Migration
     public function down()
     {
         $prefix = Capsule::connection()->getTablePrefix();
-        Capsule::statement("ALTER TABLE {$prefix}contacts DROP COLUMN AddressBookId");
+        Capsule::connection()->statement("ALTER TABLE {$prefix}contacts DROP COLUMN AddressBookId");
     }
 }

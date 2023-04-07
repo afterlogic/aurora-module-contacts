@@ -8,15 +8,34 @@
 namespace Aurora\Modules\Contacts\Models;
 
 /**
+ * Aurora\Modules\Contacts\Models\GroupContact
+ *
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2023, Afterlogic Corp.
- *
  * @package Models
  * @subpackage GroupEvent
- *
  * @property string $GroupUUID
  * @property string $ContactUUID
+ * @property integer $Id
+ * @property string $UUID
+ * @property integer $GroupId
+ * @property integer $ContactId
+ * @property \Illuminate\Support\Carbon|null $CreatedAt
+ * @property \Illuminate\Support\Carbon|null $UpdatedAt
+ * @property-read mixed $entity_id
+ * @method static \Illuminate\Database\Eloquent\Builder|\Aurora\Modules\Contacts\Models\GroupContact firstWhere(Closure|string|array|\Illuminate\Database\Query\Expression $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
+ * @method static \Illuminate\Database\Eloquent\Builder|GroupContact newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|GroupContact newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|GroupContact query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\Aurora\Modules\Contacts\Models\GroupContact where(Closure|string|array|\Illuminate\Database\Query\Expression $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
+ * @method static \Illuminate\Database\Eloquent\Builder|GroupContact whereContactId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|GroupContact whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|GroupContact whereGroupId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|GroupContact whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\Aurora\Modules\Contacts\Models\GroupContact whereIn(string $column, mixed $values, string $boolean = 'and', bool $not = false)
+ * @method static \Illuminate\Database\Eloquent\Builder|GroupContact whereUUID($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|GroupContact whereUpdatedAt($value)
  */
 
 use Aurora\System\Classes\Model;

@@ -59,9 +59,9 @@ class Sync
 
     /**
      *
-     * @param type $iUserId
-     * @param type $sTempFilePath
-     * @param type $sGroupUUID
+     * @param int $iUserId
+     * @param string $sTempFilePath
+     * @param string|null $sGroupUUID
      * @return boolean
      */
     public function Import($iUserId, $sTempFilePath, $sGroupUUID, $sStorage = null)

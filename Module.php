@@ -15,6 +15,7 @@ use Aurora\Modules\Contacts\Models\Contact;
 use Aurora\Modules\Contacts\Models\Group;
 use Aurora\Modules\Core\Module as CoreModule;
 use Aurora\System\Exceptions\ApiException;
+use Aurora\System\Module\Decorator;
 use Aurora\System\Notifications;
 use Illuminate\Database\Eloquent\Builder;
 use Sabre\DAV\UUIDUtil;
@@ -39,6 +40,15 @@ class Module extends \Aurora\System\Module\AbstractModule
     public static function getInstance()
     {
         return \Aurora\System\Api::GetModule(self::GetName());
+    }
+
+    /**
+     *
+     * @return Module
+     */
+    public static function Decorator()
+    {
+        return parent::Decorator();
     }
 
     public function getManager()
@@ -67,8 +77,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     /***** public functions *****/
     /**
-     * Returns API contacts manager.
-     * @return \CApiContactsManager
+     * Returns contacts manager.
+     * @return \Aurora\Modules\Contacts\Manager
      */
     public function GetApiContactsManager()
     {
@@ -350,7 +360,7 @@ class Module extends \Aurora\System\Module\AbstractModule
     /**
      * Exports specified contacts to a file with specified format.
      * @param string $Format File format that should be used for export.
-     * @param array $Filters Filters for obtaining specified contacts.
+     * @param Builder $Filters Filters for obtaining specified contacts.
      * @param string $GroupUUID UUID of group that should contain contacts for export.
      * @param array $ContactUUIDs List of UUIDs of contacts that should be exported.
      */
@@ -574,7 +584,7 @@ class Module extends \Aurora\System\Module\AbstractModule
     /**
      * Returns group with specified UUID.
      * @param string $UUID UUID of group to return.
-     * @return \Aurora\Modules\Contacts\Classes\Group
+     * @return \Aurora\Modules\Contacts\Models\Group
      */
     public function GetGroup($UserId, $UUID)
     {
@@ -587,8 +597,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     /**
      * Returns group item identified by its name.
-     * @param string $sName Group name
-     * @return \Aurora\Modules\Contacts\Classes\Group
+     * @param string $Name Group name
+     * @param int|null $UserId
+     * @return \Aurora\Modules\Contacts\Models\Group
      */
     public function GetGroupByName($Name, $UserId = null)
     {
@@ -672,9 +683,10 @@ class Module extends \Aurora\System\Module\AbstractModule
      * @param int $SortOrder Sorting direction.
      * @param string $Search Search string.
      * @param string $GroupUUID UUID of group that should contain all returned contacts.
-     * @param array $Filters Other conditions for obtaining contacts list.
+     * @param Builder $Filters Other conditions for obtaining contacts list.
      * @param bool $WithGroups Indicates whether contact groups should be included in the contact list
      * @param bool $WithoutTeamContactsDuplicates Do not show a contact from the global address book if the contact with the same email address already exists in personal address book
+     * @param bool $Suggestions
      * @return array
      */
     public function GetContacts($UserId, $Storage = '', $Offset = 0, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', Builder $Filters = null, $WithGroups = false, $WithoutTeamContactsDuplicates = false, $Suggestions = false)
@@ -904,7 +916,7 @@ class Module extends \Aurora\System\Module\AbstractModule
     /**
      * Returns contact with specified UUID.
      * @param string $UUID UUID of contact to return.
-     * @return \Aurora\Modules\Contacts\Classes\Contact
+     * @return \Aurora\Modules\Contacts\Models\Contact
      */
     public function GetContact($UUID, $UserId = null)
     {
@@ -1058,7 +1070,8 @@ class Module extends \Aurora\System\Module\AbstractModule
     /**
      * Returns list of contacts with specified emails.
      * @param string $Storage storage of contacts.
-     * @param array $Uids List of emails of contacts to return.
+     * @param int|null $UserId
+     * @param Builder $Filters
      * @return array
      */
     public function GetContactsInfo($Storage, $UserId = null, Builder $Filters = null)
@@ -1079,6 +1092,9 @@ class Module extends \Aurora\System\Module\AbstractModule
         $aContacts = $oQuery->get(['UUID', 'ETag', 'Auto', 'Storage']);
 
         foreach ($aContacts as $oContact) {
+            /**
+             * @var \Aurora\Modules\Contacts\Models\Contact $oContact
+             */
             $aResult['Info'][] = [
                 'UUID' => $oContact->UUID,
                 'ETag' => $oContact->ETag,
@@ -1891,6 +1907,9 @@ class Module extends \Aurora\System\Module\AbstractModule
         $oGroupEventsColl = $this->_getGroupEvents($UUID);
         if ($oGroupEventsColl->count() > 0) {
             foreach ($oGroupEventsColl as $oGroupEvent) {
+                /**
+                 * @var \Aurora\Modules\Calendar\Module $oCalendarModule
+                 */
                 $oCalendarModule = Api::GetModule('Calendar');
                 if ($oCalendarModule) {
                     $aResult[] = $oCalendarModule->GetBaseEvent($UserId, $oGroupEvent->CalendarUUID, $oGroupEvent->EventUUID);
@@ -1951,10 +1970,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     /**
      *
-     * @param type $UserId
-     * @param type $UUID
-     * @param type $Storage
-     * @param type $FileName
+     * @param int $UserId
+     * @param string $UUID
+     * @param string $FileName
      */
     public function SaveContactAsTempFile($UserId, $UUID, $FileName)
     {
@@ -2017,7 +2035,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                     $aContactData = Classes\VCard\Helper::GetContactDataFromVcard($oVCard);
                     $oContact = isset($aContactData['UUID']) ? $oApiContactsManager->getContact($aContactData['UUID']) : null;
                     $aImportResult['ParsedCount']++;
-                    if (!isset($oContact) || empty($oContact)) {
+                    if (!isset($oContact)) {
                         if (isset($sStorage)) {
                             $aContactData['Storage'] = $sStorage;
                         }
@@ -2278,6 +2296,9 @@ class Module extends \Aurora\System\Module\AbstractModule
         $aAddressBooks = AddressBook::where('UserId', $UserId)->get();
 
         foreach ($aAddressBooks as $oAddressBook) {
+            /**
+             * @var AddressBook $oAddressBook
+             */
             $aResult[] = [
                 'Id' => StorageType::AddressBook . '-' . $oAddressBook->Id,
                 'EntityId' => $oAddressBook->Id,

@@ -14,6 +14,127 @@ use Aurora\Modules\Contacts\Models\Group;
 use Aurora\Modules\Core\Models\User;
 use Aurora\System\EventEmitter;
 
+/**
+ * Aurora\Modules\Contacts\Models\Contact
+ *
+ * @property integer $Id
+ * @property string $UUID
+ * @property integer $IdUser
+ * @property integer $IdTenant
+ * @property string $Storage
+ * @property integer|null $AddressBookId
+ * @property string $FullName
+ * @property boolean $UseFriendlyName
+ * @property integer $PrimaryEmail
+ * @property integer $PrimaryPhone
+ * @property integer $PrimaryAddress
+ * @property string $ViewEmail
+ * @property string $Title
+ * @property string $FirstName
+ * @property string $LastName
+ * @property string $NickName
+ * @property string $Skype
+ * @property string $Facebook
+ * @property string $PersonalEmail
+ * @property string $PersonalAddress
+ * @property string $PersonalCity
+ * @property string $PersonalState
+ * @property string $PersonalZip
+ * @property string $PersonalCountry
+ * @property string $PersonalWeb
+ * @property string $PersonalFax
+ * @property string $PersonalPhone
+ * @property string $PersonalMobile
+ * @property string $BusinessEmail
+ * @property string $BusinessCompany
+ * @property string $BusinessAddress
+ * @property string $BusinessCity
+ * @property string $BusinessState
+ * @property string $BusinessZip
+ * @property string $BusinessCountry
+ * @property string $BusinessJobTitle
+ * @property string $BusinessDepartment
+ * @property string $BusinessOffice
+ * @property string $BusinessPhone
+ * @property string $BusinessFax
+ * @property string $BusinessWeb
+ * @property string $OtherEmail
+ * @property string|null $Notes
+ * @property integer $BirthDay
+ * @property integer $BirthMonth
+ * @property integer $BirthYear
+ * @property string $ETag
+ * @property boolean $Auto
+ * @property integer $Frequency
+ * @property string|null $DateModified
+ * @property array|null $Properties
+ * @property \Illuminate\Support\Carbon|null $CreatedAt
+ * @property \Illuminate\Support\Carbon|null $UpdatedAt
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Group> $Groups
+ * @property-read int|null $groups_count
+ * @property-read mixed $age_score
+ * @property-read mixed $entity_id
+ * @property-read mixed $notes
+ * @method static \Illuminate\Database\Eloquent\Builder|\Aurora\Modules\Contacts\Models\Contact firstWhere(Closure|string|array|\Illuminate\Database\Query\Expression $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\Aurora\Modules\Contacts\Models\Contact where(Closure|string|array|\Illuminate\Database\Query\Expression $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereAddressBookId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereAuto($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereBirthDay($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereBirthMonth($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereBirthYear($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereBusinessAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereBusinessCity($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereBusinessCompany($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereBusinessCountry($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereBusinessDepartment($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereBusinessEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereBusinessFax($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereBusinessJobTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereBusinessOffice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereBusinessPhone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereBusinessState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereBusinessWeb($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereBusinessZip($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereDateModified($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereETag($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereFacebook($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereFirstName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereFrequency($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereFullName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereIdTenant($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereIdUser($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\Aurora\Modules\Contacts\Models\Contact whereIn(string $column, mixed $values, string $boolean = 'and', bool $not = false)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereLastName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereNickName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereOtherEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact wherePersonalAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact wherePersonalCity($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact wherePersonalCountry($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact wherePersonalEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact wherePersonalFax($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact wherePersonalMobile($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact wherePersonalPhone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact wherePersonalState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact wherePersonalWeb($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact wherePersonalZip($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact wherePrimaryAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact wherePrimaryEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact wherePrimaryPhone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereProperties($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereSkype($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereStorage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereUUID($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereUseFriendlyName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Contact whereViewEmail($value)
+ */
 class Contact extends Model
 {
     public $GroupsContacts = array();
@@ -147,11 +268,13 @@ class Contact extends Model
 
     /**
      * Add group to contact.
-     * @param string $sGroupUUID Group UUID.
+     * @param array $aGroupUUIDs array of Group UUIDs.
+     * @param array $aGroupNames array of Group Names.
+     * @param bool $bCreateNonExistingGroups
      */
     public function addGroups($aGroupUUIDs, $aGroupNames, $bCreateNonExistingGroups = false)
     {
-        if (isset($aGroupUUIDs) && is_array($aGroupUUIDs)) {
+        if (is_array($aGroupUUIDs)) {
             $this->Groups()->sync(Group::whereIn('UUID', $aGroupUUIDs)
                 ->get()->map(
                     function ($oGroup) {
@@ -160,7 +283,7 @@ class Contact extends Model
                 )->toArray());
         }
         $aNonExistingGroups = [];
-        if (isset($aGroupNames)) {
+        if (is_array($aGroupNames)) {
             $aNonExistingGroups = $this->addGroupsFromNames($aGroupNames);
         }
 

@@ -5,6 +5,29 @@ namespace Aurora\Modules\Contacts\Models;
 use Aurora\System\Classes\Model;
 use Aurora\Modules\Core\Models\User;
 
+/**
+ * Aurora\Modules\Contacts\Models\CTag
+ *
+ * @property integer $Id
+ * @property integer $UserId
+ * @property string $Storage
+ * @property integer $CTag
+ * @property \Illuminate\Support\Carbon|null $CreatedAt
+ * @property \Illuminate\Support\Carbon|null $UpdatedAt
+ * @property-read mixed $entity_id
+ * @method static \Illuminate\Database\Eloquent\Builder|\Aurora\Modules\Contacts\Models\CTag firstWhere(Closure|string|array|\Illuminate\Database\Query\Expression $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
+ * @method static \Illuminate\Database\Eloquent\Builder|CTag newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|CTag newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|CTag query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\Aurora\Modules\Contacts\Models\CTag where(Closure|string|array|\Illuminate\Database\Query\Expression $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
+ * @method static \Illuminate\Database\Eloquent\Builder|CTag whereCTag($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CTag whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CTag whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\Aurora\Modules\Contacts\Models\CTag whereIn(string $column, mixed $values, string $boolean = 'and', bool $not = false)
+ * @method static \Illuminate\Database\Eloquent\Builder|CTag whereStorage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CTag whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CTag whereUserId($value)
+ */
 class CTag extends Model
 {
     protected $table = 'contacts_ctags';

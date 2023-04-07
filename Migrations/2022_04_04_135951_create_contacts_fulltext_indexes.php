@@ -19,28 +19,28 @@ class CreateContactsFulltextIndexes extends Migration
             $table->index('Storage');
             $table->index('Frequency');
 
-            Capsule::statement(
+            Capsule::connection()->statement(
                 "CREATE FULLTEXT INDEX contacts_fullname_index ON {$prefix}contacts (FullName)"
             );
-            Capsule::statement(
+            Capsule::connection()->statement(
                 "CREATE FULLTEXT INDEX contacts_viewemail_index ON {$prefix}contacts (ViewEmail)"
             );
-            Capsule::statement(
+            Capsule::connection()->statement(
                 "CREATE FULLTEXT INDEX contacts_personalemail_index ON {$prefix}contacts (PersonalEmail)"
             );
-            Capsule::statement(
+            Capsule::connection()->statement(
                 "CREATE FULLTEXT INDEX contacts_businessemail_index ON {$prefix}contacts (BusinessEmail)"
             );
-            Capsule::statement(
+            Capsule::connection()->statement(
                 "CREATE FULLTEXT INDEX contacts_businesscompany_index ON {$prefix}contacts (BusinessCompany)"
             );
-            Capsule::statement(
+            Capsule::connection()->statement(
                 "CREATE FULLTEXT INDEX contacts_otheremail_index ON {$prefix}contacts (OtherEmail)"
             );
         });
 
         Capsule::schema()->table('contacts_groups', function (Blueprint $table) use ($prefix) {
-            Capsule::statement(
+            Capsule::connection()->statement(
                 "CREATE FULLTEXT INDEX contacts_groups_name_index ON {$prefix}contacts_groups (Name)"
             );
         });
