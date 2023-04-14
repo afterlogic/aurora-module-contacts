@@ -375,7 +375,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         if (empty($GroupUUID) && count($ContactUUIDs) === 0 && $Format === 'vcf') {
             $aGroups = $this->getManager()->getGroups($UserId);
             foreach ($aGroups as $oGroup) {
-                $oVCard = new \Sabre\VObject\Component\VCard(); 
+                $oVCard = new \Sabre\VObject\Component\VCard();
                 $oVCard->VERSION = '3.0';
                 $oVCard->UID = $oGroup->UUID;
                 $oVCard->FN = $oGroup->Name;
@@ -433,7 +433,6 @@ class Module extends \Aurora\System\Module\AbstractModule
         }
 
         if (is_string($sOutput) && !empty($sOutput)) {
-
             $fileName = 'export';
             $aStorages = self::Decorator()->GetStorages();
             foreach ($aStorages as $aStorage) {
@@ -2094,9 +2093,9 @@ class Module extends \Aurora\System\Module\AbstractModule
             $oContact = $this->getManager()->getContactByEmail($iUserId, $sEmail);
             if ($oContact) {
                 // if ($oContact->Frequency !== -1) {
-                    $oContact->Frequency = $oContact->Frequency + 1;
-                    $this->getManager()->updateContact($oContact);
-                // }
+                $oContact->Frequency = $oContact->Frequency + 1;
+                $this->getManager()->updateContact($oContact);
+            // }
             } else {
                 self::Decorator()->CreateContact([
                     'FullName' => $sName,

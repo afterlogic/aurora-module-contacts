@@ -16,6 +16,7 @@ namespace Aurora\Modules\Contacts\Models;
  */
 
 use Aurora\System\Classes\Model;
+
 /**
  * Aurora\Modules\Contacts\Models\GroupEvent
  *

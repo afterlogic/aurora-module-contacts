@@ -278,8 +278,8 @@ class Contact extends Model
             $this->Groups()->sync(Group::whereIn('UUID', $aGroupUUIDs)
                 ->get()->map(
                     function ($oGroup) {
-                    return $oGroup->Id;
-                }
+                        return $oGroup->Id;
+                    }
                 )->toArray());
         }
         $aNonExistingGroups = [];

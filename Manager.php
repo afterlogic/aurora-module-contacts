@@ -178,8 +178,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
         $iLimit = 20,
         $oFilters = null,
         $aViewAttrs = array()
-    )
-    {
+    ) {
         $sSortField = 'FullName';
         switch ($iSortField) {
             case SortField::Email:
@@ -241,8 +240,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
         $iLimit = 20,
         $oFilters = null,
         $aViewAttrs = array()
-    )
-    {
+    ) {
         return $this->getContacts($iSortField, $iSortOrder, $iOffset, $iLimit, $oFilters, $aViewAttrs)->toArray();
     }
 
