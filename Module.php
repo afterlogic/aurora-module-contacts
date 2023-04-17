@@ -51,6 +51,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         return parent::Decorator();
     }
 
+    /** @return Manager */
     public function getManager()
     {
         if ($this->oManager === null) {
@@ -701,7 +702,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         });
 
         if (!empty($GroupUUID)) {
-            $oGroup = Group::firstWhere('UUID', $GroupUUID);
+            $oGroup = Group::where('UUID', $GroupUUID)->where('IdUser', $UserId)->first();
             if ($oGroup) {
                 $oQuery = $oQuery->whereHas('Groups', function ($oSubQuery) use ($oGroup) {
                     return $oSubQuery->where('contacts_groups.Id', $oGroup->Id);
@@ -2062,6 +2063,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                         }
                     }
                 }
+                $aGroupData['UUID'] = \Sabre\DAV\UUIDUtil::getUUID();
                 $oContactsDecorator->CreateGroup($aGroupData, $iUserId);
             }
         }
