@@ -165,17 +165,18 @@ class Module extends \Aurora\System\Module\AbstractModule
     {
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
         $oUser = \Aurora\System\Api::getAuthenticatedUser();
+        $oSettings = $this->GetModuleSettings();
         $aResult = [
-            'AllowAddressBooksManagement' => $this->getConfig('AllowAddressBooksManagement', false),
-            'ImportContactsLink' => $this->getConfig('ImportContactsLink', ''),
+            'AllowAddressBooksManagement' => $oSettings->AllowAddressBooksManagement,
+            'ImportContactsLink' => $oSettings->ImportContactsLink,
             'PrimaryEmail' => (new Enums\PrimaryEmail())->getMap(),
             'PrimaryPhone' => (new Enums\PrimaryPhone())->getMap(),
             'PrimaryAddress' => (new Enums\PrimaryAddress())->getMap(),
             'SortField' => (new Enums\SortField())->getMap(),
             'ImportExportFormats' => $this->aImportExportFormats,
             'SaveVcfServerModuleName' => \Aurora\System\Api::GetModuleManager()->ModuleExists('DavContacts') ? 'DavContacts' : '',
-            'ContactsPerPage' => $this->getConfig('ContactsPerPage', 20),
-            'ContactsSortBy' => $this->getConfig('ContactsSortBy', [])
+            'ContactsPerPage' => $oSettings->ContactsPerPage,
+            'ContactsSortBy' => $oSettings->ContactsSortBy
         ];
 
         if ($oUser && $oUser->isNormalOrTenant()) {
