@@ -25,6 +25,8 @@ use Sabre\DAV\UUIDUtil;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2023, Afterlogic Corp.
  *
+ * @property Settings $oModuleSettings
+ *
  * @package Modules
  */
 class Module extends \Aurora\System\Module\AbstractModule
@@ -165,18 +167,18 @@ class Module extends \Aurora\System\Module\AbstractModule
     {
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
         $oUser = \Aurora\System\Api::getAuthenticatedUser();
-        $oSettings = $this->getModuleSettings();
+
         $aResult = [
-            'AllowAddressBooksManagement' => $oSettings->AllowAddressBooksManagement,
-            'ImportContactsLink' => $oSettings->ImportContactsLink,
+            'AllowAddressBooksManagement' => $this->oModuleSettings->AllowAddressBooksManagement,
+            'ImportContactsLink' => $this->oModuleSettings->ImportContactsLink,
             'PrimaryEmail' => (new Enums\PrimaryEmail())->getMap(),
             'PrimaryPhone' => (new Enums\PrimaryPhone())->getMap(),
             'PrimaryAddress' => (new Enums\PrimaryAddress())->getMap(),
             'SortField' => (new Enums\SortField())->getMap(),
             'ImportExportFormats' => $this->aImportExportFormats,
             'SaveVcfServerModuleName' => \Aurora\System\Api::GetModuleManager()->ModuleExists('DavContacts') ? 'DavContacts' : '',
-            'ContactsPerPage' => $oSettings->ContactsPerPage,
-            'ContactsSortBy' => $oSettings->ContactsSortBy
+            'ContactsPerPage' => $this->oModuleSettings->ContactsPerPage,
+            'ContactsSortBy' => $this->oModuleSettings->ContactsSortBy
         ];
 
         if ($oUser && $oUser->isNormalOrTenant()) {
