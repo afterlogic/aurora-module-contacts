@@ -55,7 +55,7 @@ class Module extends \Aurora\System\Module\AbstractModule
      *
      * @return Settings
      */
-    protected function GetModuleSettings()
+    public function getModuleSettings()
     {
         return $this->oModuleSettings;
     }
@@ -165,7 +165,7 @@ class Module extends \Aurora\System\Module\AbstractModule
     {
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
         $oUser = \Aurora\System\Api::getAuthenticatedUser();
-        $oSettings = $this->GetModuleSettings();
+        $oSettings = $this->getModuleSettings();
         $aResult = [
             'AllowAddressBooksManagement' => $oSettings->AllowAddressBooksManagement,
             'ImportContactsLink' => $oSettings->ImportContactsLink,
