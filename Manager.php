@@ -20,6 +20,8 @@ use Illuminate\Database\Capsule\Manager as Capsule;
  * @copyright Copyright (c) 2023, Afterlogic Corp.
  *
  * @ignore
+ *
+ * @property Module $oModule
  */
 class Manager extends \Aurora\System\Managers\AbstractManager
 {
