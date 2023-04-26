@@ -574,8 +574,7 @@ class Helper
     {
         $oVCard->VERSION = '3.0';
 
-        /** @phpstan-ignore-next-line */
-        $oVCard->UID = $oContact->{'DavContacts::VCardUID'};
+        $oVCard->UID = $oContact->getExtendedProp('DavContacts::VCardUID');
 
         $oVCard->FN = $oContact->FullName;
         $oVCard->N = array(

@@ -362,8 +362,8 @@ class Manager extends \Aurora\System\Managers\AbstractManager
     {
         $oQuery = Group::whereIn('UUID', $aGroupUUIDs);
         $aGroups = $oQuery->get();
+        /** @var Group $oGroup */
         foreach ($aGroups as $oGroup) {
-            /** @phpstan-ignore-next-line */
             foreach ($oGroup->Contacts as $oContact) {
                 if ($oContact->Storage === StorageType::Personal || $oContact->Storage === StorageType::AddressBook) {
                     $this->updateCTag($oContact->IdUser, $oContact->getStorageWithId());
@@ -471,7 +471,6 @@ class Manager extends \Aurora\System\Managers\AbstractManager
     {
         $oCTag = $this->getCTag($iUserId, $Storage);
         if ($oCTag instanceof Models\CTag) {
-            /** @phpstan-ignore-next-line */
             $oCTag->increment('CTag');
         } else {
             $oCTag = new Models\CTag();

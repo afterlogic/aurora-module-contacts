@@ -10,11 +10,11 @@ namespace Aurora\Modules\Contacts;
 use Aurora\System\SettingsProperty;
 
 /**
- * @property bool $Disabled 
- * @property int $ContactsPerPage 
+ * @property bool $Disabled
+ * @property int $ContactsPerPage
  * @property string $ImportContactsLink
  * @property bool $AllowAddressBooksManagement
- * @property bool $AllowEditTeamContactsByTenantAdmins 
+ * @property bool $AllowEditTeamContactsByTenantAdmins
  * @property array $ContactsSortBy
  */
 

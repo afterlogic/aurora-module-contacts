@@ -27,7 +27,7 @@ use Aurora\Modules\Core\Models\User;
  * @property array|null $Properties
  * @property \Illuminate\Support\Carbon|null $CreatedAt
  * @property \Illuminate\Support\Carbon|null $UpdatedAt
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Aurora\Modules\Contacts\Models\Contact> $Contacts
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Contact> $Contacts
  * @property-read int|null $contacts_count
  * @property-read mixed $entity_id
  * @method static \Illuminate\Database\Eloquent\Builder|\Aurora\Modules\Contacts\Models\Group firstWhere(Closure|string|array|\Illuminate\Database\Query\Expression $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')

@@ -169,8 +169,9 @@ class ContactListItem
                 }
 
                 if (isset($oVCard->EMAIL)) {
-                    /** @phpstan-ignore-next-line */
-                    $this->Email = (string)$oVCard->EMAIL[0];
+                    /** @var \Sabre\VObject\Property\FlatText $oEmail */
+                    $oEmail = $oVCard->EMAIL[0];
+                    $this->Email = (string)$oEmail;
                     foreach ($oVCard->EMAIL as $oEmail) {
                         if ($oTypes = $oEmail['TYPE']) {
                             if ($oTypes->has('PREF')) {

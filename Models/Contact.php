@@ -80,6 +80,7 @@ use Aurora\System\EventEmitter;
  * @method static \Illuminate\Database\Eloquent\Builder|Contact newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Contact query()
  * @method static \Illuminate\Database\Eloquent\Builder|\Aurora\Modules\Contacts\Models\Contact where(Closure|string|array|\Illuminate\Database\Query\Expression $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
+ * @method static \Illuminate\Database\Eloquent\Builder|\Aurora\Modules\Contacts\Models\Contact whereNotNull(string|array $columns, string $boolean = 'and')
  * @method static \Illuminate\Database\Eloquent\Builder|Contact whereAddressBookId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Contact whereAuto($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Contact whereBirthDay($value)
