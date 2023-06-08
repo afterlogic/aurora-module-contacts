@@ -179,8 +179,8 @@ class Module extends \Aurora\System\Module\AbstractModule
         ];
 
         if ($oUser && $oUser->isNormalOrTenant()) {
-            if (isset($oUser->{self::GetName().'::ContactsPerPage'})) {
-                $aResult['ContactsPerPage'] = $oUser->{self::GetName().'::ContactsPerPage'};
+            if (null !== $oUser->getExtendedProp(self::GetName().'::ContactsPerPage')) {
+                $aResult['ContactsPerPage'] = $oUser->getExtendedProp(self::GetName().'::ContactsPerPage');
             }
 
             $aResult['Storages'] = self::Decorator()->GetStorages();
@@ -395,8 +395,8 @@ class Module extends \Aurora\System\Module\AbstractModule
                     if ($oContact) {
                         $sVCardUID = null;
                         if ($oContact->Storage !== 'team') {
-                            if (!empty($oContact->{'DavContacts::VCardUID'})) {
-                                $sVCardUID = $oContact->{'DavContacts::VCardUID'};
+                            if (!empty($oContact->getExtendedProp('DavContacts::VCardUID'))) {
+                                $sVCardUID = $oContact->getExtendedProp('DavContacts::VCardUID');
                             }
                         } else {
                             $sVCardUID = $oContact->UUID;
