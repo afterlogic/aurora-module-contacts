@@ -28,20 +28,6 @@ class Helper
         if (!empty($sUUID)) {
             $aContact['UUID'] = (string) $sUUID;
         }
-        /*
-                elseif (isset($oVCard->UID))
-                {
-                    $aContact['UUID'] = (string) $oVCard->UID;
-                }
-        */
-
-        $aGroupNames = [];
-        if (isset($oVCard->CATEGORIES)) {
-            foreach ($oVCard->CATEGORIES->getParts() as $sCategory) {
-                $aGroupNames[] = (string) $sCategory;
-            }
-        }
-        $aContact['GroupNames'] = $aGroupNames;
 
         $aContact['FullName'] = isset($oVCard->FN) ? (string) $oVCard->FN : '';
 

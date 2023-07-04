@@ -100,26 +100,11 @@ class Group extends Model
         } elseif (empty($this->UUID)) {
             $this->UUID = \Sabre\DAV\UUIDUtil::getUUID();
         }
-        // $this->GroupContacts = array();
-        // if (isset($aGroup['Contacts']) && is_array($aGroup['Contacts']))
-        // {
-        // 	$aContactUUIDs = $aGroup['Contacts'];
-        // 	Contact::whereIn('UUID', $aGroup['Contacts'])->map(function($oContact) {
-        // 		return $oContact->UUID;
-        // 	});
-
-
-        // 	foreach ($aContactUUIDs as $sContactUUID)
-        // 	{
-        // 		$oGroupContact = new \Aurora\Modules\Contacts\Classes\GroupContact($this->getModule());
-        // 		$oGroupContact->ContactUUID = $sContactUUID;
-        // 		$this->GroupContacts[] = $oGroupContact;
-        // 	}
-        // }
     }
 
     public function Contacts()
     {
-        return $this->belongsToMany(Contact::class, 'contacts_group_contact', 'GroupId', 'ContactId');
+        return $this->belongsToMany(Contact::class, 'contacts_group_contact', 'GroupId', 'ContactId')
+            ->where('IdUser', $this->IdUser);
     }
 }
