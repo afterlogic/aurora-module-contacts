@@ -241,7 +241,7 @@ class Contact extends Model
             $oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
             if ($oApiContactsManager) {
                 foreach ($aGroupNames as $sGroupName) {
-                    $oGroups = $oApiContactsManager->getGroups($this->IdUser, Group::firstWhere('Name', $sGroupName));
+                    $oGroups = $oApiContactsManager->getGroups($this->IdUser, Group::where('Name', $sGroupName));
                     if ($oGroups && count($oGroups) > 0) {
                         $this->Groups()->sync(
                             $oGroups->map(function ($oGroup) {
