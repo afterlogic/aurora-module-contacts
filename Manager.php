@@ -59,13 +59,17 @@ class Manager extends \Aurora\System\Managers\AbstractManager
     /**
      * Returns group item identified by its ID.
      *
+     * @param string $iUserId User ID
      * @param string $sUUID Group ID
      *
      * @return \Aurora\Modules\Contacts\Models\Group
      */
-    public function getGroup($sUUID)
+    public function getGroup($iUserId, $sUUID)
     {
-        return Group::firstWhere('UUID', $sUUID);
+        if (empty($sUUID)) {
+            return false;
+        }
+        return Group::where('IdUser', $iUserId)->where('UUID', $sUUID)->first();
     }
 
     /**
@@ -117,11 +121,6 @@ class Manager extends \Aurora\System\Managers\AbstractManager
             $res = $oGroup->save();
             if ($res) {
                 $this->updateCTag($oGroup->IdUser, 'personal');
-                // foreach ($oGroup->GroupContacts as $oGroupContact)
-                // {
-                // 	$oGroupContact->GroupUUID = $oGroup->UUID;
-                // 	$res = $oGroupContact->save();
-                // }
             }
         }
 
@@ -306,12 +305,6 @@ class Manager extends \Aurora\System\Managers\AbstractManager
                 } else {
                     $this->updateCTag($oContact->IdTenant, $oContact->getStorageWithId());
                 }
-
-                // foreach ($oContact->GroupsContacts as $oGroupContact)
-                // {
-                // 	$oGroupContact->ContactUUID = $oContact->UUID;
-                // 	$oGroupContact->save();
-                // }
             }
         }
 
@@ -339,16 +332,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
      */
     public function deleteContacts($iIdUser, $sStorage, $aContactUUIDs)
     {
-        $mResult = !!Contact::whereIn('UUID', $aContactUUIDs)->delete();
-
-        if ($mResult) {
-            $oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserWithoutRoleCheck($iIdUser);
-            if ($oUser instanceof \Aurora\Modules\Core\Models\User) {
-                $iIdUser = $sStorage === StorageType::Personal || $sStorage === StorageType::AddressBook ? $oUser->Id : $oUser->IdTenant;
-            }
-            //			$this->updateCTag($iIdUser, $sStorage);
-        }
-        return $mResult;
+        return !!Contact::whereIn('UUID', $aContactUUIDs)->delete();
     }
 
     /**
@@ -358,9 +342,9 @@ class Manager extends \Aurora\System\Managers\AbstractManager
      *
      * @return bool
      */
-    public function deleteGroups($aGroupUUIDs)
+    public function deleteGroups($iUserId, $aGroupUUIDs)
     {
-        $oQuery = Group::whereIn('UUID', $aGroupUUIDs);
+        $oQuery = Group::where('IdUser', $iUserId)->whereIn('UUID', $aGroupUUIDs);
         $aGroups = $oQuery->get();
         /** @var Group $oGroup */
         foreach ($aGroups as $oGroup) {
@@ -385,17 +369,17 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 
     /**
      * Adds one or multiple contacts to the specific group.
-     *
+     * @param int $iUserId User identifier
      * @param string $sGroupUUID Group identifier to be used
      * @param array $aContactUUIDs Array of integers
      *
      * @return bool
      */
-    public function addContactsToGroup($sGroupUUID, $aContactUUIDs)
+    public function addContactsToGroup($iUserId, $sGroupUUID, $aContactUUIDs)
     {
         $res = true;
 
-        $oGroup = $this->getGroup($sGroupUUID);
+        $oGroup = $this->getGroup($iUserId, $sGroupUUID);
         $aContacts = Contact::whereIn('UUID', $aContactUUIDs)->get();
         $oGroup->Contacts()->sync(
             $oGroup->Contacts->merge(
@@ -422,14 +406,15 @@ class Manager extends \Aurora\System\Managers\AbstractManager
     /**
      * The method deletes one or multiple contacts from the group.
      *
+     * @param int $iUserId User identifier
      * @param string $sGroupUUID Group identifier
      * @param array $aContactUUIDs Array of integers
      *
      * @return bool
      */
-    public function removeContactsFromGroup($sGroupUUID, $aContactUUIDs)
+    public function removeContactsFromGroup($iUserId, $sGroupUUID, $aContactUUIDs)
     {
-        $oGroup = $this->getGroup($sGroupUUID);
+        $oGroup = $this->getGroup($iUserId, $sGroupUUID);
         $aContacts = Contact::whereIn('UUID', $aContactUUIDs)->get();
         $aContactIds = $aContacts->map(function ($oContact) {
             return $oContact->Id;

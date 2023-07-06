@@ -601,7 +601,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         Api::CheckAccess($UserId);
 
-        return $this->getManager()->getGroup($UUID);
+        return $this->getManager()->getGroup($UserId, $UUID);
     }
 
     /**
@@ -1608,7 +1608,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
-        $oGroup = $this->getManager()->getGroup($Group['UUID']);
+        $oGroup = $this->getManager()->getGroup($UserId, $Group['UUID']);
         if ($oGroup) {
             $oGroup->populate($Group);
 
@@ -1686,7 +1686,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
         $this->getManager()->updateCTag($UserId, 'personal');
-        return $this->getManager()->deleteGroups([$UUID]);
+        return $this->getManager()->deleteGroups($UserId, [$UUID]);
     }
 
     /**
@@ -1751,7 +1751,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
         if (is_array($ContactUUIDs) && !empty($ContactUUIDs)) {
-            return $this->getManager()->addContactsToGroup($GroupUUID, $ContactUUIDs);
+            return $this->getManager()->addContactsToGroup($UserId, $GroupUUID, $ContactUUIDs);
         }
 
         return true;
@@ -1819,7 +1819,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
         if (is_array($ContactUUIDs) && !empty($ContactUUIDs)) {
-            return $this->getManager()->removeContactsFromGroup($GroupUUID, $ContactUUIDs);
+            return $this->getManager()->removeContactsFromGroup($UserId, $GroupUUID, $ContactUUIDs);
         }
 
         return true;
