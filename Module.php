@@ -194,7 +194,9 @@ class Module extends \Aurora\System\Module\AbstractModule
         return true;
     }
 
-    //Depricated
+    /**
+     * @deprecated since version 9.7.2
+     */
     public function GetContactStorages()
     {
         return $this->Decorator()->GetStorages();
