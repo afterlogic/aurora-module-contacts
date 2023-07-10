@@ -423,8 +423,7 @@ class Contact extends Model
 
     public function Groups()
     {
-        return $this->belongsToMany(Group::class, 'contacts_group_contact', 'ContactId', 'GroupId')
-            ->where('IdUser', $this->IdUser);
+        return $this->belongsToMany(Group::class, 'contacts_group_contact', 'ContactId', 'GroupId');
     }
 
     public function getStorageWithId()
