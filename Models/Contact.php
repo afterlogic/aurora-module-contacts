@@ -398,9 +398,9 @@ class Contact extends Model
         if (is_null($aRes['Notes'])) {
             $aRes['Notes'] = '';
         }
-        $aRes['GroupUUIDs'] = $this->Groups->map(function ($oGroup) {
-            return $oGroup->UUID;
-        });
+        $aRes['GroupUUIDs'] = array_filter($this->Groups->map(function ($oGroup) {
+            return $oGroup->IdUser === $this->IdUser ? $oGroup->UUID : null;
+        })->toArray());
 
         foreach ($this->ExtendedInformation as $sKey => $mValue) {
             $aRes[$sKey] = $mValue;
