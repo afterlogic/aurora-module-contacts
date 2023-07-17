@@ -4,6 +4,7 @@ namespace Aurora\Modules\Contacts\Models;
 
 use Aurora\System\Classes\Model;
 use Aurora\Modules\Core\Models\User;
+use Aurora\Modules\Core\Models\Tenant;
 
 /**
  * Aurora\Modules\Contacts\Models\CTag
@@ -35,6 +36,7 @@ class CTag extends Model
     protected $table = 'contacts_ctags';
 
     protected $foreignModel = User::class;
+    protected $foreignModelSecond = Tenant::class;
     protected $foreignModelIdColumn = 'UserId'; // Column that refers to an external table
 
     protected $fillable = [
@@ -43,4 +45,33 @@ class CTag extends Model
         'Storage',
         'CTag'
     ];
+
+    public function getOrphanIds()
+    {
+        if (!$this->foreignModel || !$this->foreignModelIdColumn) {
+            return ['status' => -1, 'message' => 'Foreign field doesn\'t exist'];
+        }
+        $tableName = $this->getTable();
+        $foreignObject = new $this->foreignModel();
+        $foreignTable = $foreignObject->getTable();
+        $foreignPK = $foreignObject->primaryKey;
+
+        $orphanIds = self::where('Storage', '<>', 'team')->pluck($this->primaryKey)->diff(
+            self::leftJoin($foreignTable, "$tableName.$this->foreignModelIdColumn", '=', "$foreignTable.$foreignPK")->whereNotNull("$foreignTable.$foreignPK")->where('Storage', '<>', 'team')->pluck("$tableName.$this->primaryKey")
+        )->all();
+
+        $foreignSecondObject = new $this->foreignModelSecond;
+        $foreignSecondTable = $foreignSecondObject->getTable();
+        $foreignSecondPK = $foreignSecondObject->primaryKey;
+        $orphanSecondIds = self::where('Storage', 'team')->pluck($this->primaryKey)->diff(
+            self::leftJoin($foreignSecondTable, "$tableName.$this->foreignModelIdColumn", '=', "$foreignSecondTable.$foreignSecondPK")->whereNotNull("$foreignSecondTable.$foreignSecondPK")->where('Storage', 'team')->pluck("$tableName.$this->primaryKey")
+        )->all();
+
+        $orphanIds = array_merge($orphanIds, $orphanSecondIds);
+
+        $message = $orphanIds ? "$tableName table has orphans: " . count($orphanIds) . "." : "Orphans were not found.";
+        $oResult = ['status' => $orphanIds ? 1 : 0, 'message' => $message, 'orphansIds' => $orphanIds];
+
+        return $oResult;
+    }
 }
