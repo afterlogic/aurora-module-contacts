@@ -526,7 +526,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         Api::CheckAccess($UserId);
 
-        return $this->getManager()->getGroups($UserId)->toArray();
+        return $this->getManager()->getGroups($UserId)->all();
     }
 
     /**
@@ -741,7 +741,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                     foreach ($aGroups as $oGroup) {
                         $aGroupContactsEmails = $oGroup->Contacts->map(function ($oContact) {
                             return $oContact->FullName ? "\"{$oContact->FullName}\" <{$oContact->ViewEmail}>" : $oContact->ViewEmail;
-                        })->toArray();
+                        })->all();
 
                         $aGroupUsersList[] = [
                             'UUID' => $oGroup->UUID,
@@ -762,7 +762,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $iCount = $this->getManager()->getContactsCount($oQuery);
         $aContactsCol = $this->getManager()->getContacts($SortField, $SortOrder, $Offset, $Limit, $oQuery);
-        $aContacts = $aContactsCol->toArray();
+        $aContacts = $aContactsCol->all();
 
         if ($Storage === StorageType::All && $WithoutTeamContactsDuplicates) {
             $aPersonalContacsCol = $aContactsCol->map(function ($oContact) {
@@ -1333,7 +1333,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     public function MoveContactsToStorage($UserId, $FromStorage, $ToStorage, $UUIDs)
     {
-
         $oQuery = Models\Contact::where('IdUser', $UserId)->whereIn('UUID', $UUIDs);
 
         $aFromStorageParts = \explode('-', $FromStorage);
@@ -1374,7 +1373,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         return $mResult;
     }
-
 
     /**
      * @api {post} ?/Api/ DeleteContacts
@@ -2135,7 +2133,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 // if ($oContact->Frequency !== -1) {
                 $oContact->Frequency = $oContact->Frequency + 1;
                 $this->getManager()->updateContact($oContact);
-                // }
+            // }
             } else {
                 self::Decorator()->CreateContact([
                     'FullName' => $sName,
