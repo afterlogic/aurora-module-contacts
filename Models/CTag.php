@@ -56,15 +56,15 @@ class CTag extends Model
         $foreignTable = $foreignObject->getTable();
         $foreignPK = $foreignObject->primaryKey;
 
-        $orphanIds = self::where('Storage', '<>', 'team')->pluck($this->primaryKey)->diff(
-            self::leftJoin($foreignTable, "$tableName.$this->foreignModelIdColumn", '=', "$foreignTable.$foreignPK")->whereNotNull("$foreignTable.$foreignPK")->where('Storage', '<>', 'team')->pluck("$tableName.$this->primaryKey")
+        $orphanIds = self::where('Storage', '<>', 'team')->where('Storage', '<>', 'shared')->pluck($this->primaryKey)->diff(
+            self::leftJoin($foreignTable, "$tableName.$this->foreignModelIdColumn", '=', "$foreignTable.$foreignPK")->whereNotNull("$foreignTable.$foreignPK")->where('Storage', '<>', 'team')->where('Storage', '<>', 'shared')->pluck("$tableName.$this->primaryKey")
         )->all();
 
         $foreignSecondObject = new $this->foreignModelSecond;
         $foreignSecondTable = $foreignSecondObject->getTable();
         $foreignSecondPK = $foreignSecondObject->primaryKey;
-        $orphanSecondIds = self::where('Storage', 'team')->pluck($this->primaryKey)->diff(
-            self::leftJoin($foreignSecondTable, "$tableName.$this->foreignModelIdColumn", '=', "$foreignSecondTable.$foreignSecondPK")->whereNotNull("$foreignSecondTable.$foreignSecondPK")->where('Storage', 'team')->pluck("$tableName.$this->primaryKey")
+        $orphanSecondIds = self::where('Storage', 'team')->where('Storage', 'shared')->pluck($this->primaryKey)->diff(
+            self::leftJoin($foreignSecondTable, "$tableName.$this->foreignModelIdColumn", '=', "$foreignSecondTable.$foreignSecondPK")->whereNotNull("$foreignSecondTable.$foreignSecondPK")->where('Storage', 'team')->where('Storage', 'shared')->pluck("$tableName.$this->primaryKey")
         )->all();
 
         $orphanIds = array_merge($orphanIds, $orphanSecondIds);
