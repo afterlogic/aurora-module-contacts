@@ -179,8 +179,8 @@ class Module extends \Aurora\System\Module\AbstractModule
         ];
 
         if ($oUser && $oUser->isNormalOrTenant()) {
-            if (null !== $oUser->getExtendedProp(self::GetName().'::ContactsPerPage')) {
-                $aResult['ContactsPerPage'] = $oUser->getExtendedProp(self::GetName().'::ContactsPerPage');
+            if (null !== $oUser->getExtendedProp(self::GetName() . '::ContactsPerPage')) {
+                $aResult['ContactsPerPage'] = $oUser->getExtendedProp(self::GetName() . '::ContactsPerPage');
             }
 
             $aResult['Storages'] = self::Decorator()->GetStorages();
@@ -310,7 +310,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $oUser = \Aurora\System\Api::getAuthenticatedUser();
         if ($oUser) {
             if ($oUser->isNormalOrTenant()) {
-                $oUser->setExtendedProp(self::GetName().'::ContactsPerPage', $ContactsPerPage);
+                $oUser->setExtendedProp(self::GetName() . '::ContactsPerPage', $ContactsPerPage);
                 return \Aurora\Modules\Core\Module::Decorator()->UpdateUserObject($oUser);
             }
             if ($oUser->isAdmin()) {
@@ -722,12 +722,12 @@ class Module extends \Aurora\System\Module\AbstractModule
         }
         if (!empty($Search)) {
             $oQuery = $oQuery->where(function ($query) use ($Search) {
-                $query->where('FullName', 'LIKE', '%'.$Search.'%')
-                ->orWhere('ViewEmail', 'LIKE', '%'.$Search.'%')
-                ->orWhere('PersonalEmail', 'LIKE', '%'.$Search.'%')
-                ->orWhere('BusinessEmail', 'LIKE', '%'.$Search.'%')
-                ->orWhere('OtherEmail', 'LIKE', '%'.$Search.'%')
-                ->orWhere('BusinessCompany', 'LIKE', '%'.$Search.'%');
+                $query->where('FullName', 'LIKE', '%' . $Search . '%')
+                ->orWhere('ViewEmail', 'LIKE', '%' . $Search . '%')
+                ->orWhere('PersonalEmail', 'LIKE', '%' . $Search . '%')
+                ->orWhere('BusinessEmail', 'LIKE', '%' . $Search . '%')
+                ->orWhere('OtherEmail', 'LIKE', '%' . $Search . '%')
+                ->orWhere('BusinessCompany', 'LIKE', '%' . $Search . '%');
             });
         }
 
@@ -2025,7 +2025,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $sVCardData = $oVCard->serialize();
             if ($sVCardData) {
                 $sUUID = \Aurora\System\Api::getUserUUIDById($UserId);
-                $sTempName = md5($sUUID.$UUID);
+                $sTempName = md5($sUUID . $UUID);
                 $oApiFileCache = new \Aurora\System\Managers\Filecache();
 
                 $oApiFileCache->put($sUUID, $sTempName, $sVCardData);
@@ -2133,7 +2133,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 // if ($oContact->Frequency !== -1) {
                 $oContact->Frequency = $oContact->Frequency + 1;
                 $this->getManager()->updateContact($oContact);
-            // }
+                // }
             } else {
                 self::Decorator()->CreateContact([
                     'FullName' => $sName,

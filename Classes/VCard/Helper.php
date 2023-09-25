@@ -113,8 +113,8 @@ class Helper
                         if ($oType->has('PREF')) {
                             $aContact['PrimaryEmail'] = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other;
                         }
-                    } elseif ($oEmail->group && isset($oVCard->{$oEmail->group.'.X-ABLABEL'}) &&
-                        strtolower((string) $oVCard->{$oEmail->group.'.X-ABLABEL'}) === '_$!<other>!$_') {
+                    } elseif ($oEmail->group && isset($oVCard->{$oEmail->group . '.X-ABLABEL'}) &&
+                        strtolower((string) $oVCard->{$oEmail->group . '.X-ABLABEL'}) === '_$!<other>!$_') {
                         $aContact['OtherEmail'] = (string) $oEmail;
                         if ($oType->has('PREF')) {
                             $aContact['PrimaryEmail'] = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other;
@@ -356,11 +356,11 @@ class Helper
                             }
                             $oEmail->setValue($oContact->OtherEmail);
                         }
-                    } elseif ($oEmail->group && isset($oVCardCopy->{$oEmail->group.'.X-ABLabel'}) &&
-                            (strtolower((string) $oVCardCopy->{$oEmail->group.'.X-ABLabel'}) === '_$!<other>!$_') ||
-                            (strtolower((string) $oVCardCopy->{$oEmail->group.'.X-ABLabel'}) === 'other')) {
+                    } elseif ($oEmail->group && isset($oVCardCopy->{$oEmail->group . '.X-ABLabel'}) &&
+                            (strtolower((string) $oVCardCopy->{$oEmail->group . '.X-ABLabel'}) === '_$!<other>!$_') ||
+                            (strtolower((string) $oVCardCopy->{$oEmail->group . '.X-ABLabel'}) === 'other')) {
                         if (!$bFindOther) {
-                            unset($oVCardCopy->{$oEmail->group.'.X-ABLabel'});
+                            unset($oVCardCopy->{$oEmail->group . '.X-ABLabel'});
                             unset($oEmail);
                         } else {
                             $bFindOther = false;
@@ -605,7 +605,7 @@ class Helper
 
         unset($oVCard->BDAY);
         if ($oContact->BirthYear !== 0 && $oContact->BirthMonth !== 0 && $oContact->BirthDay !== 0) {
-            $sBDayDT = $oContact->BirthYear.'-'.$oContact->BirthMonth.'-'.$oContact->BirthDay;
+            $sBDayDT = $oContact->BirthYear . '-' . $oContact->BirthMonth . '-' . $oContact->BirthDay;
             $oVCard->add('BDAY', $sBDayDT);
         }
     }

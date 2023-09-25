@@ -205,7 +205,7 @@ class Formatter
             $iYear = $this->oContainer->{$sYearFieldName};
         }
 
-        return checkdate($iMonth, $iDay, $iYear) ? $iDay.'/'.$iMonth.'/'.$iYear : '';
+        return checkdate($iMonth, $iDay, $iYear) ? $iDay . '/' . $iMonth . '/' . $iYear : '';
     }
 
     /**
@@ -218,6 +218,6 @@ class Formatter
     {
         $sValue = str_replace('"', '""', $sValue);
         return $bAddQuotation ?
-            (empty($sValue) ? '' : '"'.$sValue.'"') : $sValue;
+            (empty($sValue) ? '' : '"' . $sValue . '"') : $sValue;
     }
 }

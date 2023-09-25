@@ -231,7 +231,7 @@ class ContactListItem
     public function ToString()
     {
         return ($this->UseFriendlyName && 0 < strlen(trim($this->Name)) && !$this->IsGroup)
-            ? '"'.trim($this->Name).'" <'.trim($this->Email).'>'
+            ? '"' . trim($this->Name) . '" <' . trim($this->Email) . '>'
             : (($this->IsGroup) ? trim($this->Name) : trim($this->Email));
     }
 
