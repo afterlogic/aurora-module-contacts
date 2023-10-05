@@ -213,6 +213,9 @@ class Module extends \Aurora\System\Module\AbstractModule
             case Enums\StorageType::Personal:
                 $result = $this->i18N('LABEL_STORAGE_PERSONAL');
                 break;
+            case Enums\StorageType::Collected:
+                $result = $this->i18N('LABEL_STORAGE_COLLECTED');
+                break;
             case Enums\StorageType::Team:
                 $result = $this->i18N('LABEL_STORAGE_TEAM');
                 break;
