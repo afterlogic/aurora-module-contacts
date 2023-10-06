@@ -187,7 +187,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
                 break;
             case SortField::Frequency:
                 $sSortField = 'AgeScore';
-                $oFilters->select(Capsule::connection()->raw('*, (Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, DateModified)/30)) as AgeScore'));
+                //                $oFilters->select(Capsule::connection()->raw('*, (Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, DateModified)/30)) as AgeScore'));
                 break;
             case SortField::FirstName:
                 $sSortField = 'FirstName';

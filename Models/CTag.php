@@ -60,7 +60,7 @@ class CTag extends Model
             self::leftJoin($foreignTable, "$tableName.$this->foreignModelIdColumn", '=', "$foreignTable.$foreignPK")->whereNotNull("$foreignTable.$foreignPK")->where('Storage', '<>', 'team')->where('Storage', '<>', 'shared')->pluck("$tableName.$this->primaryKey")
         )->all();
 
-        $foreignSecondObject = new $this->foreignModelSecond;
+        $foreignSecondObject = new $this->foreignModelSecond();
         $foreignSecondTable = $foreignSecondObject->getTable();
         $foreignSecondPK = $foreignSecondObject->primaryKey;
         $orphanSecondIds = self::where('Storage', 'team')->where('Storage', 'shared')->pluck($this->primaryKey)->diff(

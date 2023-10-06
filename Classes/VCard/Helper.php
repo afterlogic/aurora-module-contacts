@@ -573,6 +573,7 @@ class Helper
         );
         $oVCard->{'X-OFFICE'} = $oContact->BusinessOffice;
         $oVCard->{'X-USE-FRIENDLY-NAME'} = $oContact->UseFriendlyName ? '1' : '0';
+        $oVCard->{'X-FREQUENCY'} = $oContact->Frequency;
         $oVCard->TITLE = $oContact->BusinessJobTitle;
         $oVCard->NICKNAME = $oContact->NickName;
         $oVCard->NOTE = $oContact->Notes;
@@ -582,13 +583,13 @@ class Helper
         );
 
         $aCategories = [];
-        foreach ($oContact->GroupsContacts as $oGroupsContact) {
-            $oContactsModule = \Aurora\Modules\Contacts\Module::Decorator();
-            $oGroup = $oContactsModule->GetGroup($oContact->IdUser, $oGroupsContact->GroupUUID);
-            if ($oGroup) {
-                $aCategories[] = $oGroup->Name;
-            }
-        }
+        // foreach ($oContact->GroupsContacts as $oGroupsContact) {
+        //     $oContactsModule = \Aurora\Modules\Contacts\Module::Decorator();
+        //     $oGroup = $oContactsModule->GetGroup($oContact->IdUser, $oGroupsContact->GroupUUID);
+        //     if ($oGroup) {
+        //         $aCategories[] = $oGroup->Name;
+        //     }
+        // }
 
         unset($oVCard->CATEGORIES);
         if (count($aCategories) > 0) {
@@ -607,6 +608,12 @@ class Helper
         if ($oContact->BirthYear !== 0 && $oContact->BirthMonth !== 0 && $oContact->BirthDay !== 0) {
             $sBDayDT = $oContact->BirthYear . '-' . $oContact->BirthMonth . '-' . $oContact->BirthDay;
             $oVCard->add('BDAY', $sBDayDT);
+        }
+
+        $props = $oContact->getExtendedProps();
+        foreach ($props as $key => $prop) {
+            $key = str_replace('::', '--', $key);
+            $oVCard->add('X-' . $key, $prop);
         }
     }
 
