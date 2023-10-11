@@ -279,12 +279,49 @@ class Module extends \Aurora\System\Module\AbstractModule
         $aCustomAddressBooks = $this->Decorator()->GetAddressBooks($iUserId);
         foreach ($aCustomAddressBooks as &$oAddressBook) {
             $oAddressBook['DisplayName'] = $this->GetStorageDisplayNameOverride($oAddressBook['DisplayName'], $oAddressBook['Id']);
-            $oAddressBook['Editable'] = !in_array($oAddressBook['Uri'], [Constants::ADDRESSBOOK_COLLECTED_NAME, Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME]);
+            $oAddressBook['Editable'] = isset($oAddressBook['Uri']) && !in_array($oAddressBook['Uri'], [Constants::ADDRESSBOOK_COLLECTED_NAME, Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME]);
         }
 
         $aStorages = array_merge($aStorages, $aCustomAddressBooks);
 
-        return $aStorages;
+        $aStoragesOrder = array("personal", "collected", "shared", "team");
+        return $this->sortAddressBooks($aStorages, $aStoragesOrder);
+    }
+
+    protected function sortAddressBooks($aAddressBooks, $aOrder = [])
+    {
+        $priority_books = array();
+        $non_priority_books = array();
+
+        // Loop through the address books and check their ids
+        foreach ($aAddressBooks as $book) {
+            $id = $book['Id'];
+
+            if (in_array($id, $aOrder)) {
+                $priority_books[] = $book;
+            } else {
+                $non_priority_books[] = $book;
+            }
+        }
+
+        // Sort the priority books array by the order of the priority ids array
+        usort($priority_books, function ($a, $b) use ($aOrder) {
+            // Get the index of the ids in the priority ids array
+            $index_a = array_search($a['Id'], $aOrder);
+            $index_b = array_search($b['Id'], $aOrder);
+
+            // Compare the indexes
+            return $index_a - $index_b;
+        });
+
+        // Sort the non-priority books array by the DisplayName property in ascending order
+        usort($non_priority_books, function ($a, $b) {
+            // Compare the names
+            return strcmp($a['DisplayName'], $b['DisplayName']);
+        });
+
+        // Merge the two arrays and return the result
+        return array_merge($priority_books, $non_priority_books);
     }
 
     /**
