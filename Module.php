@@ -184,8 +184,8 @@ class Module extends \Aurora\System\Module\AbstractModule
         ];
 
         if ($oUser && $oUser->isNormalOrTenant()) {
-            if (null !== $oUser->getExtendedProp(self::GetName().'::ContactsPerPage')) {
-                $aResult['ContactsPerPage'] = $oUser->getExtendedProp(self::GetName().'::ContactsPerPage');
+            if (null !== $oUser->getExtendedProp(self::GetName() . '::ContactsPerPage')) {
+                $aResult['ContactsPerPage'] = $oUser->getExtendedProp(self::GetName() . '::ContactsPerPage');
             }
 
             $aResult['Storages'] = self::Decorator()->GetStorages();
@@ -232,28 +232,59 @@ class Module extends \Aurora\System\Module\AbstractModule
         return $result;
     }
 
+    protected function GetStorageDisplayNameOverride($sStorageName, $sSotrageId)
+    {
+        $result = $sStorageName;
+
+        switch(true) {
+            case $sSotrageId === Enums\StorageType::Personal && $sStorageName === Constants::ADDRESSBOOK_DEFAULT_DISPLAY_NAME:
+                $result = $this->i18N('LABEL_STORAGE_PERSONAL');
+                break;
+            case $sSotrageId === Enums\StorageType::Collected && $sStorageName === Constants::ADDRESSBOOK_COLLECTED_DISPLAY_NAME:
+                $result = $this->i18N('LABEL_STORAGE_COLLECTED');
+                break;
+            case $sSotrageId === Enums\StorageType::Team && $sStorageName === 'Team':
+                $result = $this->i18N('LABEL_STORAGE_TEAM');
+                break;
+            case $sSotrageId === Enums\StorageType::Shared && $sStorageName === Constants::ADDRESSBOOK_SHARED_WITH_ALL_DISPLAY_NAME:
+                $result = $this->i18N('LABEL_STORAGE_SHARED');
+                break;
+        }
+
+        return $result;
+    }
+
     public function GetStorages()
     {
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
         $aStorages = [];
-        $aStorageNames = [];
-        $this->broadcastEvent('GetStorages', $aStorageNames);
-        \ksort($aStorageNames);
+        $aStandardStorageNames = [];
+        $this->broadcastEvent('GetStorages', $aStandardStorageNames);
+        \ksort($aStandardStorageNames);
 
         $iUserId = \Aurora\System\Api::getAuthenticatedUserId();
 
-        foreach ($aStorageNames as $iIndex => $sStorageName) {
+        foreach ($aStandardStorageNames as $iIndex => $sStorageName) {
             $aStorages[] = [
                 'Id' => $sStorageName,
                 'CTag' => $this->Decorator()->GetCTag($iUserId, $sStorageName),
                 'Display' => $this->Decorator()->IsDisplayedStorage($sStorageName),
                 'Order' => $iIndex,
-                'DisplayName' => $this->Decorator()->GetStorageDisplayName($sStorageName)
+                'DisplayName' => $this->Decorator()->GetStorageDisplayName($sStorageName),
+                'Editable' => false //TODO: currently only Team storage is processed wihtin this loop
             ];
         }
 
-        return array_merge($aStorages, $this->Decorator()->GetAddressBooks($iUserId));
+        $aCustomAddressBooks = $this->Decorator()->GetAddressBooks($iUserId);
+        foreach ($aCustomAddressBooks as &$oAddressBook) {
+            $oAddressBook['DisplayName'] = $this->GetStorageDisplayNameOverride($oAddressBook['DisplayName'], $oAddressBook['Id']);
+            $oAddressBook['Editable'] = !in_array($oAddressBook['Uri'], [Constants::ADDRESSBOOK_COLLECTED_NAME, Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME]);
+        }
+
+        $aStorages = array_merge($aStorages, $aCustomAddressBooks);
+
+        return $aStorages;
     }
 
     /**
@@ -318,7 +349,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $oUser = \Aurora\System\Api::getAuthenticatedUser();
         if ($oUser) {
             if ($oUser->isNormalOrTenant()) {
-                $oUser->setExtendedProp(self::GetName().'::ContactsPerPage', $ContactsPerPage);
+                $oUser->setExtendedProp(self::GetName() . '::ContactsPerPage', $ContactsPerPage);
                 return \Aurora\Modules\Core\Module::Decorator()->UpdateUserObject($oUser);
             }
             if ($oUser->isAdmin()) {
@@ -742,11 +773,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         if (!empty($Search)) {
             $query = $query->where(function ($query) use ($Search) {
-                $query->where('FullName', 'LIKE', '%'.$Search.'%')
-                ->orWhere('PersonalEmail', 'LIKE', '%'.$Search.'%')
-                ->orWhere('BusinessEmail', 'LIKE', '%'.$Search.'%')
-                ->orWhere('OtherEmail', 'LIKE', '%'.$Search.'%')
-                ->orWhere('BusinessCompany', 'LIKE', '%'.$Search.'%');
+                $query->where('FullName', 'LIKE', '%' . $Search . '%')
+                ->orWhere('PersonalEmail', 'LIKE', '%' . $Search . '%')
+                ->orWhere('BusinessEmail', 'LIKE', '%' . $Search . '%')
+                ->orWhere('OtherEmail', 'LIKE', '%' . $Search . '%')
+                ->orWhere('BusinessCompany', 'LIKE', '%' . $Search . '%');
             });
         }
 
@@ -2103,7 +2134,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $sVCardData = $oVCard->serialize();
             if ($sVCardData) {
                 $sUUID = \Aurora\System\Api::getUserUUIDById($UserId);
-                $sTempName = md5($sUUID.$UUID);
+                $sTempName = md5($sUUID . $UUID);
                 $oApiFileCache = new \Aurora\System\Managers\Filecache();
 
                 $oApiFileCache->put($sUUID, $sTempName, $sVCardData);
