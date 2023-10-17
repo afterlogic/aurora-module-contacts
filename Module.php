@@ -462,64 +462,29 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $sOutput = '';
 
-        if (empty($GroupUUID) && count($ContactUUIDs) === 0 && $Format === 'vcf') {
-            $aGroups = $this->getManager()->getGroups($UserId);
-            foreach ($aGroups as $oGroup) {
-                $oVCard = new \Sabre\VObject\Component\VCard();
-                $oVCard->VERSION = '3.0';
-                $oVCard->UID = $oGroup->UUID;
-                $oVCard->FN = $oGroup->Name;
-                $oVCard->{'X-ADDRESSBOOKSERVER-KIND'} = 'GROUP';
-
-                foreach ($oGroup->Contacts as $oContact) {
-                    if ($oContact) {
-                        $sVCardUID = null;
-                        if ($oContact->Storage !== 'team') {
-                            if (!empty($oContact->getExtendedProp('DavContacts::VCardUID'))) {
-                                $sVCardUID = $oContact->getExtendedProp('DavContacts::VCardUID');
-                            }
-                        } else {
-                            $sVCardUID = $oContact->UUID;
-                        }
-                        if (isset($sVCardUID)) {
-                            $oVCard->add('X-ADDRESSBOOKSERVER-MEMBER', 'urn:uuid:' . $sVCardUID);
-                        }
-                    }
-                }
-
-                $sOutput .= $oVCard->serialize();
-            }
-        }
-
-        $oQuery = ($Filters instanceof Builder) ? $Filters : Models\Contact::query();
-        $oQuery->where(function ($query) use ($UserId, $Storage) {
-            $this->prepareFiltersFromStorage($UserId, $Storage, $query);
-        });
-
-        if (empty($ContactUUIDs) && !empty($GroupUUID)) {
-            $oGroup = Group::firstWhere('UUID', $GroupUUID);
+        if (!empty($GroupUUID)) {
+            $oGroup = self::Decorator()->GetGroup($UserId, $GroupUUID);
             if ($oGroup) {
-                $oQuery->whereHas('Groups', function ($oSubQuery) use ($oGroup) {
-                    return $oSubQuery->where('Groups.Id', $oGroup->Id);
-                });
+                $ContactUUIDs = array_merge(
+                    $this->getContactsIdsFromUUIDs($oGroup->Contacts),
+                    $ContactUUIDs
+                );
             }
         }
-        if (count($ContactUUIDs) > 0) {
-            $oQuery->whereIn('UUID', $ContactUUIDs);
-        }
 
-        $aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $oQuery);
+        if (is_array($ContactUUIDs) && count($ContactUUIDs) > 0) {
+            if ($Format === 'vcf') {
+                $query = $this->getGetContactsQueryBuilder($UserId, StorageType::All);
+                $rows = $query->whereIn('contacts_cards.CardId', $ContactUUIDs)->select('carddata')->get()->all();
 
-        switch ($Format) {
-            case 'csv':
-                $oSync = new Classes\Csv\Sync();
-                $sOutput = $oSync->Export($aContacts);
-                break;
-            case 'vcf':
-                foreach ($aContacts as $oContact) {
-                    $sOutput .= self::Decorator()->GetContactAsVCF($UserId, $oContact);
+                foreach ($rows as $row) {
+                    $sOutput .= $row->carddata;
                 }
-                break;
+            } elseif ($Format === 'csv') {
+                $oSync = new Classes\Csv\Sync();
+                $aContacts = self::Decorator()->GetContactsByUids($UserId, $ContactUUIDs);
+                $sOutput = $oSync->Export($aContacts);
+            }
         }
 
         if (is_string($sOutput) && !empty($sOutput)) {
@@ -1642,6 +1607,23 @@ class Module extends \Aurora\System\Module\AbstractModule
         return array_map(function ($item) {
             $pathInfo = pathinfo($item->card_uri);
             return $pathInfo['filename'];
+        }, $contactsIds);
+    }
+
+    protected function getContactsIdsFromUUIDs($UserId, $UUIDs)
+    {
+        $Uris = array_map(function ($item) {
+            return $item . '.vcf';
+        }, $UUIDs);
+
+        $contactsIds = Capsule::connection()->table('adav_cards')
+            ->join('adav_addressbooks', 'adav_cards.addressbookid', '=', 'adav_addressbooks.id')
+            ->select('adav_cards.id as card_id')
+            ->where('principaluri', Constants::PRINCIPALS_PREFIX . Api::getUserPublicIdById($UserId))
+            ->whereIn('adav_cards.uri', $Uris)->get()->all();
+
+        return array_map(function ($item) {
+            return $item->card_id;
         }, $contactsIds);
     }
 
