@@ -837,6 +837,33 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $rows = $this->getManager()->getContacts($SortField, $SortOrder, $Offset, $Limit, $query)->toArray();
 
+        // if ($WithGroups) {
+        //     $oUser = \Aurora\System\Api::getAuthenticatedUser();
+        //     if ($oUser instanceof \Aurora\Modules\Core\Models\User) {
+        //         $aGroups = $this->getManager()->getGroups($oUser->Id, Group::where('Name', 'LIKE', "%{$Search}%"));
+        //         if ($aGroups) {
+        //             foreach ($aGroups as $oGroup) {
+        //                 $aGroupContactsEmails = $oGroup->Contacts->map(function ($oContact) {
+        //                     return $oContact->FullName ? "\"{$oContact->FullName}\" <{$oContact->ViewEmail}>" : $oContact->ViewEmail;
+        //                 })->toArray();
+
+        //                 $aGroupUsersList[] = [
+        //                     'UUID' => $oGroup->UUID,
+        //                     'IdUser' => $oGroup->IdUser,
+        //                     'FullName' => $oGroup->Name,
+        //                     'FirstName' => '',
+        //                     'LastName' => '',
+        //                     'ViewEmail' => implode(', ', $aGroupContactsEmails),
+        //                     'Storage' => '',
+        //                     'Frequency' => 0,
+        //                     'DateModified' => '',
+        //                     'IsGroup' => true,
+        //                 ];
+        //             }
+        //         }
+        //     }
+        // }
+
         return [
             'ContactCount' => $count,
             'List' => \Aurora\System\Managers\Response::GetResponseObject($rows)
@@ -1495,14 +1522,25 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
-        $sStorage = $Storage;
-
-        if (self::Decorator()->CheckAccessToAddressBook($oUser, $sStorage, Enums\Access::Write)) {
-            $mResult = !!Capsule::connection()->table('contacts_cards')
+        if (self::Decorator()->CheckAccessToAddressBook($oUser, $Storage, Enums\Access::Write)) {
+            $query = Capsule::connection()->table('contacts_cards')
                 ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
                 ->join('adav_addressbooks', 'adav_cards.addressbookid', '=', 'adav_addressbooks.id')
-                ->whereIn('adav_cards.id', $UUIDs)
-                ->delete();
+                ->select('adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id');
+
+            $aArgs = [
+                'UUID' => $UUIDs,
+                'UserId' => $UserId
+            ];
+            $this->broadcastEvent(self::GetName() . '::ContactQueryBuilder', $aArgs, $query);
+
+            $rows = $query->get()->all();
+
+            foreach ($rows as $row) {
+                Backend::Carddav()->deleteCard($row->addressbook_id, $row->card_uri);
+            }
+
+            $mResult = true;
         }
 
         return $mResult;
