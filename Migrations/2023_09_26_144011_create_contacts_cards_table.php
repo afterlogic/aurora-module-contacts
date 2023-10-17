@@ -27,6 +27,7 @@ class CreateContactsCardsTable extends Migration
             $table->string('OtherEmail')->default('');
             $table->string('BusinessCompany')->default('');
             $table->integer('Frequency')->default(0);
+            $table->boolean('IsGroup')->default(false);
 
             $table->json('Properties')->nullable();
         });

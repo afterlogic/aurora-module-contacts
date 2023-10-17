@@ -194,11 +194,9 @@ class Helper
         $aGroup = [];
 
         if (!empty($sUUID)) {
-            $aGroup['DavContacts::UID'] = (string) $sUUID;
-            $aGroup['UUID'] = $aGroup['DavContacts::UID'];
+            $aGroup['UUID'] = (string) $sUUID;
         } elseif (isset($oVCard->UID)) {
-            $aGroup['DavContacts::UID'] = \str_replace('urn:uuid:', '', (string) $oVCard->UID);
-            $aGroup['UUID'] = $aGroup['DavContacts::UID'];
+            $aGroup['UUID'] = \str_replace('urn:uuid:', '', (string) $oVCard->UID);
         }
 
         if (isset($oVCard->FN)) {
@@ -206,6 +204,68 @@ class Helper
         } elseif (isset($oVCard->N)) {
             $aNames = $oVCard->N->getParts();
             $aGroup['Name'] = \implode(' ', $aNames);
+        }
+
+        if (isset($oVCard->ORG)) {
+            $aParts = $oVCard->ORG->getParts();
+            $aGroup['Company'] = isset($aParts[0]) ? $aParts[0] : '';
+        }
+
+        if (isset($oVCard->{'X-AFTERLOGIC-IS-ORG'})) {
+            $aGroup['IsOrganization'] = (int) $oVCard->{'X-AFTERLOGIC-IS-ORG'}->getValue() === 1;
+        }
+
+        if (isset($oVCard->ADR)) {
+            foreach ($oVCard->ADR as $oAdr) {
+                $aAdrs = $oAdr->getParts();
+                $oTypes = $oAdr['TYPE'];
+                if ($oTypes) {
+                    if ($oTypes->has('WORK')) {
+                        $aGroup['Street'] = isset($aAdrs[2]) ? (string) $aAdrs[2] : '';
+                        $aGroup['City'] = isset($aAdrs[3]) ? (string) $aAdrs[3] : '';
+                        $aGroup['State'] = isset($aAdrs[4]) ? (string) $aAdrs[4] : '';
+                        $aGroup['Zip'] = isset($aAdrs[5]) ? (string) $aAdrs[5] : '';
+                        $aGroup['Country'] = isset($aAdrs[6]) ? (string) $aAdrs[6] : '';
+                    }
+                }
+            }
+        }
+
+        if (isset($oVCard->TEL)) {
+            foreach ($oVCard->TEL as $oTel) {
+                $oTypes = $oTel['TYPE'];
+                if ($oTypes) {
+                    if ($oTypes->has('WORK')) {
+                        if ($oTypes->has('FAX')) {
+                            $aGroup['Fax'] = $oTel->getValue();
+                        } else {
+                            $aGroup['Phone'] = $oTel->getValue();
+                        }
+                    }
+                }
+            }
+        }
+
+        if (isset($oVCard->URL)) {
+            foreach ($oVCard->URL as $oUrl) {
+                $oTypes = $oUrl['TYPE'];
+                if ($oTypes) {
+                    if ($oTypes->has('WORK')) {
+                        $aGroup['Web'] = $oUrl->getValue();
+                    }
+                }
+            }
+        }
+
+        if (isset($oVCard->EMAIL)) {
+            foreach ($oVCard->EMAIL as $oEmail) {
+                $oTypes = $oUrl['TYPE'];
+                if ($oTypes) {
+                    if ($oTypes->has('WORK')) {
+                        $aGroup['Email'] = $oEmail->getValue();
+                    }
+                }
+            }
         }
 
         $aMembers = [];
@@ -618,7 +678,7 @@ class Helper
     }
 
     /**
-    * @param \Aurora\Modules\Contacts\Models\Group $oGroup
+    * @param \Aurora\Modules\Contacts\Classes\Group $oGroup
     * @param \Sabre\VObject\Component\VCard $oVCard
     * @param bool $bIsUpdate = false
     * @return void
@@ -627,12 +687,33 @@ class Helper
     {
         $oVCard->VERSION = '3.0';
         $oVCard->UID = $oGroup->UUID;
-        //		$oVCard->N = [$oGroup->Name];
         $oVCard->FN = $oGroup->Name;
         $oVCard->{'X-ADDRESSBOOKSERVER-KIND'} = 'GROUP';
+        $oVCard->ORG = [$oGroup->Company, ''];
+        $oVCard->{'X-AFTERLOGIC-IS-ORG'} = $oGroup->IsOrganization ? 1 : 0;
+        $oVCard->add('ADR', ['', '', $oGroup->Street, $oGroup->City, $oGroup->State, $oGroup->Zip, $oGroup->Country], ['TYPE' => ['WORK']]);
+        
+        if (!empty($oGroup->Phone)) {
+            $oVCard->add('TEL', $oGroup->Phone, array('TYPE' => array('VOICE', 'WORK')));
+        }
+
+        if (!empty($oGroup->Fax)) {
+            $oVCard->add('TEL', $oGroup->Fax, array('TYPE' => array('FAX', 'WORK')));
+        }
+
+        if (!empty($oGroup->Web)) {
+            $oVCard->add('URL', $oGroup->Web, array('TYPE' => array('WORK')));
+        }
+
+        if (!empty($oGroup->Email)) {
+            $oVCard->add('EMAIL', $oGroup->Email, array('TYPE' => array('WORK')));
+        }
+
         unset($oVCard->{'X-ADDRESSBOOKSERVER-MEMBER'});
-        foreach ($oGroup->Contacts as $oGroupContact) {
-            $oVCard->add('X-ADDRESSBOOKSERVER-MEMBER', 'urn:uuid:' . $oGroupContact->UUID);
+        if (is_array($oGroup->Contacts)) {
+            foreach ($oGroup->Contacts as $sContactUID) {
+                $oVCard->add('X-ADDRESSBOOKSERVER-MEMBER', 'urn:uuid:' . $sContactUID);
+            }
         }
     }
 }

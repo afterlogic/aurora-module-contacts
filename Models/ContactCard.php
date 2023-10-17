@@ -8,14 +8,10 @@
 namespace Aurora\Modules\Contacts\Models;
 
 use Aurora\System\Classes\Model;
-use Aurora\Modules\Contacts\Classes\VCard\Helper;
-use Aurora\Modules\Contacts\Enums\StorageType;
-use Aurora\Modules\Contacts\Models\Group;
-use Aurora\Modules\Core\Models\User;
-use Aurora\System\EventEmitter;
+
 
 /**
- * Aurora\Modules\Contacts\Models\Contact
+ * Aurora\Modules\Contacts\Models\ContactCard
  *
  * @property integer $Id
  * @property integer $CardId
@@ -26,7 +22,6 @@ use Aurora\System\EventEmitter;
  * @property string $LastName
  * @property integer $Frequency
  * @property array|null $Properties
- * @property-read mixed $age_score
  */
 class ContactCard extends Model
 {
@@ -48,6 +43,7 @@ class ContactCard extends Model
         'FirstName',
         'LastName',
         'Frequency',
+        'IsGroup',
         'Properties'
     ];
 
@@ -62,7 +58,8 @@ class ContactCard extends Model
         'Storage',
         "DateModified",
         "ETag",
-        'ViewEmail'
+        'ViewEmail',
+        'Uri',
     ];
 
     public function getUUIDAttribute()
@@ -93,6 +90,11 @@ class ContactCard extends Model
     public function getETagAttribute()
     {
         return $this->attributes['ETag'];
+    }
+
+    public function getUriAttribute()
+    {
+        return $this->attributes['Uri'];
     }
 
     /**

@@ -74,6 +74,7 @@ class Contact
     public int $Frequency;
     public float $AgeScore;
     public string $AddressBookId;
+    public array $GroupUUIDs;
 
     public $ExtendedInformation = array();
 
@@ -129,6 +130,7 @@ class Contact
         $this->Frequency = 0;
         $this->AgeScore = 0;
         $this->AddressBookId = '';
+        $this->GroupUUIDs = [];
     }
 
     public function toResponseArray()
