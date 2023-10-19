@@ -677,16 +677,19 @@ class Module extends \Aurora\System\Module\AbstractModule
             $query = Capsule::connection()->table('contacts_cards')
                 ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
                 ->join('adav_addressbooks', 'adav_cards.addressbookid', '=', 'adav_addressbooks.id')
-                ->select('adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id')
-                ->where('contacts_cards.IsGroup', true);
+                ->select('adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id');
 
             $aArgs = [
                 'UUID' => $UUID,
                 'UserId' => $UserId
             ];
-            $this->broadcastEvent(self::GetName() . '::ContactQueryBuilder', $aArgs, $query);
 
-            $row = $query->first();
+            $query->where(function ($q) use ($aArgs, $query) {
+                $aArgs['Query'] = $query;
+                $this->broadcastEvent(self::GetName() . '::ContactQueryBuilder', $aArgs, $q);
+            });
+
+            $row = $query->where('contacts_cards.IsGroup', true)->first();
 
             if ($row) {
                 $card = Backend::Carddav()->getCard($row->addressbook_id, $row->card_uri);
@@ -1005,7 +1008,10 @@ class Module extends \Aurora\System\Module\AbstractModule
                 'UUID' => $UUID,
                 'UserId' => $UserId
             ];
-            $this->broadcastEvent(self::GetName() . '::ContactQueryBuilder', $aArgs, $query);
+            $query->where(function ($q) use ($aArgs, $query) {
+                $aArgs['Query'] = $query;
+                $this->broadcastEvent(self::GetName() . '::ContactQueryBuilder', $aArgs, $q);
+            });
 
             $row = $query->first();
 
@@ -1449,7 +1455,10 @@ class Module extends \Aurora\System\Module\AbstractModule
         ];
 
         // build a query to obtain the addressbook_id and card_uri with checking access to the contact
-        $this->broadcastEvent(self::GetName() . '::ContactQueryBuilder', $aArgs, $query);
+        $query->where(function ($q) use ($aArgs, $query) {
+            $aArgs['Query'] = $query;
+            $this->broadcastEvent(self::GetName() . '::ContactQueryBuilder', $aArgs, $q);
+        });
 
         $row = $query->first();
         if ($row) {
@@ -1532,7 +1541,10 @@ class Module extends \Aurora\System\Module\AbstractModule
                 'UUID' => $UUIDs,
                 'UserId' => $UserId
             ];
-            $this->broadcastEvent(self::GetName() . '::ContactQueryBuilder', $aArgs, $query);
+            $query->where(function ($q) use ($aArgs, $query) {
+                $aArgs['Query'] = $query;
+                $this->broadcastEvent(self::GetName() . '::ContactQueryBuilder', $aArgs, $q);
+            });
 
             $rows = $query->get()->all();
 
@@ -1720,7 +1732,9 @@ class Module extends \Aurora\System\Module\AbstractModule
         $mResult = false;
         $oVCard = new \Sabre\VObject\Component\VCard();
 
-        $oGroup->Contacts = $this->getContactsUUIDsFromIds($UserId, $oGroup->Contacts);
+        if (is_array($oGroup->Contacts) && count($oGroup->Contacts)) {
+            $oGroup->Contacts = $this->getContactsUUIDsFromIds($UserId, $oGroup->Contacts);
+        }
 
         Helper::UpdateVCardFromGroup($oGroup, $oVCard);
 
@@ -1735,7 +1749,10 @@ class Module extends \Aurora\System\Module\AbstractModule
         ];
 
         // build a query to obtain the addressbook_id and card_uri with checking access to the contact
-        $this->broadcastEvent(self::GetName() . '::ContactQueryBuilder', $aArgs, $query);
+        $query->where(function ($q) use ($aArgs, $query) {
+            $aArgs['Query'] = $query;
+            $this->broadcastEvent(self::GetName() . '::ContactQueryBuilder', $aArgs, $q);
+        });
 
         $row = $query->first();
         if ($row) {
@@ -1761,7 +1778,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $oGroup = self::Decorator()->GetGroup($UserId, $Group['UUID']);
         if ($oGroup) {
             $oGroup->populate($Group);
-            $mResult = $this->UpdateGroupObject($UserId, $Group);
+            $mResult = $this->UpdateGroupObject($UserId, $oGroup);
         }
 
         return $mResult;

@@ -85,7 +85,7 @@ class Group
             $this->UUID = \Sabre\DAV\UUIDUtil::getUUID();
         }
 
-        if (isset($aGroup['Contacts']) && is_array($aGroup['Contacts'])) {
+        if (isset($aGroup['Contacts']) && is_array($aGroup['Contacts']) && count($aGroup['Contacts']) > 0) {
 
             $contactsIds = array_map(function ($item) {
                 return $item . '.vcf';
@@ -110,7 +110,10 @@ class Group
             ];
 
             // build a query to obtain the addressbook_id and card_uri with checking access to the contact
-            EventEmitter::getInstance()->emit('Contacts', 'ContactQueryBuilder', $aArgs, $query);
+            $query->where(function ($q) use (&$aArgs, $query) {
+                $aArgs['Query'] =& $query;
+                EventEmitter::getInstance()->emit('Contacts', 'ContactQueryBuilder', $aArgs, $q);
+            });
 
             $rows = $query->get()->map(function ($value) {
                 return $value->card_id;
