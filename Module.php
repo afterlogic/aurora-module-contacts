@@ -466,7 +466,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $oGroup = self::Decorator()->GetGroup($UserId, $GroupUUID);
             if ($oGroup) {
                 $ContactUUIDs = array_merge(
-                    $this->getContactsIdsFromUUIDs($oGroup->Contacts),
+                    $this->getContactsIdsFromUUIDs($UserId, $oGroup->Contacts),
                     $ContactUUIDs
                 );
             }
@@ -574,8 +574,14 @@ class Module extends \Aurora\System\Module\AbstractModule
             ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
             ->select('adav_cards.id as UUID', 'carddata');
 
-        $query->where(function ($q) use ($UserId) {
-            $this->prepareFiltersFromStorage($UserId, StorageType::Personal, $q, false);
+        $aArgs = [
+            'UserId' => $UserId,
+            'Storage' => StorageType::Personal,
+            'AddressBookId' => 0
+        ];
+        $this->populateStorage($aArgs);
+        $query->where(function ($q) use ($UserId, $aArgs) {
+            $this->prepareFiltersFromStorage($UserId, StorageType::Personal, $aArgs['AddressBookId'], $q, false);
         })->where('IsGroup', true);
 
         $groups = $query->get();
@@ -810,62 +816,68 @@ class Module extends \Aurora\System\Module\AbstractModule
      * @param bool $Suggestions
      * @return array
      */
-    public function GetContacts($UserId, $Storage = '', $Offset = 0, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', Builder $Filters = null, $WithGroups = false, $WithoutTeamContactsDuplicates = false, $Suggestions = false)
+    public function GetContacts($UserId, $Storage = '', $Offset = 0, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', Builder $Filters = null, $WithGroups = false, $WithoutTeamContactsDuplicates = false, $Suggestions = false, $AddressBookId = null)
     {
         // $Storage is used by subscribers to prepare filters.
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
         Api::CheckAccess($UserId);
 
-        $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $Suggestions);
+        $oUser = Api::getUserById($UserId);
+        if (self::Decorator()->CheckAccessToAddressBook($oUser, $AddressBookId, [Access::Write, Access::Read])) {
 
-        if (!empty($Search)) {
-            $query = $query->where(function ($query) use ($Search) {
-                $query->where('FullName', 'LIKE', '%' . $Search . '%')
-                ->orWhere('PersonalEmail', 'LIKE', '%' . $Search . '%')
-                ->orWhere('BusinessEmail', 'LIKE', '%' . $Search . '%')
-                ->orWhere('OtherEmail', 'LIKE', '%' . $Search . '%')
-                ->orWhere('BusinessCompany', 'LIKE', '%' . $Search . '%');
-            });
-        }
+            $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $AddressBookId, $Suggestions);
 
-        if (!empty($GroupUUID)) {
-            $oGroup = self::Decorator()->GetGroup($UserId, $GroupUUID);
-            if ($oGroup) {
-                $query->whereIn('adav_cards.id', $oGroup->Contacts);
+            if (!empty($Search)) {
+                $query = $query->where(function ($query) use ($Search) {
+                    $query->where('FullName', 'LIKE', '%' . $Search . '%')
+                    ->orWhere('PersonalEmail', 'LIKE', '%' . $Search . '%')
+                    ->orWhere('BusinessEmail', 'LIKE', '%' . $Search . '%')
+                    ->orWhere('OtherEmail', 'LIKE', '%' . $Search . '%')
+                    ->orWhere('BusinessCompany', 'LIKE', '%' . $Search . '%');
+                });
             }
+
+            if (!empty($GroupUUID)) {
+                $oGroup = self::Decorator()->GetGroup($UserId, $GroupUUID);
+                if ($oGroup) {
+                    $query->whereIn('adav_cards.id', $oGroup->Contacts);
+                }
+            }
+
+            $count = $query->count();
+
+            $rows = $this->getManager()->getContacts($SortField, $SortOrder, $Offset, $Limit, $query)->toArray();
+
+            // if ($WithGroups) {
+            //     $oUser = \Aurora\System\Api::getAuthenticatedUser();
+            //     if ($oUser instanceof \Aurora\Modules\Core\Models\User) {
+            //         $aGroups = $this->getManager()->getGroups($oUser->Id, Group::where('Name', 'LIKE', "%{$Search}%"));
+            //         if ($aGroups) {
+            //             foreach ($aGroups as $oGroup) {
+            //                 $aGroupContactsEmails = $oGroup->Contacts->map(function ($oContact) {
+            //                     return $oContact->FullName ? "\"{$oContact->FullName}\" <{$oContact->ViewEmail}>" : $oContact->ViewEmail;
+            //                 })->toArray();
+
+            //                 $aGroupUsersList[] = [
+            //                     'UUID' => $oGroup->UUID,
+            //                     'IdUser' => $oGroup->IdUser,
+            //                     'FullName' => $oGroup->Name,
+            //                     'FirstName' => '',
+            //                     'LastName' => '',
+            //                     'ViewEmail' => implode(', ', $aGroupContactsEmails),
+            //                     'Storage' => '',
+            //                     'Frequency' => 0,
+            //                     'DateModified' => '',
+            //                     'IsGroup' => true,
+            //                 ];
+            //             }
+            //         }
+            //     }
+            // }
+        } else {
+            throw new ApiException(\Aurora\System\Notifications::AccessDenied, null, 'AccessDenied');
         }
-
-        $count = $query->count();
-
-        $rows = $this->getManager()->getContacts($SortField, $SortOrder, $Offset, $Limit, $query)->toArray();
-
-        // if ($WithGroups) {
-        //     $oUser = \Aurora\System\Api::getAuthenticatedUser();
-        //     if ($oUser instanceof \Aurora\Modules\Core\Models\User) {
-        //         $aGroups = $this->getManager()->getGroups($oUser->Id, Group::where('Name', 'LIKE', "%{$Search}%"));
-        //         if ($aGroups) {
-        //             foreach ($aGroups as $oGroup) {
-        //                 $aGroupContactsEmails = $oGroup->Contacts->map(function ($oContact) {
-        //                     return $oContact->FullName ? "\"{$oContact->FullName}\" <{$oContact->ViewEmail}>" : $oContact->ViewEmail;
-        //                 })->toArray();
-
-        //                 $aGroupUsersList[] = [
-        //                     'UUID' => $oGroup->UUID,
-        //                     'IdUser' => $oGroup->IdUser,
-        //                     'FullName' => $oGroup->Name,
-        //                     'FirstName' => '',
-        //                     'LastName' => '',
-        //                     'ViewEmail' => implode(', ', $aGroupContactsEmails),
-        //                     'Storage' => '',
-        //                     'Frequency' => 0,
-        //                     'DateModified' => '',
-        //                     'IsGroup' => true,
-        //                 ];
-        //             }
-        //         }
-        //     }
-        // }
 
         return [
             'ContactCount' => $count,
@@ -1014,8 +1026,11 @@ class Module extends \Aurora\System\Module\AbstractModule
             });
 
             $row = $query->first();
-
             if ($row) {
+                if (!self::Decorator()->CheckAccessToAddressBook($oUser, $row->addressbook_id, [Access::Write, Access::Read])) {
+                    throw new ApiException(\Aurora\System\Notifications::AccessDenied, null, 'AccessDenied');
+                }
+
                 $card = Backend::Carddav()->getCard($row->addressbook_id, $row->card_uri);
                 if ($card) {
                     $mResult = new Contact();
@@ -1031,7 +1046,6 @@ class Module extends \Aurora\System\Module\AbstractModule
                             $mResult->GroupUUIDs[] = $group->UUID;
                         }
                     }
-
                 }
             }
         }
@@ -1108,9 +1122,16 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         Api::CheckAccess($UserId);
 
+        $aArgs = [
+            'UserId' => $UserId,
+            'Storage' => $Storage,
+            'AddressBookId' => 0
+        ];
+        $this->populateStorage($aArgs);
+
         $oQuery = ($Filters instanceof Builder) ? $Filters : Models\Contact::query();
-        $oQuery->where(function ($query) use ($UserId, $Storage) {
-            $this->prepareFiltersFromStorage($UserId, $Storage, $query);
+        $oQuery->where(function ($query) use ($UserId, $Storage, $aArgs) {
+            $this->prepareFiltersFromStorage($UserId, $Storage, $aArgs['AddressBookId'], $query);
         });
         $oQuery = $oQuery->whereIn('ViewEmail', $Emails);
         if ($Storage !== StorageType::All) {
@@ -1165,9 +1186,16 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         Api::CheckAccess($UserId);
 
+        $aArgs = [
+            'UserId' => $UserId,
+            'Storage' => $Storage,
+            'AddressBookId' => 0
+        ];
+        $this->populateStorage($aArgs);
+
         $oQuery = ($Filters instanceof Builder) ? $Filters : Models\Contact::query();
-        $oQuery->where(function ($query) use ($UserId, $Storage) {
-            $this->prepareFiltersFromStorage($UserId, $Storage, $query);
+        $oQuery->where(function ($query) use ($UserId, $Storage, $aArgs) {
+            $this->prepareFiltersFromStorage($UserId, $Storage, $aArgs['AddressBookId'], $query);
         });
 
         $aContacts = $oQuery->get(['UUID', 'ETag', 'Auto', 'Storage']);
@@ -1382,7 +1410,8 @@ class Module extends \Aurora\System\Module\AbstractModule
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
         $oContact = self::Decorator()->GetContact($Contact['UUID'], $UserId);
-        if ($oContact) {
+        $oUser = Api::getUserById($UserId);
+        if ($oContact && self::Decorator()->CheckAccessToAddressBook($oUser, $oContact->AddressBookId, Access::Write)) {
             $oContact->populate($Contact, true);
             if ($this->UpdateContactObject($oContact)) {
 
@@ -2281,11 +2310,16 @@ class Module extends \Aurora\System\Module\AbstractModule
         return $aImportResult;
     }
 
-    private function prepareFiltersFromStorage($UserId, $Storage = '', $oQuery = null, $bSuggesions = false)
+    private function populateStorage(&$aArgs) {
+        $this->broadcastEvent('PopulateStorage', $aArgs);
+    }
+
+    private function prepareFiltersFromStorage($UserId, $Storage = '', $AddressBookId = 0, $oQuery = null, $bSuggesions = false)
     {
         $aArgs = [
             'UserId' => $UserId,
             'Storage' => $Storage,
+            'AddressBookId' => $AddressBookId,
             'Suggestions' => $bSuggesions,
             'IsValid' => false,
         ];
@@ -2612,7 +2646,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         return [];
     }
 
-    protected function getGetContactsQueryBuilder($UserId, $Storage = '', $Suggestions = false)
+    protected function getGetContactsQueryBuilder($UserId, $Storage = '', $AddressBookId = 0, $Suggestions = false)
     {
         $con = Capsule::connection();
 
@@ -2636,8 +2670,8 @@ class Module extends \Aurora\System\Module\AbstractModule
                 $con->raw($UserId . ' as UserId')
             );
 
-        $query->where(function ($q) use ($UserId, $Storage, $Suggestions) {
-            $this->prepareFiltersFromStorage($UserId, $Storage, $q, $Suggestions);
+        $query->where(function ($q) use ($UserId, $Storage, $AddressBookId, $Suggestions) {
+            $this->prepareFiltersFromStorage($UserId, $Storage, $AddressBookId, $q, $Suggestions);
         })->where('IsGroup', false);
 
         return $query;
