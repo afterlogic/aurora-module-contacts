@@ -94,7 +94,7 @@ class Group
             $contactsIds = Capsule::connection()->table('adav_cards')
                 ->select('id')
                 ->whereIn('uri', $contactsIds)->get()->all();
-            
+
             $contactsIds = array_map(function ($item) {
                 return $item->id;
             }, $contactsIds);
@@ -111,7 +111,7 @@ class Group
 
             // build a query to obtain the addressbook_id and card_uri with checking access to the contact
             $query->where(function ($q) use (&$aArgs, $query) {
-                $aArgs['Query'] =& $query;
+                $aArgs['Query'] = & $query;
                 EventEmitter::getInstance()->emit('Contacts', 'ContactQueryBuilder', $aArgs, $q);
             });
 

@@ -692,7 +692,7 @@ class Helper
         $oVCard->ORG = [$oGroup->Company, ''];
         $oVCard->{'X-AFTERLOGIC-IS-ORG'} = $oGroup->IsOrganization ? 1 : 0;
         $oVCard->add('ADR', ['', '', $oGroup->Street, $oGroup->City, $oGroup->State, $oGroup->Zip, $oGroup->Country], ['TYPE' => ['WORK']]);
-        
+
         if (!empty($oGroup->Phone)) {
             $oVCard->add('TEL', $oGroup->Phone, array('TYPE' => array('VOICE', 'WORK')));
         }

@@ -129,7 +129,7 @@ class Contact
         $this->Auto = false;
         $this->Frequency = 0;
         $this->AgeScore = 0;
-        $this->AddressBookId = '';
+        $this->AddressBookId = 0;
         $this->GroupUUIDs = [];
     }
 
