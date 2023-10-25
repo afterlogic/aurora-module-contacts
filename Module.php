@@ -832,6 +832,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         Api::CheckAccess($UserId);
 
         $oUser = Api::getUserById($UserId);
+        $aContacts = [];
         if (self::Decorator()->CheckAccessToAddressBook($oUser, $AddressBookId, [Access::Write, Access::Read])) {
 
             $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $AddressBookId, $Suggestions);
@@ -931,7 +932,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                         ];
                     }
                 }
-                $rows = array_merge($aContacts, $aGroupUsersList);
+                $aContacts = array_merge($aContacts, $aGroupUsersList);
             }
         } else {
             throw new ApiException(\Aurora\System\Notifications::AccessDenied, null, 'AccessDenied');
@@ -939,7 +940,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         return [
             'ContactCount' => $count,
-            'List' => \Aurora\System\Managers\Response::GetResponseObject($rows)
+            'List' => \Aurora\System\Managers\Response::GetResponseObject($aContacts)
         ];
     }
 
