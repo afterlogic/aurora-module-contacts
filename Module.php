@@ -1733,8 +1733,16 @@ class Module extends \Aurora\System\Module\AbstractModule
 
             $userPublicId = Api::getUserPublicIdById($UserId);
             $addressBook = Backend::Carddav()->getAddressBookForUser(Constants::PRINCIPALS_PREFIX . $userPublicId, Constants::ADDRESSBOOK_DEFAULT_NAME);
+            $cardUri = $oGroup->UUID . '.vcf';
+
             if ($addressBook) {
-                $mResult = !!Backend::Carddav()->createCard($addressBook['id'], $oGroup->UUID . '.vcf', $oVCard->serialize());
+                $cardETag = Backend::Carddav()->createCard($addressBook['id'], $cardUri, $oVCard->serialize());
+                if ($cardETag) {
+                    $newCard = Backend::Carddav()->getCard($addressBook['id'], $cardUri);
+                    if ($newCard) {
+                        $mResult = (string) $newCard['id'];
+                    }
+                }
             }
         }
 
