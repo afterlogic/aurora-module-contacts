@@ -892,47 +892,53 @@ class Module extends \Aurora\System\Module\AbstractModule
             if ($WithGroups) {
                 $groups = self::Decorator()->GetGroups($UserId, [], $Search);
 
-                $groupContactsUuids = [];
-                $contactsUuids = [];
-                array_map(function ($item) use (&$groupContactsUuids, &$contactsUuids) {
-                    if (is_array($item->Contacts) && count($item->Contacts) > 0) {
-                        $groupContactsUuids[$item->UUID] = $item->Contacts;
-                        $contactsUuids = array_merge($contactsUuids, $item->Contacts);
-                    }
-                }, $groups);
+                if (is_array($groups) && count($groups) > 0) {
+                    $groupContactsUuids = [];
+                    $contactsUuids = [];
+                    array_map(function ($item) use (&$groupContactsUuids, &$contactsUuids) {
+                        if (is_array($item->Contacts) && count($item->Contacts) > 0) {
+                            $groupContactsUuids[$item->UUID] = $item->Contacts;
+                            $contactsUuids = array_merge($contactsUuids, $item->Contacts);
+                        }
+                    }, $groups);
 
-                $groupContacts = [];
-                foreach (self::Decorator()->GetContactsByUids($UserId, array_unique($contactsUuids)) as $groupContact) {
-                    $groupContacts[$groupContact->UUID] = $groupContact;
-                }
+                    $groupContacts = [];
+                    $contactsUuids = array_unique($contactsUuids);
 
-                $aGroupUsersList = [];
-
-                foreach ($groups as $group) {
-                    $aGroupContactsEmails = [];
-                    if (is_array($group->Contacts)) {
-                        foreach ($group->Contacts as $contactUuid) {
-                            if (isset($groupContacts[$contactUuid])) {
-                                $oContact = $groupContacts[$contactUuid];
-                                $aGroupContactsEmails[] = $oContact->FullName ? "\"{$oContact->FullName}\" <{$oContact->ViewEmail}>" : $oContact->ViewEmail;
-                            }
+                    if (count($contactsUuids) > 0) {
+                        foreach (self::Decorator()->GetContactsByUids($UserId, $contactsUuids) as $groupContact) {
+                            $groupContacts[$groupContact->UUID] = $groupContact;
                         }
 
-                        $aGroupUsersList[] = [
-                            'UUID' => $group->UUID,
-                            'IdUser' => $group->IdUser,
-                            'FullName' => $group->Name,
-                            'FirstName' => '',
-                            'LastName' => '',
-                            'ViewEmail' => implode(', ', $aGroupContactsEmails),
-                            'Storage' => '',
-                            'Frequency' => 0,
-                            'DateModified' => '',
-                            'IsGroup' => true,
-                        ];
+                        $aGroupUsersList = [];
+
+                        foreach ($groups as $group) {
+                            $aGroupContactsEmails = [];
+                            if (is_array($group->Contacts)) {
+                                foreach ($group->Contacts as $contactUuid) {
+                                    if (isset($groupContacts[$contactUuid])) {
+                                        $oContact = $groupContacts[$contactUuid];
+                                        $aGroupContactsEmails[] = $oContact->FullName ? "\"{$oContact->FullName}\" <{$oContact->ViewEmail}>" : $oContact->ViewEmail;
+                                    }
+                                }
+
+                                $aGroupUsersList[] = [
+                                    'UUID' => $group->UUID,
+                                    'IdUser' => $group->IdUser,
+                                    'FullName' => $group->Name,
+                                    'FirstName' => '',
+                                    'LastName' => '',
+                                    'ViewEmail' => implode(', ', $aGroupContactsEmails),
+                                    'Storage' => '',
+                                    'Frequency' => 0,
+                                    'DateModified' => '',
+                                    'IsGroup' => true,
+                                ];
+                            }
+                        }
+                        $aContacts = array_merge($aContacts, $aGroupUsersList);
                     }
                 }
-                $aContacts = array_merge($aContacts, $aGroupUsersList);
             }
         } else {
             throw new ApiException(\Aurora\System\Notifications::AccessDenied, null, 'AccessDenied');
