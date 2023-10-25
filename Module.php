@@ -1363,11 +1363,19 @@ class Module extends \Aurora\System\Module\AbstractModule
             \Aurora\Modules\Contacts\Classes\VCard\Helper::UpdateVCardFromContact($oContact, $oVCard);
 
             if (self::Decorator()->CheckAccessToAddressBook($oUser, $oContact->AddressBookId, Access::Write)) {
-                $mResult = !!Backend::Carddav()->createCard($oContact->AddressBookId, $oContact->UUID . '.vcf', $oVCard->serialize());
+                $cardUri = $oContact->UUID . '.vcf';
+                $cardETag = Backend::Carddav()->createCard($oContact->AddressBookId, $cardUri, $oVCard->serialize());
+
+                if ($cardETag) {
+                    $newCard = Backend::Carddav()->getCard($oContact->AddressBookId, $cardUri);
+                    if ($newCard) {
+                        $mResult = (string) $newCard['id'];
+                    }
+                }
             }
 
             if ($mResult) {
-                $mResult = ['UUID' => $oContact->UUID, 'ETag' => $oContact->ETag];
+                $mResult = ['UUID' => $mResult, 'ETag' => $oContact->ETag];
             }
         }
 
