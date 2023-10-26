@@ -1733,8 +1733,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $oGroup->IdUser = (int) $UserId;
 
             $oGroup->populate($Group);
-
-            $oGroup->Contacts = $this->getContactsUUIDsFromIds($UserId, $oGroup->Contacts);
+            $oGroup->Contacts = $this->getContactsUUIDsFromIds($UserId, $Group['Contacts']);
 
             $oVCard = new \Sabre\VObject\Component\VCard();
             Helper::UpdateVCardFromGroup($oGroup, $oVCard);
