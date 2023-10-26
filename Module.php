@@ -942,6 +942,10 @@ class Module extends \Aurora\System\Module\AbstractModule
             throw new ApiException(\Aurora\System\Notifications::AccessDenied, null, 'AccessDenied');
         }
 
+        foreach($aContacts as &$aContact) {
+            $aContact['UUID'] = (string)$aContact['UUID'];
+        };
+
         return [
             'ContactCount' => $count,
             'List' => \Aurora\System\Managers\Response::GetResponseObject($aContacts)
@@ -1226,6 +1230,10 @@ class Module extends \Aurora\System\Module\AbstractModule
         if (is_array($Uids) && count($Uids) > 0) {
             $query = $this->getGetContactsQueryBuilder($UserId, StorageType::All);
             $aResult = $query->whereIn('contacts_cards.CardId', $Uids)->get()->all();
+
+            foreach($aResult as $oContact) {
+                $oContact->UUID = (string)$oContact->UUID;
+            };
         } else {
             throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::InvalidInputParameter);
         }
