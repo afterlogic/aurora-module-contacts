@@ -262,8 +262,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $aStorages = [];
         $aStandardStorageNames = [];
-        $this->broadcastEvent('GetStorages', $aStandardStorageNames);
-        \ksort($aStandardStorageNames);
+        // $this->broadcastEvent('GetStorages', $aStandardStorageNames);
+        // \ksort($aStandardStorageNames);
 
         $iUserId = \Aurora\System\Api::getAuthenticatedUserId();
 
@@ -581,7 +581,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         ];
         $this->populateStorage($aArgs);
         $query->where(function ($whereQuery) use ($UserId, $aArgs, $query) {
-            $this->prepareFiltersFromStorage($UserId, StorageType::Personal, $aArgs['AddressBookId'], $query, $whereQuery, false);
+            $this->prepareFiltersFromStorage($UserId, StorageType::Personal, $aArgs['AddressBookId'], $query, $whereQuery);
         })->where('IsGroup', true);
 
         if (is_array($UUIDs) && count($UUIDs) > 0) {
@@ -835,9 +835,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $aContacts = [];
         if (self::Decorator()->CheckAccessToAddressBook($oUser, $AddressBookId, [Access::Write, Access::Read])) {
 
-            $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $AddressBookId, $Suggestions);
-
-            Api::Log($query->toSql());
+            $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $AddressBookId);
 
             if (!empty($Search)) {
                 $query = $query->where(function ($query) use ($Search) {
@@ -1259,16 +1257,13 @@ class Module extends \Aurora\System\Module\AbstractModule
         ];
         $this->populateStorage($aArgs);
 
-        $oQuery = ($Filters instanceof Builder) ? $Filters : Models\Contact::query();
-        $oQuery->where(function ($query) use ($UserId, $Storage, $aArgs) {
-            $this->prepareFiltersFromStorage($UserId, $Storage, $aArgs['AddressBookId'], $query);
-        });
+        $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $aArgs['AddressBookId']);
 
-        $aContacts = $oQuery->get(['UUID', 'ETag', 'Auto', 'Storage']);
+        $aContacts = $query->get(['UUID', 'ETag', 'Auto', 'Storage']);
 
         foreach ($aContacts as $oContact) {
             /**
-             * @var \Aurora\Modules\Contacts\Models\Contact $oContact
+             * @var \Aurora\Modules\Contacts\Models\ContactCard $oContact
              */
             $aResult['Info'][] = [
                 'UUID' => $oContact->UUID,
@@ -2396,13 +2391,12 @@ class Module extends \Aurora\System\Module\AbstractModule
         $this->broadcastEvent('PopulateStorage', $aArgs);
     }
 
-    private function prepareFiltersFromStorage($UserId, $Storage = '', $AddressBookId = 0, &$Query = null, &$WhereQuery = null, $bSuggesions = false)
+    private function prepareFiltersFromStorage($UserId, $Storage = '', $AddressBookId = 0, &$Query = null, &$WhereQuery = null)
     {
         $aArgs = [
             'UserId' => $UserId,
             'Storage' => $Storage,
             'AddressBookId' => $AddressBookId,
-            'Suggestions' => $bSuggesions,
             'IsValid' => false,
             'Query' => $Query
         ];
@@ -2622,24 +2616,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
-        $userPublicId = Api::getUserPublicIdById($UserId);
-        $aAddressBooks = Backend::Carddav()->getAddressBooksForUser(Constants::PRINCIPALS_PREFIX . $userPublicId);
-
-        foreach ($aAddressBooks as $oAddressBook) {
-            /**
-             * @var array $oAddressBook
-             */
-            $aResult[] = [
-                'Id' => $oAddressBook['id'],
-                'EntityId' => $oAddressBook['id'],
-                'CTag' => $oAddressBook['{http://sabredav.org/ns}sync-token'],
-                'Display' => $oAddressBook['uri'] !== Constants::ADDRESSBOOK_COLLECTED_NAME,
-                'Order' => 1,
-                'DisplayName' => $oAddressBook['{DAV:}displayname'],
-                'Uri' => $oAddressBook['uri']
-            ];
-        }
-
         return $aResult;
     }
 
@@ -2730,7 +2706,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         return [];
     }
 
-    protected function getGetContactsQueryBuilder($UserId, $Storage = '', $AddressBookId = 0, $Suggestions = false)
+    protected function getGetContactsQueryBuilder($UserId, $Storage = '', $AddressBookId = 0)
     {
         $con = Capsule::connection();
 
@@ -2754,8 +2730,8 @@ class Module extends \Aurora\System\Module\AbstractModule
                 $con->raw($UserId . ' as UserId')
             );
 
-        $query->where(function ($wherQuery) use ($UserId, $Storage, $AddressBookId, $Suggestions, $query) {
-            $this->prepareFiltersFromStorage($UserId, $Storage, $AddressBookId, $query, $wherQuery, $Suggestions);
+        $query->where(function ($wherQuery) use ($UserId, $Storage, $AddressBookId, $query) {
+            $this->prepareFiltersFromStorage($UserId, $Storage, $AddressBookId, $query, $wherQuery);
         })->where('IsGroup', false);
 
         return $query;
