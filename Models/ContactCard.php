@@ -7,6 +7,7 @@
 
 namespace Aurora\Modules\Contacts\Models;
 
+use Aurora\Modules\Contacts\Enums\StorageType;
 use Aurora\System\Classes\Model;
 
 /**
@@ -113,6 +114,15 @@ class ContactCard extends Model
                 return (string) $this->BusinessEmail;
             case \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other:
                 return (string) $this->OtherEmail;
+        }
+    }
+
+    public function getStorageWithId()
+    {
+        if ($this->Storage === StorageType::AddressBook) {
+            return $this->Storage . $this->AddressBookId;
+        } else {
+            return $this->Storage;
         }
     }
 }
