@@ -48,6 +48,9 @@ class ContactCard extends Model
 
     protected $casts = [
         'Properties' => 'array',
+        'Auto' => 'boolean',
+        'Shared' => 'boolean',
+        'IsTeam' => 'boolean',
     ];
 
     protected $appends = [
@@ -68,7 +71,7 @@ class ContactCard extends Model
 
     public function getAgeScoreAttribute()
     {
-        return $this->attributes['AgeScore'];
+        return round($this->attributes['AgeScore']);
     }
 
     public function getUserIdAttribute()

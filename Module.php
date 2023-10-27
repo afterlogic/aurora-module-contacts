@@ -944,6 +944,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         foreach($aContacts as &$aContact) {
             $aContact['UUID'] = (string)$aContact['UUID'];
+            $aContact['Storage'] = (string)$aContact['Storage'];
         };
 
         return [
@@ -1105,7 +1106,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                     $mResult->InitFromVCardStr($UserId, $card['carddata']);
                     $mResult->UUID = $UUID;
                     $mResult->ETag = \trim($card['etag'], '"');
-                    $mResult->Storage = $row->addressbook_id;
+                    $mResult->Storage = (string)$row->addressbook_id;
                     $mResult->AddressBookId = (int) $row->addressbook_id;
 
                     $groups = self::Decorator()->GetGroups($UserId);
@@ -1231,8 +1232,10 @@ class Module extends \Aurora\System\Module\AbstractModule
             $query = $this->getGetContactsQueryBuilder($UserId, StorageType::All);
             $aResult = $query->whereIn('contacts_cards.CardId', $Uids)->get()->all();
 
+            //TODO: remove this after refactoring API and client
             foreach($aResult as $oContact) {
                 $oContact->UUID = (string)$oContact->UUID;
+                $oContact->Storage = (string)$oContact->Storage;
             };
         } else {
             throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::InvalidInputParameter);
