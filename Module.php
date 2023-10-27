@@ -2640,7 +2640,9 @@ class Module extends \Aurora\System\Module\AbstractModule
         }
 
         $userPublicId = Api::getUserPublicIdById($UserId);
-        $mResult = Backend::Carddav()->createAddressBook(Constants::PRINCIPALS_PREFIX . $userPublicId, $sAddressBookUUID . '.vcf', ['{DAV:}displayname' => $AddressBookName]);
+
+        //TODO: later make it return book id and CTag
+        $mResult = !!Backend::Carddav()->createAddressBook(Constants::PRINCIPALS_PREFIX . $userPublicId, $sAddressBookUUID . '.vcf', ['{DAV:}displayname' => $AddressBookName]);
 
         return $mResult;
     }
