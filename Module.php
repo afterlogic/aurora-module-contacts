@@ -42,6 +42,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     protected $aImportExportFormats = ['csv', 'vcf'];
 
+    protected $userPublicIdToDelete = null;
+
     /**
      * @return Module
      */
@@ -85,10 +87,8 @@ class Module extends \Aurora\System\Module\AbstractModule
     {
         $this->subscribeEvent('Mail::AfterUseEmails', array($this, 'onAfterUseEmails'));
         $this->subscribeEvent('Mail::GetBodyStructureParts', array($this, 'onGetBodyStructureParts'));
+        $this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
         $this->subscribeEvent('Core::DeleteUser::after', array($this, 'onAfterDeleteUser'));
-
-        $this->subscribeEvent('Calendar::CreateEvent', array($this, 'onCreateOrUpdateEvent'));
-        $this->subscribeEvent('Calendar::UpdateEvent', array($this, 'onCreateOrUpdateEvent'));
     }
 
     /***** public functions *****/
@@ -267,16 +267,16 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $iUserId = \Aurora\System\Api::getAuthenticatedUserId();
 
-        foreach ($aStandardStorageNames as $iIndex => $sStorageName) {
-            $aStorages[] = [
-                'Id' => $sStorageName,
-                'CTag' => $this->Decorator()->GetCTag($iUserId, $sStorageName),
-                'Display' => $this->Decorator()->IsDisplayedStorage($sStorageName),
-                'Order' => $iIndex,
-                'DisplayName' => $this->Decorator()->GetStorageDisplayName($sStorageName),
-                'Editable' => false //TODO: currently only Team storage is processed wihtin this loop
-            ];
-        }
+        // foreach ($aStandardStorageNames as $iIndex => $sStorageName) {
+        //     $aStorages[] = [
+        //         'Id' => $sStorageName,
+        //         'CTag' => $this->Decorator()->GetCTag($iUserId, $sStorageName),
+        //         'Display' => $this->Decorator()->IsDisplayedStorage($sStorageName),
+        //         'Order' => $iIndex,
+        //         'DisplayName' => $this->Decorator()->GetStorageDisplayName($sStorageName),
+        //         'Editable' => false //TODO: currently only Team storage is processed wihtin this loop
+        //     ];
+        // }
 
         $aCustomAddressBooks = $this->Decorator()->GetAddressBooks($iUserId);
         foreach ($aCustomAddressBooks as &$oAddressBook) {
@@ -834,7 +834,6 @@ class Module extends \Aurora\System\Module\AbstractModule
         $oUser = Api::getUserById($UserId);
         $aContacts = [];
         if (self::Decorator()->CheckAccessToAddressBook($oUser, $AddressBookId, [Access::Write, Access::Read])) {
-
             $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $AddressBookId);
 
             if (!empty($Search)) {
@@ -1191,26 +1190,22 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         Api::CheckAccess($UserId);
 
+        $oUser = Api::getUserById($UserId);
         $aArgs = [
             'UserId' => $UserId,
-            'Storage' => $Storage,
+            'Storage' => StorageType::Personal,
             'AddressBookId' => 0
         ];
         $this->populateStorage($aArgs);
 
-        $oQuery = ($Filters instanceof Builder) ? $Filters : Models\Contact::query();
-        $oQuery->where(function ($query) use ($UserId, $Storage, $aArgs) {
-            $this->prepareFiltersFromStorage($UserId, $Storage, $aArgs['AddressBookId'], $query);
-        });
-        $oQuery = $oQuery->whereIn('ViewEmail', $Emails);
-        if ($Storage !== StorageType::All) {
-            $oQuery->where('Storage', $Storage);
-        }
+        if (isset($aArgs['AddressBookId']) && self::Decorator()->CheckAccessToAddressBook($oUser, $aArgs['AddressBookId'], [Access::Write, Access::Read])) {
+            $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $aArgs['AddressBookId']);
+            $query->whereIn('ViewEmail', $Emails);
 
-        if ($AsArray) {
-            $aContacts = $this->getManager()->getContactsAsArray(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $oQuery);
-        } else {
-            $aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $oQuery);
+            $aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $query);
+            if ($AsArray) {
+                $aContacts = $aContacts->toArray();
+            }
         }
         return $aContacts;
     }
@@ -1254,8 +1249,8 @@ class Module extends \Aurora\System\Module\AbstractModule
     public function GetContactsInfo($Storage, $UserId = null, Builder $Filters = null)
     {
         $aResult = [
-            'CTag' => $this->GetCTag($UserId, $Storage),
-            'Info' => array()
+            'CTag' => 0,
+            'Info' => []
         ];
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
@@ -1267,20 +1262,29 @@ class Module extends \Aurora\System\Module\AbstractModule
             'AddressBookId' => 0
         ];
         $this->populateStorage($aArgs);
+        
+        $userPublicId = Api::getUserPublicIdById($UserId);
 
-        $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $aArgs['AddressBookId']);
+        if ((int) $aArgs['AddressBookId'] > 0) {
+            $addressbook = Backend::Carddav()->getAddressBookByIdForUser(Constants::PRINCIPALS_PREFIX . $userPublicId, $aArgs['AddressBookId']);
 
-        $aContacts = $query->get(['UUID', 'ETag', 'Auto', 'Storage']);
+            if ($addressbook) {
+                $aResult['CTag'] = $addressbook['{http://sabredav.org/ns}sync-token'];
+                $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $aArgs['AddressBookId']);
 
-        foreach ($aContacts as $oContact) {
-            /**
-             * @var \Aurora\Modules\Contacts\Models\ContactCard $oContact
-             */
-            $aResult['Info'][] = [
-                'UUID' => $oContact->UUID,
-                'ETag' => $oContact->ETag,
-                'Storage' => $oContact->Auto ? 'collected' : $oContact->getStorageWithId()
-            ];
+                $aContacts = $query->get(['UUID', 'ETag', 'Auto', 'Storage']);
+
+                foreach ($aContacts as $oContact) {
+                    /**
+                     * @var \Aurora\Modules\Contacts\Models\ContactCard $oContact
+                     */
+                    $aResult['Info'][] = [
+                        'UUID' => $oContact->UUID,
+                        'ETag' => $oContact->ETag,
+                        'Storage' => $oContact->Auto ? 'collected' : $oContact->getStorageWithId()
+                    ];
+                }
+            }
         }
 
         return $aResult;
@@ -1655,6 +1659,8 @@ class Module extends \Aurora\System\Module\AbstractModule
             });
 
             $rows = $query->get()->all();
+
+            $groups = self::Decorator()->GetGroups($UserId);
 
             foreach ($rows as $row) {
                 Backend::Carddav()->deleteCard($row->addressbook_id, $row->card_uri);
@@ -2223,29 +2229,6 @@ class Module extends \Aurora\System\Module\AbstractModule
         return $aResponse;
     }
 
-    public function GetGroupEvents($UserId, $UUID)
-    {
-        \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-
-        Api::CheckAccess($UserId);
-
-        $aResult = [];
-        $oGroupEventsColl = $this->_getGroupEvents($UUID);
-        if ($oGroupEventsColl->count() > 0) {
-            foreach ($oGroupEventsColl as $oGroupEvent) {
-                /**
-                 * @var \Aurora\Modules\Calendar\Module $oCalendarModule
-                 */
-                $oCalendarModule = Api::GetModule('Calendar');
-                if ($oCalendarModule) {
-                    $aResult[] = $oCalendarModule->GetBaseEvent($UserId, $oGroupEvent->CalendarUUID, $oGroupEvent->EventUUID);
-                }
-            }
-        }
-
-        return $aResult;
-    }
-
     public function UpdateSharedContacts($UserId, $UUIDs)
     {
         Api::CheckAccess($UserId);
@@ -2452,159 +2435,23 @@ class Module extends \Aurora\System\Module\AbstractModule
         }
     }
 
+    public function onBeforeDeleteUser(&$aArgs, &$mResult)
+    {
+        if (isset($aArgs['UserId'])) {
+            $this->userPublicIdToDelete = Api::getUserPublicIdById($aArgs['UserId']);
+        }
+    }
+
     public function onAfterDeleteUser(&$aArgs, &$mResult)
     {
-        $this->getManager()->deleteGroupsByUserId($aArgs['UserId']);
-        $this->getManager()->deleteCTagsByUserId($aArgs['UserId']);
-        $this->getManager()->deleteContactsByUserId($aArgs['UserId']);
-        AddressBook::where('UserId', $aArgs['UserId'])->delete();
-    }
-
-    public function onCreateOrUpdateEvent(&$aArgs)
-    {
-        $oEvent = $aArgs['Event'];
-        $aGroups = self::findGroupsHashTagsFromString($oEvent->Name);
-        $aGroupsDescription = self::findGroupsHashTagsFromString($oEvent->Description);
-        $aGroups = array_merge($aGroups, $aGroupsDescription);
-        $aGroupsLocation = self::findGroupsHashTagsFromString($oEvent->Location);
-        $aGroups = array_merge($aGroups, $aGroupsLocation);
-        $oUser = \Aurora\System\Api::getAuthenticatedUser();
-
-        if ($oUser instanceof \Aurora\Modules\Core\Models\User) {
-            foreach ($aGroups as $sGroup) {
-                $sGroupName = ltrim($sGroup, '#');
-                $oGroup = $this->Decorator()->GetGroupByName($sGroupName, $oUser->Id);
-                if (!$oGroup) {
-                    $sGroupUUID = $this->Decorator()->CreateGroup(['Name' => $sGroupName], $oUser->Id);
-                    if ($sGroupUUID) {
-                        $oGroup = $this->GetGroup($oUser->Id, $sGroupUUID);
-                    }
-                }
-
-                if ($oGroup instanceof Models\Group) {
-                    $this->removeEventFromGroup($oGroup->UUID, $oEvent->IdCalendar, $oEvent->Id);
-                    $this->addEventToGroup($oGroup->UUID, $oEvent->IdCalendar, $oEvent->Id);
+        if ($mResult && $this->userPublicIdToDelete) {
+            $abooks = Backend::Carddav()->getAddressBooksForUser(Constants::PRINCIPALS_PREFIX . $this->userPublicIdToDelete);
+            if ($abooks) {
+                foreach ($abooks as $book) {
+                    Backend::Carddav()->deleteAddressBook($book['id']);
                 }
             }
         }
-    }
-
-    /**
-     * @param string $sGroupUUID
-     *
-     * @return mixed
-     */
-    protected function _getGroupEvents($sGroupUUID)
-    {
-        $mResult = false;
-        try {
-            $mResult = Models\GroupEvent::where(['GroupUUID' => $sGroupUUID])->get();
-        } catch (\Aurora\System\Exceptions\BaseException $oException) {
-            $mResult = false;
-        }
-        return $mResult;
-    }
-
-    /**
-     * @param string $sCalendarUUID
-     * @param string $sEventUUID
-     *
-     * @return bool
-     */
-    protected function getGroupEvent($sCalendarUUID, $sEventUUID)
-    {
-        $mResult = false;
-        try {
-            $mResult = \Aurora\Modules\Contacts\Models\GroupEvent::where('CalendarUUID', $sCalendarUUID)
-                ->where('EventUUID', $sEventUUID)->first();
-        } catch (\Aurora\System\Exceptions\BaseException $oException) {
-            $mResult = false;
-        }
-        return $mResult;
-    }
-
-    /**
-     * @param string $sGroupUUID
-     * @param string $sCalendarUUID
-     * @param string $sEventUUID
-     *
-     * @return bool
-     */
-    protected function addEventToGroup($sGroupUUID, $sCalendarUUID, $sEventUUID)
-    {
-        $bResult = false;
-        try {
-            $oGroupEvent = new Models\GroupEvent();
-            $oGroupEvent->GroupUUID = $sGroupUUID;
-            $oGroupEvent->CalendarUUID = $sCalendarUUID;
-            $oGroupEvent->EventUUID = $sEventUUID;
-            $bResult = $oGroupEvent->save();
-        } catch (\Aurora\System\Exceptions\BaseException $oException) {
-            $bResult = false;
-        }
-        return $bResult;
-    }
-
-    /**
-     * @param string $sGroupUUID
-     * @param string $sCalendarUUID
-     * @param string $sEventUUID
-     *
-     * @return bool
-     */
-    protected function removeEventFromGroup($sGroupUUID, $sCalendarUUID, $sEventUUID)
-    {
-        $mResult = false;
-        try {
-            $mResult = \Aurora\Modules\Contacts\Models\GroupEvent::where('GroupUUID', $sGroupUUID)
-                ->where('CalendarUUID', $sCalendarUUID)
-                ->where('EventUUID', $sEventUUID)->first();
-
-            if ($mResult instanceof Models\GroupEvent) {
-                $mResult = $mResult->delete();
-            }
-        } catch (\Aurora\System\Exceptions\BaseException $oException) {
-            $mResult = false;
-        }
-        return $mResult;
-    }
-
-    /**
-    * @param string $sString
-    *
-    * @return array
-    */
-    protected static function findGroupsHashTagsFromString($sString)
-    {
-        $aResult = array();
-
-        preg_match_all("/[#]([^#\s]+)/", $sString, $aMatches);
-
-        if (\is_array($aMatches) && isset($aMatches[0]) && \is_array($aMatches[0]) && 0 < \count($aMatches[0])) {
-            $aResult = $aMatches[0];
-        }
-
-        return $aResult;
-    }
-
-    /**
-     * @param string $sCalendarUUID
-     * @param string $sEventUUID
-     *
-     * @return bool
-     */
-    public function removeEventFromAllGroups($sCalendarUUID, $sEventUUID)
-    {
-        $mResult = false;
-        try {
-            Models\GroupEvent::where('CalendarUUID', $sCalendarUUID)
-                ->where('EventUUID', $sEventUUID)->delete();
-
-            $mResult = true;
-        } catch (\Aurora\System\Exceptions\BaseException $oException) {
-            $mResult = false;
-        }
-        return $mResult;
     }
     /***** private functions *****/
 
@@ -2644,7 +2491,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $userPublicId = Api::getUserPublicIdById($UserId);
 
         //TODO: later make it return book id and CTag
-        $mResult = !!Backend::Carddav()->createAddressBook(Constants::PRINCIPALS_PREFIX . $userPublicId, $sAddressBookUUID . '.vcf', ['{DAV:}displayname' => $AddressBookName]);
+        $mResult = !!Backend::Carddav()->createAddressBook(Constants::PRINCIPALS_PREFIX . $userPublicId, $sAddressBookUUID, ['{DAV:}displayname' => $AddressBookName]);
 
         return $mResult;
     }
