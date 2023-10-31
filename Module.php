@@ -1262,7 +1262,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             'AddressBookId' => 0
         ];
         $this->populateStorage($aArgs);
-        
+
         $userPublicId = Api::getUserPublicIdById($UserId);
 
         if ((int) $aArgs['AddressBookId'] > 0) {
@@ -1279,7 +1279,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                      * @var \Aurora\Modules\Contacts\Models\ContactCard $oContact
                      */
                     $aResult['Info'][] = [
-                        'UUID' => $oContact->UUID,
+                        'UUID' => (string) $oContact->UUID,
                         'ETag' => $oContact->ETag,
                         'Storage' => $oContact->Auto ? 'collected' : $oContact->getStorageWithId()
                     ];
