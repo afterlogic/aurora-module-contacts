@@ -76,7 +76,8 @@ class Contact
     public string $AddressBookId;
     public array $GroupUUIDs;
 
-    public $ExtendedInformation = array();
+    public $ExtendedInformation = [];
+    public $Properties = [];
 
     public function __construct()
     {
@@ -139,6 +140,16 @@ class Contact
         foreach ($this->ExtendedInformation as $sKey => $mValue) {
             $aRes[$sKey] = $mValue;
         }
+        if ($this->Properties) {
+            foreach ($this->Properties as $sKey => $mValue) {
+                $aRes[$sKey] = $mValue;
+            }
+            $this->Properties = [];
+        }
+        foreach ($this->ExtendedInformation as $sKey => $mValue) {
+            $aRes[$sKey] = $mValue;
+        }
+
         return array_merge($aRes, (array) $this);
     }
 
@@ -224,14 +235,51 @@ class Contact
         );
     }
 
+    public function setExtendedProp($key, $value)
+    {
+        $card = ContactCard::select('Properties')->where('CardId', $this->Id)->first();
+        if ($card) {
+            $properties = $card->Properties;
+            $properties[$key] = $value;
+            $card->Properties = $properties;
+
+            $card->save();
+        }
+    }
+
+    public function unsetExtendedProp($key)
+    {
+        $card = ContactCard::select('Properties')->where('CardId', $this->Id)->first();
+        if ($card) {
+            $properties = $card->Properties;
+            if (isset($properties[$key])) {
+                unset($properties[$key]);
+            }
+            $card->Properties = $properties;
+
+            $card->save();
+        }
+    }
+
+    public function setExtendedProps($props)
+    {
+        $card = ContactCard::select('Properties')->where('CardId', $this->Id)->first();
+        if ($card) {
+            $properties = is_array($card->Properties) ? $card->Properties : [];
+            $card->Properties = array_merge($properties, $props);
+
+            $card->save();
+        }
+    }
+
     public function getExtendedProp($key)
     {
         $result = null;
         $card = ContactCard::select('Properties')->where('CardId', $this->Id)->first();
 
         if ($card) {
-            if (isset($card->Properties['key'])) {
-                $result =  $card->Properties['key'];
+            if (isset($card->Properties[$key])) {
+                $result =  $card->Properties[$key];
             }
         }
 

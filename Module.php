@@ -22,6 +22,7 @@ use Aurora\Modules\Contacts\Classes\Group;
 use Aurora\Modules\Core\Module as CoreModule;
 use Aurora\System\Exceptions\ApiException;
 use Aurora\System\Notifications;
+use Google\Service\ApigeeRegistry\Build;
 use Illuminate\Database\Eloquent\Builder;
 use Sabre\DAV\UUIDUtil;
 use Illuminate\Database\Capsule\Manager as Capsule;
@@ -474,7 +475,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         if (is_array($ContactUUIDs) && count($ContactUUIDs) > 0) {
             if ($Format === 'vcf') {
-                $query = $this->getGetContactsQueryBuilder($UserId, StorageType::All);
+                $query = $this->getGetContactsQueryBuilder($UserId, StorageType::All, 0, $Filters);
                 $rows = $query->whereIn('contacts_cards.CardId', $ContactUUIDs)->select('carddata')->get()->all();
 
                 foreach ($rows as $row) {
@@ -834,7 +835,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $oUser = Api::getUserById($UserId);
         $aContacts = [];
         if (self::Decorator()->CheckAccessToAddressBook($oUser, $AddressBookId, [Access::Write, Access::Read])) {
-            $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $AddressBookId);
+            $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $AddressBookId, $Filters);
 
             if (!empty($Search)) {
                 $query = $query->where(function ($query) use ($Search) {
@@ -1081,7 +1082,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $query = Capsule::connection()->table('contacts_cards')
                 ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
                 ->join('adav_addressbooks', 'adav_cards.addressbookid', '=', 'adav_addressbooks.id')
-                ->select('adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id');
+                ->select('adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id', 'Properties');
 
             $aArgs = [
                 'UUID' => $UUID,
@@ -1107,6 +1108,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                     $mResult->ETag = \trim($card['etag'], '"');
                     $mResult->Storage = (string)$row->addressbook_id;
                     $mResult->AddressBookId = (int) $row->addressbook_id;
+                    $mResult->Properties = \json_decode($row->Properties);
 
                     $groups = self::Decorator()->GetGroups($UserId);
                     foreach ($groups as $group) {
@@ -1193,13 +1195,13 @@ class Module extends \Aurora\System\Module\AbstractModule
         $oUser = Api::getUserById($UserId);
         $aArgs = [
             'UserId' => $UserId,
-            'Storage' => StorageType::Personal,
+            'Storage' => $Storage,
             'AddressBookId' => 0
         ];
         $this->populateStorage($aArgs);
 
-        if (isset($aArgs['AddressBookId']) && self::Decorator()->CheckAccessToAddressBook($oUser, $aArgs['AddressBookId'], [Access::Write, Access::Read])) {
-            $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $aArgs['AddressBookId']);
+        if (isset($aArgs['AddressBookId']) && self::Decorator()->CheckAccessToAddressBook($oUser, $aArgs['AddressBookId'], [Access::Read])) {
+            $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $aArgs['AddressBookId'], $Filters);
             $query->whereIn('ViewEmail', $Emails);
 
             $aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $query);
@@ -1262,7 +1264,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             'AddressBookId' => 0
         ];
         $this->populateStorage($aArgs);
-
+        
         $userPublicId = Api::getUserPublicIdById($UserId);
 
         if ((int) $aArgs['AddressBookId'] > 0) {
@@ -1270,21 +1272,21 @@ class Module extends \Aurora\System\Module\AbstractModule
 
             if ($addressbook) {
                 $aResult['CTag'] = $addressbook['{http://sabredav.org/ns}sync-token'];
-                $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $aArgs['AddressBookId']);
-
-                $aContacts = $query->get(['UUID', 'ETag', 'Auto', 'Storage']);
-
-                foreach ($aContacts as $oContact) {
-                    /**
-                     * @var \Aurora\Modules\Contacts\Models\ContactCard $oContact
-                     */
-                    $aResult['Info'][] = [
-                        'UUID' => (string) $oContact->UUID,
-                        'ETag' => $oContact->ETag,
-                        'Storage' => $oContact->Auto ? 'collected' : $oContact->getStorageWithId()
-                    ];
-                }
             }
+        }
+        $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $aArgs['AddressBookId'], $Filters);
+
+        $aContacts = $query->get(['UUID', 'ETag', 'Auto', 'Storage']);
+
+        foreach ($aContacts as $oContact) {
+            /**
+             * @var \Aurora\Modules\Contacts\Models\ContactCard $oContact
+             */
+            $aResult['Info'][] = [
+                'UUID' => $oContact->UUID,
+                'ETag' => $oContact->ETag,
+                'Storage' => $oContact->Auto ? 'collected' : $oContact->getStorageWithId()
+            ];
         }
 
         return $aResult;
@@ -2565,12 +2567,18 @@ class Module extends \Aurora\System\Module\AbstractModule
         return [];
     }
 
-    protected function getGetContactsQueryBuilder($UserId, $Storage = '', $AddressBookId = 0)
+    protected function getGetContactsQueryBuilder($UserId, $Storage = '', $AddressBookId = 0, Builder $Filters = null)
     {
-        $con = Capsule::connection();
+        if ($Filters instanceof Builder) {
+            $query =& $Filters;
+        } else {
+            $query = ContactCard::query();
+        }
 
-        $query = ContactCard::join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
+        $con = Capsule::connection();
+        $query->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
             ->select(
+                'adav_cards.id as Id',
                 'adav_cards.id as UUID',
                 'adav_cards.uri as Uri',
                 'adav_cards.addressbookid as Storage',
@@ -2585,13 +2593,13 @@ class Module extends \Aurora\System\Module\AbstractModule
                 'FirstName',
                 'LastName',
                 'Frequency',
+                'Properties',
                 $con->raw('(Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, FROM_UNIXTIME(lastmodified))/30)) as AgeScore'),
                 $con->raw($UserId . ' as UserId')
-            );
-
-        $query->where(function ($wherQuery) use ($UserId, $Storage, $AddressBookId, $query) {
-            $this->prepareFiltersFromStorage($UserId, $Storage, $AddressBookId, $query, $wherQuery);
-        })->where('IsGroup', false);
+            )
+            ->where(function ($wherQuery) use ($UserId, $Storage, $AddressBookId, $query) {
+                $this->prepareFiltersFromStorage($UserId, $Storage, $AddressBookId, $query, $wherQuery);
+            })->where('IsGroup', false);
 
         return $query;
     }
