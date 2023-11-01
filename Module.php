@@ -246,7 +246,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             case $sSotrageId === Enums\StorageType::Collected && $sStorageName === Constants::ADDRESSBOOK_COLLECTED_DISPLAY_NAME:
                 $result = $this->i18N('LABEL_STORAGE_COLLECTED');
                 break;
-            case $sSotrageId === Enums\StorageType::Team && $sStorageName === 'Team':
+            case $sSotrageId === Enums\StorageType::Team && $sStorageName === Constants::ADDRESSBOOK_TEAM_DISPLAY_NAME:
                 $result = $this->i18N('LABEL_STORAGE_TEAM');
                 break;
             case $sSotrageId === Enums\StorageType::Shared && $sStorageName === Constants::ADDRESSBOOK_SHARED_WITH_ALL_DISPLAY_NAME:
