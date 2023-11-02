@@ -151,7 +151,8 @@ class Sync
         $aData = array();
 
         @setlocale(LC_CTYPE, 'en_US.UTF-8');
-        \ini_set('auto_detect_line_endings', true);
+        // TODO: check if this is needed. It throws deprecation warning in PHP 8.1
+        // \ini_set('auto_detect_line_endings', true);
 
         if (false !== ($rHandle = @fopen($sFileName, 'rb'))) {
             $sDelimiterSearchString = @fread($rHandle, 2000);
@@ -190,7 +191,8 @@ class Sync
             fclose($rHandle);
         }
 
-        ini_set('auto_detect_line_endings', false);
+        // TODO: check if this is needed. It throws deprecation warning in PHP 8.1
+        // ini_set('auto_detect_line_endings', false);
 
         return $aData;
     }

@@ -1264,7 +1264,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             'AddressBookId' => 0
         ];
         $this->populateStorage($aArgs);
-        
+
         $userPublicId = Api::getUserPublicIdById($UserId);
 
         if ((int) $aArgs['AddressBookId'] > 0) {
@@ -2570,7 +2570,7 @@ class Module extends \Aurora\System\Module\AbstractModule
     protected function getGetContactsQueryBuilder($UserId, $Storage = '', $AddressBookId = 0, Builder $Filters = null)
     {
         if ($Filters instanceof Builder) {
-            $query =& $Filters;
+            $query = & $Filters;
         } else {
             $query = ContactCard::query();
         }
