@@ -1108,8 +1108,9 @@ class Module extends \Aurora\System\Module\AbstractModule
                     $mResult->ETag = \trim($card['etag'], '"');
                     $mResult->Storage = (string)$row->addressbook_id;
                     $mResult->AddressBookId = (int) $row->addressbook_id;
-                    $mResult->Properties = \json_decode($row->Properties);
-
+                    if ($mResult->Properties) {
+                        $mResult->Properties = \json_decode($row->Properties);
+                    }
                     $groups = self::Decorator()->GetGroups($UserId);
                     foreach ($groups as $group) {
                         if (in_array($UUID, $group->Contacts)) {
