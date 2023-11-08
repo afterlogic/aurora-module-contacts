@@ -115,7 +115,7 @@ class Group
                     EventEmitter::getInstance()->emit('Contacts', 'ContactQueryBuilder', $aArgs, $q);
                 });
 
-                $rows = $query->get()->map(function ($value) {
+                $rows = $query->distinct()->get()->map(function ($value) {
                     return $value->card_id;
                 });
 

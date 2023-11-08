@@ -1499,7 +1499,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $oUser = Api::getUserById($UserId);
         if ($oContact && self::Decorator()->CheckAccessToAddressBook($oUser, $oContact->AddressBookId, Access::Write)) {
             $oContact->populate($Contact, true);
-            if ($this->UpdateContactObject($oContact)) {
+            if (self::Decorator()->UpdateContactObject($oContact)) {
 
                 if (is_array($oContact->GroupUUIDs)) {
                     $groups = self::Decorator()->GetGroups($UserId, $oContact->GroupUUIDs);
@@ -1650,7 +1650,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $query = Capsule::connection()->table('contacts_cards')
                 ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
                 ->join('adav_addressbooks', 'adav_cards.addressbookid', '=', 'adav_addressbooks.id')
-                ->select('adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id');
+                ->select('adav_cards.id as card_id', 'adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id');
 
             $aArgs = [
                 'UUID' => $UUIDs,
@@ -1661,12 +1661,27 @@ class Module extends \Aurora\System\Module\AbstractModule
                 $this->broadcastEvent(self::GetName() . '::ContactQueryBuilder', $aArgs, $q);
             });
 
-            $rows = $query->get()->all();
+            $rows = $query->distinct()->get()->all();
 
             $groups = self::Decorator()->GetGroups($UserId);
+            $groupsToUpdate = [];
 
             foreach ($rows as $row) {
                 Backend::Carddav()->deleteCard($row->addressbook_id, $row->card_uri);
+                foreach ($groups as $group) {
+                    if (($key = array_search($row->card_id, $group->Contacts)) !== false) {
+                        unset($group->Contacts[$key]);
+                        if (!in_array($group->UUID, $groupsToUpdate)) {
+                            $groupsToUpdate[] = $group->UUID;
+                        }
+                    }
+                }
+            }
+
+            foreach ($groups as $group) {
+                if (in_array($group->UUID, $groupsToUpdate)) {
+                    $this->UpdateGroupObject($UserId, $group);
+                }
             }
 
             $mResult = true;
@@ -2411,10 +2426,8 @@ class Module extends \Aurora\System\Module\AbstractModule
         foreach ($aAddresses as $sEmail => $sName) {
             $oContact = $this->getManager()->getContactByEmail($iUserId, $sEmail);
             if ($oContact) {
-                // if ($oContact->Frequency !== -1) {
                 $oContact->Frequency = $oContact->Frequency + 1;
                 self::Decorator()->UpdateContactObject($oContact);
-                // }
             } else {
                 self::Decorator()->CreateContact([
                     'FullName' => $sName,
