@@ -259,7 +259,7 @@ class Helper
 
         if (isset($oVCard->EMAIL)) {
             foreach ($oVCard->EMAIL as $oEmail) {
-                $oTypes = $oUrl['TYPE'];
+                $oTypes = $oEmail['TYPE'];
                 if ($oTypes) {
                     if ($oTypes->has('WORK')) {
                         $aGroup['Email'] = $oEmail->getValue();
