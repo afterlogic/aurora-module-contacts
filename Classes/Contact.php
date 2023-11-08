@@ -184,7 +184,7 @@ class Contact
      */
     public function populate($aContact)
     {
-        $aStorageParts = \explode('-', $aContact['Storage']);
+        $aStorageParts = \explode('-', (string)$aContact['Storage']);
         if (isset($aStorageParts[0]) && $aStorageParts[0] === StorageType::AddressBook) {
             if (isset($aStorageParts[1])) {
                 $aContact['AddressBookId'] = (int) $aStorageParts[1];
