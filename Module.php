@@ -1074,7 +1074,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         Api::CheckAccess($UserId);
 
-        $oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserWithoutRoleCheck($UserId);
+        $oUser = Api::getUserById($UserId);
 
         $mResult = false;
 
@@ -1500,7 +1500,6 @@ class Module extends \Aurora\System\Module\AbstractModule
         if ($oContact && self::Decorator()->CheckAccessToAddressBook($oUser, $oContact->AddressBookId, Access::Write)) {
             $oContact->populate($Contact, true);
             if (self::Decorator()->UpdateContactObject($oContact)) {
-
                 if (is_array($oContact->GroupUUIDs)) {
                     $groups = self::Decorator()->GetGroups($UserId, $oContact->GroupUUIDs);
                     foreach ($groups as $group) {
