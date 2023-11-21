@@ -1066,7 +1066,7 @@ class Module extends \Aurora\System\Module\AbstractModule
     /**
      * Returns contact with specified UUID.
      * @param string $UUID UUID of contact to return.
-     * @return \Aurora\Modules\Contacts\Models\Contact
+     * @return \Aurora\Modules\Contacts\Classes\Contact
      */
     public function GetContact($UUID, $UserId = null)
     {
@@ -1197,11 +1197,11 @@ class Module extends \Aurora\System\Module\AbstractModule
         $aArgs = [
             'UserId' => $UserId,
             'Storage' => $Storage,
-            'AddressBookId' => 0
+            'AddressBookId' => null
         ];
         $this->populateStorage($aArgs);
 
-        if (isset($aArgs['AddressBookId']) && self::Decorator()->CheckAccessToAddressBook($oUser, $aArgs['AddressBookId'], [Access::Read])) {
+        if (self::Decorator()->CheckAccessToAddressBook($oUser, $aArgs['AddressBookId'], [Access::Read])) {
             $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $aArgs['AddressBookId'], $Filters);
             $query->whereIn('ViewEmail', $Emails);
 
@@ -1286,7 +1286,9 @@ class Module extends \Aurora\System\Module\AbstractModule
             $aResult['Info'][] = [
                 'UUID' => (string) $oContact->UUID,
                 'ETag' => $oContact->ETag,
-                'Storage' => $oContact->Auto ? 'collected' : $oContact->getStorageWithId()
+                'Storage' => $oContact->Auto ? 'collected' : $oContact->getStorageWithId(),
+                'IsTeam' => $oContact->IsTeam,
+                'Shared' => $oContact->Shared,
             ];
         }
 

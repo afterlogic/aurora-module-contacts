@@ -140,12 +140,12 @@ class Contact
         foreach ($this->ExtendedInformation as $sKey => $mValue) {
             $aRes[$sKey] = $mValue;
         }
-        if ($this->Properties) {
-            foreach ($this->Properties as $sKey => $mValue) {
-                $aRes[$sKey] = $mValue;
-            }
-            $this->Properties = [];
+
+        foreach ($this->getExtendedProps() as $sKey => $mValue) {
+            $aRes[$sKey] = $mValue;
         }
+        $this->Properties = [];
+
         foreach ($this->ExtendedInformation as $sKey => $mValue) {
             $aRes[$sKey] = $mValue;
         }
@@ -237,7 +237,7 @@ class Contact
 
     public function setExtendedProp($key, $value)
     {
-        $card = ContactCard::select('Properties')->where('CardId', $this->Id)->first();
+        $card = ContactCard::select('Id', 'Properties')->where('CardId', $this->Id)->first();
         if ($card) {
             $properties = $card->Properties;
             $properties[$key] = $value;
@@ -249,7 +249,7 @@ class Contact
 
     public function unsetExtendedProp($key)
     {
-        $card = ContactCard::select('Properties')->where('CardId', $this->Id)->first();
+        $card = ContactCard::where('CardId', $this->Id)->first();
         if ($card) {
             $properties = $card->Properties;
             if (isset($properties[$key])) {
@@ -263,7 +263,7 @@ class Contact
 
     public function setExtendedProps($props)
     {
-        $card = ContactCard::select('Properties')->where('CardId', $this->Id)->first();
+        $card = ContactCard::where('CardId', $this->Id)->first();
         if ($card) {
             $properties = is_array($card->Properties) ? $card->Properties : [];
             $card->Properties = array_merge($properties, $props);
