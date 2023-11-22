@@ -261,8 +261,8 @@ class Module extends \Aurora\System\Module\AbstractModule
     {
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
-        $aStorages = [];
-        $aStandardStorageNames = [];
+        // $aStorages = [];
+        // $aStandardStorageNames = [];
         // $this->broadcastEvent('GetStorages', $aStandardStorageNames);
         // \ksort($aStandardStorageNames);
 
@@ -279,16 +279,16 @@ class Module extends \Aurora\System\Module\AbstractModule
         //     ];
         // }
 
-        $aCustomAddressBooks = $this->Decorator()->GetAddressBooks($iUserId);
-        foreach ($aCustomAddressBooks as &$oAddressBook) {
+        $aAddressBooks = $this->Decorator()->GetAddressBooks($iUserId);
+
+        foreach ($aAddressBooks as &$oAddressBook) {
             $oAddressBook['DisplayName'] = $this->GetStorageDisplayNameOverride($oAddressBook['DisplayName'], $oAddressBook['Id']);
-            $oAddressBook['Editable'] = isset($oAddressBook['Uri']) && !in_array($oAddressBook['Uri'], [Constants::ADDRESSBOOK_COLLECTED_NAME, Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME]);
         }
 
-        $aStorages = array_merge($aStorages, $aCustomAddressBooks);
+        // $aStorages = array_merge($aStorages, $aAddressBooks);
 
         $aStoragesOrder = array("personal", "collected", "shared", "team");
-        return $this->sortAddressBooks($aStorages, $aStoragesOrder);
+        return $this->sortAddressBooks($aAddressBooks, $aStoragesOrder);
     }
 
     protected function sortAddressBooks($aAddressBooks, $aOrder = [])
