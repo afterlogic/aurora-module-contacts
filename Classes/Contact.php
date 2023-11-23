@@ -184,13 +184,16 @@ class Contact
      */
     public function populate($aContact)
     {
-        $aStorageParts = \explode('-', (string)$aContact['Storage']);
-        if (isset($aStorageParts[0]) && $aStorageParts[0] === StorageType::AddressBook) {
-            if (isset($aStorageParts[1])) {
-                $aContact['AddressBookId'] = (int) $aStorageParts[1];
+        if (isset($aContact['Storage'])) {
+            $aStorageParts = \explode('-', (string)$aContact['Storage']);
+            if (isset($aStorageParts[0]) && $aStorageParts[0] === StorageType::AddressBook) {
+                if (isset($aStorageParts[1])) {
+                    $aContact['AddressBookId'] = (int) $aStorageParts[1];
+                }
+                $aContact['Storage'] = StorageType::AddressBook;
             }
-            $aContact['Storage'] = StorageType::AddressBook;
         }
+
         foreach ($aContact as $key => $value) {
             if (property_exists($this, $key)) {
                 $this->$key = $value;
