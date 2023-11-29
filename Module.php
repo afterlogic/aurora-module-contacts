@@ -1106,7 +1106,16 @@ class Module extends \Aurora\System\Module\AbstractModule
                     $mResult->InitFromVCardStr($UserId, $card['carddata']);
                     $mResult->UUID = $UUID;
                     $mResult->ETag = \trim($card['etag'], '"');
-                    $mResult->Storage = (string)$row->addressbook_id;
+
+                    $storagesMapToAddressbooks = \Aurora\Modules\Contacts\Module::Decorator()->GetStoragesMapToAddressbooks();
+                    $addressbook = Backend::Carddav()->getAddressBookById($row->addressbook_id);
+
+                    $key = false;
+                    if ($addressbook) {
+                        $key = array_search($addressbook['uri'], $storagesMapToAddressbooks);
+                    }
+
+                    $mResult->Storage = $key !== false ? $key : (string) $row->addressbook_id;
                     $mResult->AddressBookId = (int) $row->addressbook_id;
                     if ($mResult->Properties) {
                         $mResult->Properties = \json_decode($row->Properties);

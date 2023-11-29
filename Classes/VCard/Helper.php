@@ -670,11 +670,11 @@ class Helper
             $oVCard->add('BDAY', $sBDayDT);
         }
 
-        $props = $oContact->getExtendedProps();
-        foreach ($props as $key => $prop) {
-            $key = str_replace('::', '--', $key);
-            $oVCard->add('X-' . $key, $prop);
-        }
+        // $props = $oContact->getExtendedProps();
+        // foreach ($props as $key => $prop) {
+        //     $key = str_replace('::', '--', $key);
+        //     $oVCard->add('X-' . $key, $prop);
+        // }
     }
 
     /**
