@@ -834,7 +834,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $oUser = Api::getUserById($UserId);
         $aContacts = [];
-        if (self::Decorator()->CheckAccessToAddressBook($oUser, $AddressBookId, [Access::Write, Access::Read])) {
+        if (self::Decorator()->CheckAccessToAddressBook($oUser, $AddressBookId, Access::Read)) {
             $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $AddressBookId, $Filters);
 
             if (!empty($Search)) {
@@ -1095,7 +1095,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
             $row = $query->first();
             if ($row) {
-                if (!self::Decorator()->CheckAccessToAddressBook($oUser, $row->addressbook_id, [Access::Write, Access::Read])) {
+                if (!self::Decorator()->CheckAccessToAddressBook($oUser, $row->addressbook_id, Access::Read)) {
                     throw new ApiException(\Aurora\System\Notifications::AccessDenied, null, 'AccessDenied');
                 }
 
@@ -1210,7 +1210,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         ];
         $this->populateStorage($aArgs);
 
-        if (self::Decorator()->CheckAccessToAddressBook($oUser, $aArgs['AddressBookId'], [Access::Read])) {
+        if (self::Decorator()->CheckAccessToAddressBook($oUser, $aArgs['AddressBookId'], Access::Read)) {
             $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $aArgs['AddressBookId'], $Filters);
             $query->whereIn('ViewEmail', $Emails);
 
