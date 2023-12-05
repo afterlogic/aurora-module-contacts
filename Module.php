@@ -1416,13 +1416,19 @@ class Module extends \Aurora\System\Module\AbstractModule
         Api::CheckAccess($UserId);
 
         $iFrequency = 0;
-        $sStorage = 'personal';
-        $oQuery = Models\Contact::where([
-            ['ViewEmail', '=', $sViewEmail],
-            ['IdUser', '=',  $UserId],
-            ['Auto', '=', true],
-            ['Storage', '=', $sStorage]
+
+        $aArgs = [
+            'UserId' => $UserId,
+            'Storage' => StorageType::Collected,
+            'AddressBookId' => 0
+        ];
+        $this->populateStorage($aArgs);
+
+        $oQuery = ContactCard::where([
+            ['AddressBookId', '=', $aArgs['AddressBookId']],
+            ['ViewEmail', '=', $sViewEmail]
         ]);
+
         $oAutocreatedContacts = $this->getManager()->getContacts(
             \Aurora\Modules\Contacts\Enums\SortField::Name,
             \Aurora\System\Enums\SortOrder::ASC,
@@ -1431,10 +1437,13 @@ class Module extends \Aurora\System\Module\AbstractModule
             $oQuery
         );
         $oContact = $oAutocreatedContacts->first();
-        if ($oContact instanceof Contact) {
+        if ($oContact instanceof ContactCard) {
+            $card_uri = Capsule::connection()->table('adav_cards')
+                ->where('id', $oContact->CardId)
+                ->pluck('uri')->first();
+
+            Backend::Carddav()->deleteCard($oContact->AddressBookId, $card_uri);
             $iFrequency = $oContact->Frequency;
-            $this->getManager()->deleteContacts($UserId, $sStorage, [$oContact->UUID]);
-            $this->getManager()->updateCTag($UserId, $sStorage);
         }
         return $iFrequency;
     }
