@@ -1281,7 +1281,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $addressbook = Backend::Carddav()->getAddressBookByIdForUser(Constants::PRINCIPALS_PREFIX . $userPublicId, $aArgs['AddressBookId']);
 
             if ($addressbook) {
-                $aResult['CTag'] = $addressbook['{http://sabredav.org/ns}sync-token'];
+                $aResult['CTag'] = (int) $addressbook['{http://sabredav.org/ns}sync-token'];
             }
         }
         $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $aArgs['AddressBookId'], $Filters);
