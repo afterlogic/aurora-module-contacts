@@ -1276,7 +1276,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $userPublicId = Api::getUserPublicIdById($UserId);
 
         if ((int) $aArgs['AddressBookId'] > 0) {
-            $addressbook = Backend::Carddav()->getAddressBookByIdForUser(Constants::PRINCIPALS_PREFIX . $userPublicId, $aArgs['AddressBookId']);
+            $addressbook = Backend::Carddav()->getAddressBookById($aArgs['AddressBookId']);
 
             if ($addressbook) {
                 $aResult['CTag'] = (int) $addressbook['{http://sabredav.org/ns}sync-token'];
