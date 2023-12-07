@@ -860,10 +860,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 
             $aContactsCol = collect($aContacts);
             if ($Storage === StorageType::All && $WithoutTeamContactsDuplicates) {
-                $aPersonalContacsCol = $aContactsCol->map(function ($aContact) {
-                    if (isset($aContact['IsTeam'], $aContact['Shared']) && !$aContact['IsTeam'] && !$aContact['Shared']) {
-                        return $aContact;
-                    }
+                $aPersonalContacsCol = $aContactsCol->filter(function ($aContact) {
+                    return (isset($aContact['IsTeam'], $aContact['Shared']) && !$aContact['IsTeam'] && !$aContact['Shared']);
                 });
 
                 foreach ($aContacts as $key => $aContact) {
@@ -2443,10 +2441,12 @@ class Module extends \Aurora\System\Module\AbstractModule
         $aAddresses = $Args['Emails'];
         $iUserId = $Args['IdUser'];
         foreach ($aAddresses as $sEmail => $sName) {
-            $oContact = $this->getManager()->getContactByEmail($iUserId, $sEmail);
+            /** @var $contactsColl  */
+            $contactsColl = self::GetContactsByEmails($iUserId, StorageType::Personal, [$sEmail], null, false);
+
+            $oContact = $contactsColl->first();
             if ($oContact) {
-                $oContact->Frequency = $oContact->Frequency + 1;
-                self::Decorator()->UpdateContactObject($oContact);
+                ContactCard::where('CardId', $oContact->Id)->update(['Frequency' => $oContact->Frequency + 1]);
             } else {
                 self::Decorator()->CreateContact([
                     'FullName' => $sName,
@@ -2455,7 +2455,6 @@ class Module extends \Aurora\System\Module\AbstractModule
                     'Storage' => StorageType::Collected,
                 ], $iUserId);
             }
-            $this->getManager()->updateCTag($iUserId, 'collected');
         }
     }
 
