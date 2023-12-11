@@ -2445,6 +2445,12 @@ class Module extends \Aurora\System\Module\AbstractModule
             $contactsColl = self::GetContactsByEmails($iUserId, StorageType::Personal, [$sEmail], null, false);
 
             $oContact = $contactsColl->first();
+            if (!$oContact) {
+                /** @var $contactsColl  */
+                $contactsColl = self::GetContactsByEmails($iUserId, StorageType::Collected, [$sEmail], null, false);   
+                $oContact = $contactsColl->first();
+            }
+
             if ($oContact) {
                 ContactCard::where('CardId', $oContact->Id)->update(['Frequency' => $oContact->Frequency + 1]);
             } else {
