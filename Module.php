@@ -9,7 +9,6 @@ namespace Aurora\Modules\Contacts;
 
 use Afterlogic\DAV\Backend;
 use Afterlogic\DAV\Constants;
-use Afterlogic\DAV\Server;
 use Aurora\Api;
 use Aurora\Modules\Contacts\Enums\Access;
 use Aurora\Modules\Contacts\Enums\StorageType;
@@ -22,7 +21,6 @@ use Aurora\Modules\Contacts\Classes\Group;
 use Aurora\Modules\Core\Module as CoreModule;
 use Aurora\System\Exceptions\ApiException;
 use Aurora\System\Notifications;
-use Google\Service\ApigeeRegistry\Build;
 use Illuminate\Database\Eloquent\Builder;
 use Sabre\DAV\UUIDUtil;
 use Illuminate\Database\Capsule\Manager as Capsule;
@@ -39,8 +37,6 @@ use Sabre\DAV\PropPatch;
  */
 class Module extends \Aurora\System\Module\AbstractModule
 {
-    public $oManager = null;
-
     protected $aImportExportFormats = ['csv', 'vcf'];
 
     protected $userPublicIdToDelete = null;
@@ -69,16 +65,6 @@ class Module extends \Aurora\System\Module\AbstractModule
         return $this->oModuleSettings;
     }
 
-    /** @return Manager */
-    public function getManager()
-    {
-        if ($this->oManager === null) {
-            $this->oManager = new Manager($this);
-        }
-
-        return $this->oManager;
-    }
-
     /**
      * Initializes Contacts Module.
      *
@@ -91,17 +77,6 @@ class Module extends \Aurora\System\Module\AbstractModule
         $this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
         $this->subscribeEvent('Core::DeleteUser::after', array($this, 'onAfterDeleteUser'));
     }
-
-    /***** public functions *****/
-    /**
-     * Returns contacts manager.
-     * @return \Aurora\Modules\Contacts\Manager
-     */
-    public function GetApiContactsManager()
-    {
-        return $this->getManager();
-    }
-    /***** public functions *****/
 
     /***** public functions might be called with web API *****/
     /**
@@ -261,31 +236,13 @@ class Module extends \Aurora\System\Module\AbstractModule
     {
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
-        // $aStorages = [];
-        // $aStandardStorageNames = [];
-        // $this->broadcastEvent('GetStorages', $aStandardStorageNames);
-        // \ksort($aStandardStorageNames);
-
         $iUserId = \Aurora\System\Api::getAuthenticatedUserId();
-
-        // foreach ($aStandardStorageNames as $iIndex => $sStorageName) {
-        //     $aStorages[] = [
-        //         'Id' => $sStorageName,
-        //         'CTag' => $this->Decorator()->GetCTag($iUserId, $sStorageName),
-        //         'Display' => $this->Decorator()->IsDisplayedStorage($sStorageName),
-        //         'Order' => $iIndex,
-        //         'DisplayName' => $this->Decorator()->GetStorageDisplayName($sStorageName),
-        //         'Editable' => false //TODO: currently only Team storage is processed wihtin this loop
-        //     ];
-        // }
 
         $aAddressBooks = $this->Decorator()->GetAddressBooks($iUserId);
 
         foreach ($aAddressBooks as &$oAddressBook) {
             $oAddressBook['DisplayName'] = $this->GetStorageDisplayNameOverride($oAddressBook['DisplayName'], $oAddressBook['Id']);
         }
-
-        // $aStorages = array_merge($aStorages, $aAddressBooks);
 
         $aStoragesOrder = array("personal", "collected", "shared", "team");
         return $this->sortAddressBooks($aAddressBooks, $aStoragesOrder);
@@ -325,6 +282,39 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         // Merge the two arrays and return the result
         return array_merge($priority_books, $non_priority_books);
+    }
+
+    protected function _getContacts($iSortField = SortField::Name, $iSortOrder = \Aurora\System\Enums\SortOrder::ASC, $iOffset = 0, $iLimit = 20, $oFilters = null) 
+    {
+        $sSortField = 'FullName';
+        switch ($iSortField) {
+            case SortField::Email:
+                $sSortField = 'ViewEmail';
+                break;
+            case SortField::Frequency:
+                $sSortField = 'AgeScore';
+                // $oFilters->select(Capsule::connection()->raw('*, (Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, DateModified)/30)) as AgeScore'));
+                break;
+            case SortField::FirstName:
+                $sSortField = 'FirstName';
+                break;
+            case SortField::LastName:
+                $sSortField = 'LastName';
+                break;
+            case SortField::Name:
+                $sSortField = 'FullName';
+                break;
+        }
+        if ($iOffset > 0) {
+            $oFilters->offset($iOffset);
+        }
+        if ($iLimit > 0) {
+            $oFilters->limit($iLimit);
+        }
+
+        return $oFilters
+            ->orderBy($sSortField, $iSortOrder === \Aurora\System\Enums\SortOrder::ASC ? 'asc' : 'desc')
+            ->get();
     }
 
     /**
@@ -390,7 +380,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         if ($oUser) {
             if ($oUser->isNormalOrTenant()) {
                 $oUser->setExtendedProp(self::GetName() . '::ContactsPerPage', $ContactsPerPage);
-                return \Aurora\Modules\Core\Module::Decorator()->UpdateUserObject($oUser);
+                return CoreModule::Decorator()->UpdateUserObject($oUser);
             }
             if ($oUser->isAdmin()) {
                 $this->setConfig('ContactsPerPage', $ContactsPerPage);
@@ -732,26 +722,6 @@ class Module extends \Aurora\System\Module\AbstractModule
     }
 
     /**
-     * Returns group item identified by its name.
-     * @param string $Name Group name
-     * @param int|null $UserId
-     * @return \Aurora\Modules\Contacts\Models\Group
-     */
-    public function GetGroupByName($Name, $UserId = null)
-    {
-        \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-
-        if (isset($UserId) && $UserId !==  \Aurora\System\Api::getAuthenticatedUserId()) {
-            \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::SuperAdmin);
-        } else {
-            $UserId = \Aurora\System\Api::getAuthenticatedUserId();
-        }
-
-        Api::CheckAccess($UserId);
-
-        return $this->getManager()->getGroupByName($Name, $UserId);
-    }
-    /**
      * @api {post} ?/Api/ GetContacts
      * @apiName GetContacts
      * @apiGroup Contacts
@@ -856,7 +826,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
             $count = $query->count();
 
-            $aContacts = $this->getManager()->getContacts($SortField, $SortOrder, $Offset, $Limit, $query)->toArray();
+            $aContacts = $this->_getContacts($SortField, $SortOrder, $Offset, $Limit, $query)->toArray();
 
             $aContactsCol = collect($aContacts);
             if ($Storage === StorageType::All && $WithoutTeamContactsDuplicates) {
@@ -937,7 +907,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 }
             }
         } else {
-            throw new ApiException(\Aurora\System\Notifications::AccessDenied, null, 'AccessDenied');
+            throw new ApiException(Notifications::AccessDenied, null, 'AccessDenied');
         }
 
         foreach($aContacts as &$aContact) {
@@ -1094,7 +1064,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $row = $query->first();
             if ($row) {
                 if (!self::Decorator()->CheckAccessToAddressBook($oUser, $row->addressbook_id, Access::Read)) {
-                    throw new ApiException(\Aurora\System\Notifications::AccessDenied, null, 'AccessDenied');
+                    throw new ApiException(Notifications::AccessDenied, null, 'AccessDenied');
                 }
 
                 $card = Backend::Carddav()->getCard($row->addressbook_id, $row->card_uri);
@@ -1212,7 +1182,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $aArgs['AddressBookId'], $Filters);
             $query->whereIn('ViewEmail', $Emails);
 
-            $aContacts = $this->getManager()->getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $query);
+            $aContacts = $this->_getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $query);
             if ($AsArray) {
                 $aContacts = $aContacts->toArray();
             }
@@ -1243,7 +1213,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 $oContact->Storage = (string)$oContact->Storage;
             };
         } else {
-            throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::InvalidInputParameter);
+            throw new ApiException(Notifications::InvalidInputParameter);
         }
 
         return $aResult;
@@ -1427,8 +1397,8 @@ class Module extends \Aurora\System\Module\AbstractModule
             ['ViewEmail', '=', $sViewEmail]
         ]);
 
-        $oAutocreatedContacts = $this->getManager()->getContacts(
-            \Aurora\Modules\Contacts\Enums\SortField::Name,
+        $oAutocreatedContacts = $this->_getContacts(
+            SortField::Name,
             \Aurora\System\Enums\SortOrder::ASC,
             0,
             1,
@@ -2218,7 +2188,7 @@ class Module extends \Aurora\System\Module\AbstractModule
     {
         Api::CheckAccess($UserId);
 
-        $oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserWithoutRoleCheck($UserId);
+        $oUser = CoreModule::getInstance()->GetUserWithoutRoleCheck($UserId);
 
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
@@ -2250,15 +2220,15 @@ class Module extends \Aurora\System\Module\AbstractModule
                     $aResponse['ImportedCount'] = $aImportResult['ImportedCount'];
                     $aResponse['ParsedCount'] = $aImportResult['ParsedCount'];
                 } else {
-                    throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::IncorrectFileExtension);
+                    throw new ApiException(Notifications::IncorrectFileExtension);
                 }
 
                 $oApiFileCacheManager->clear($oUser->UUID, $sTempFileName, '', self::GetName());
             } else {
-                throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::UnknownError);
+                throw new ApiException(Notifications::UnknownError);
             }
         } else {
-            throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::UnknownError);
+            throw new ApiException(Notifications::UnknownError);
         }
 
         return $aResponse;
@@ -2276,12 +2246,12 @@ class Module extends \Aurora\System\Module\AbstractModule
     {
         Api::CheckAccess($UserId);
 
-        $oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserWithoutRoleCheck($UserId);
+        $oUser = CoreModule::getInstance()->GetUserWithoutRoleCheck($UserId);
 
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
         if (empty($File)) {
-            throw new \Aurora\System\Exceptions\ApiException(\Aurora\System\Notifications::InvalidInputParameter);
+            throw new ApiException(Notifications::InvalidInputParameter);
         }
 
         $oApiFileCache = new \Aurora\System\Managers\Filecache();
@@ -2290,26 +2260,6 @@ class Module extends \Aurora\System\Module\AbstractModule
         $aImportResult = $this->importVcf($oUser->Id, $sTempFilePath);
 
         return $aImportResult;
-    }
-
-    public function GetCTag($UserId, $Storage)
-    {
-        Api::CheckAccess($UserId);
-
-        $oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserWithoutRoleCheck($UserId);
-
-        $iResult = 0;
-        if ($oUser instanceof \Aurora\Modules\Core\Models\User) {
-            $aStorageParts = \explode('-', $Storage);
-            $iUserId = $Storage === StorageType::Personal || $Storage === StorageType::Collected || (isset($aStorageParts[0]) && $aStorageParts[0] === StorageType::AddressBook) ? $oUser->Id : $oUser->IdTenant;
-
-            $oCTag = $this->getManager()->getCTag($iUserId, $Storage);
-            if ($oCTag instanceof Models\CTag) {
-                $iResult = $oCTag->CTag;
-            }
-        }
-
-        return $iResult;
     }
 
     /**
@@ -2329,7 +2279,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $oContact = self::Decorator()->GetContact($UUID, $UserId);
         if ($oContact) {
             $oVCard = new \Sabre\VObject\Component\VCard();
-            \Aurora\Modules\Contacts\Classes\VCard\Helper::UpdateVCardFromContact($oContact, $oVCard);
+            Helper::UpdateVCardFromContact($oContact, $oVCard);
             $sVCardData = $oVCard->serialize();
             if ($sVCardData) {
                 $sUUID = \Aurora\System\Api::getUserUUIDById($UserId);
@@ -2377,7 +2327,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                     $aGroupsData[] = Classes\VCard\Helper::GetGroupDataFromVcard($oVCard);
                 } else {
                     $aContactData = Classes\VCard\Helper::GetContactDataFromVcard($oVCard);
-                    $oContact = isset($aContactData['UUID']) ? $oApiContactsManager->getContact($aContactData['UUID']) : null;
+                    $oContact = isset($aContactData['UUID']) ? self::Decorator()->GetContact($aContactData['UUID'], $iUserId) : null;
                     $aImportResult['ParsedCount']++;
                     if (!isset($oContact)) {
                         if (isset($sStorage)) {
@@ -2407,7 +2357,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                         }
                     }
                 }
-                $aGroupData['UUID'] = \Sabre\DAV\UUIDUtil::getUUID();
+                $aGroupData['UUID'] = UUIDUtil::getUUID();
                 $oContactsDecorator->CreateGroup($aGroupData, $iUserId);
             }
         }
