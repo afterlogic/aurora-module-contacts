@@ -1361,6 +1361,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 if ($cardETag) {
                     $newCard = Backend::Carddav()->getCard($oContact->AddressBookId, $cardUri);
                     if ($newCard) {
+                        ContactCard::where('CardId', $newCard['id'])->update(['Frequency' => $oContact->Frequency]);
                         $mResult = [
                             'UUID' => (string) $newCard['id'],
                             'ETag' => \trim($newCard['etag'], '"')
