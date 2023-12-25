@@ -284,7 +284,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         return array_merge($priority_books, $non_priority_books);
     }
 
-    protected function _getContacts($iSortField = SortField::Name, $iSortOrder = \Aurora\System\Enums\SortOrder::ASC, $iOffset = 0, $iLimit = 20, $oFilters = null) 
+    protected function _getContacts($iSortField = SortField::Name, $iSortOrder = \Aurora\System\Enums\SortOrder::ASC, $iOffset = 0, $iLimit = 20, $oFilters = null)
     {
         $sSortField = 'FullName';
         switch ($iSortField) {
@@ -1747,7 +1747,9 @@ class Module extends \Aurora\System\Module\AbstractModule
             $oGroup->IdUser = (int) $UserId;
 
             $oGroup->populate($Group);
-            $oGroup->Contacts = $this->getContactsUUIDsFromIds($UserId, $Group['Contacts']);
+            if (is_array($Group['Contacts'])) {
+                $oGroup->Contacts = $this->getContactsUUIDsFromIds($UserId, $Group['Contacts']);
+            }
 
             $oVCard = new \Sabre\VObject\Component\VCard();
             Helper::UpdateVCardFromGroup($oGroup, $oVCard);
@@ -2395,7 +2397,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $oContact = $contactsColl->first();
             if (!$oContact) {
                 /** @var $contactsColl  */
-                $contactsColl = self::GetContactsByEmails($iUserId, StorageType::Collected, [$sEmail], null, false);   
+                $contactsColl = self::GetContactsByEmails($iUserId, StorageType::Collected, [$sEmail], null, false);
                 $oContact = $contactsColl->first();
             }
 
