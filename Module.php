@@ -1512,26 +1512,23 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     public function MoveContactsToStorage($UserId, $FromStorage, $ToStorage, $UUIDs)
     {
-        $oQuery = Models\Contact::where('IdUser', $UserId)->whereIn('UUID', $UUIDs);
+        $aArgsFrom = [
+            'UserId' => $UserId,
+            'Storage' => $FromStorage,
+            'AddressBookId' => 0
+        ];
+        $this->populateStorage($aArgsFrom);
 
-        $aFromStorageParts = \explode('-', $FromStorage);
-        if (isset($aFromStorageParts[0], $aFromStorageParts[1]) && $aFromStorageParts[0] === StorageType::AddressBook) {
-            $oQuery = $oQuery->where('Storage', StorageType::AddressBook)->where('AddressBookId', (int) $aFromStorageParts[1]);
-        } else {
-            $oQuery = $oQuery->where('Storage', $FromStorage);
-        }
-
-        $ToAddressBookId = null;
-        $aStorageParts = \explode('-', $ToStorage);
-        if (isset($aStorageParts[0], $aStorageParts[1]) && $aStorageParts[0] === StorageType::AddressBook) {
-            $ToAddressBookId = (int) $aStorageParts[1];
-            $ToStorage =  StorageType::AddressBook;
-        }
-
-        $oQuery->update([
+        $aArgsTo = [
+            'UserId' => $UserId,
             'Storage' => $ToStorage,
-            'AddressBookId' => $ToAddressBookId
-        ]);
+            'AddressBookId' => 0
+        ];
+        $this->populateStorage($aArgsTo);
+
+        foreach ($UUIDs as $uuid) {
+            Backend::Carddav()->updateCardAddressBook($aArgsFrom['AddressBookId'], $aArgsTo['AddressBookId'], $uuid);
+        }
 
         return true;
     }
@@ -2452,8 +2449,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
-        return AddressBook::where('UserId', $UserId)
-            ->where('UUID', $UUID)->first();
+        $principalUri = Constants::PRINCIPALS_PREFIX . \Aurora\System\Api::getUserPublicIdById($UserId);
+
+        return Backend::Carddav()->getAddressBookByUriForUser($principalUri, $UUID);
     }
 
     public function GetAddressBooks($UserId = null)
