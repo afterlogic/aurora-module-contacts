@@ -84,7 +84,7 @@ class CopyDataToContactsCardsTable extends Migration
                                     Api::Log('Contact migrated successfuly:', \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
                                     Api::Log('User.PublicId: ' . $userPublicId, \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
                                     Api::Log('Contact.UUID: ' . $uid, \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
-                                    Api::Log('Conatct.ViewEmail: ' . $row->ViewEmail, \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
+                                    Api::Log('Contact.ViewEmail: ' . $row->ViewEmail, \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
                                     Api::Log('ContactCard.CardId: ' . $info->CardId, \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
                                     Api::Log('', \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
                                 }
