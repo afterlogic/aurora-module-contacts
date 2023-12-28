@@ -1,10 +1,8 @@
 <?php
 
-use Afterlogic\DAV\Backend;
 use Afterlogic\DAV\Constants;
 use Aurora\Modules\Contacts\Models\ContactCard;
 use Aurora\System\Api;
-use Aurora\System\EventEmitter;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
@@ -38,7 +36,14 @@ class CopyDataToContactsCardsTable extends Migration
                     $userPublicId = Api::getUserPublicIdById($row->IdUser);
                     $userPrincipal = Constants::PRINCIPALS_PREFIX . $userPublicId;
 
-                    if (isset($properties) || $row->Frequency > 0) {
+                    Api::Log('Source contact: ', \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
+                    Api::Log('  Contact.Id: ' . $row->Id, \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
+
+                    if ($row->Frequency > 0 || (isset($properties) && is_array($properties) && count($properties) > 0)) {
+                        Api::Log('  Contact.UUID: ' . $uid, \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
+                        Api::Log('  Contact.ViewEmail: ' . $row->ViewEmail, \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
+                        Api::Log('  User.PublicId: ' . $userPublicId, \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
+
                         $query = Capsule::connection()->table('contacts_cards')
                             ->select('contacts_cards.Id', 'contacts_cards.CardId', 'contacts_cards.Properties')
                             ->join('adav_addressbooks', 'contacts_cards.AddressBookId', '=', 'adav_addressbooks.id')
@@ -59,37 +64,47 @@ class CopyDataToContactsCardsTable extends Migration
                             }
 
                             if ($isCustomAddressBook) {
+                                Api::Log('  Custom addressbook (id): ' . $row->AddressBookId, \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
                                 $query->join('contacts_addressbooks', 'contacts_addressbooks.UUID', '=', 'adav_addressbooks.uri')
                                     ->where('contacts_addressbooks.Id', $row->AddressBookId);
                             } elseif ($addressbookUri) {
+                                Api::Log('  Dav addressbook (uri): ' . $addressbookUri, \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
                                 $query->where('adav_addressbooks.uri', $addressbookUri);
                             }
                         }
                         $cardsInfo = $query->get();
 
-                        foreach ($cardsInfo as $info) {
-                            $update = [];
-                            if (isset($properties)) {
-                                if (isset($info->Properties)) {
-                                    $oldProperties = \json_decode($info->Properties, true);
-                                    $properties = array_merge($oldProperties, $properties);
+                        if (count($cardsInfo) > 0) {
+                            foreach ($cardsInfo as $info) {
+                                Api::Log('Destination contact card:', \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
+                                Api::Log('  ContactCard.Id: ' . $info->Id, \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
+                                Api::Log('  ContactCard.CardId: ' . $info->CardId, \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
+
+                                $update = [];
+                                if (isset($properties) && is_array($properties) && count($properties) > 0) {
+                                    Api::Log('  Source properties (count): ' . count($properties), \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
+                                    if (isset($info->Properties)) {
+                                        $oldProperties = \json_decode($info->Properties, true);
+                                        $properties = array_merge($oldProperties, $properties);
+                                    }
+                                    Api::Log('  Result properties (count): ' . count($properties), \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
+                                    $update['Properties'] = \json_encode($properties);
                                 }
-                                $update['Properties'] = \json_encode($properties);
-                            }
-                            if ($row->Frequency > 0) {
-                                $update['Frequency'] = $row->Frequency;
-                            }
-                            if (count($update) > 0) {
-                                if (!!ContactCard::where('Id', $info->Id)->update($update)) {
-                                    Api::Log('Contact migrated successfuly:', \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
-                                    Api::Log('User.PublicId: ' . $userPublicId, \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
-                                    Api::Log('Contact.UUID: ' . $uid, \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
-                                    Api::Log('Contact.ViewEmail: ' . $row->ViewEmail, \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
-                                    Api::Log('ContactCard.CardId: ' . $info->CardId, \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
-                                    Api::Log('', \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
+                                if ($row->Frequency > 0) {
+                                    Api::Log('  Frequency: ' . $row->Frequency, \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
+                                    $update['Frequency'] = $row->Frequency;
+                                }
+                                if (count($update) > 0) {
+                                    if (!!ContactCard::where('Id', $info->Id)->update($update)) {
+                                        Api::Log('Contact data migrated successfuly!', \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
+                                    }
                                 }
                             }
+                        } else {
+                            Api::Log('No destination contact cards were found', \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
                         }
+                    } else {
+                        Api::Log('No contact data to migrate', \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
                     }
                 } catch (\Exception $e) {
                     Api::Log('Contact migration exception', \Aurora\System\Enums\LogLevel::Error, 'contacts-migration-');
@@ -97,6 +112,8 @@ class CopyDataToContactsCardsTable extends Migration
                     Api::Log($e->getMessage(), \Aurora\System\Enums\LogLevel::Error, 'contacts-migration-');
                     // \Aurora\System\Api::LogException($e, \Aurora\System\Enums\LogLevel::Error, 'contacts-migration-');
                 }
+
+                Api::Log('', \Aurora\System\Enums\LogLevel::Full, 'contacts-migration-');
             }
         });
     }
