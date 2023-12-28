@@ -1747,7 +1747,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $oGroup->IdUser = (int) $UserId;
 
             $oGroup->populate($Group);
-            if (is_array($Group['Contacts'])) {
+            if (isset($Group['Contacts']) && is_array($Group['Contacts'])) {
                 $oGroup->Contacts = $this->getContactsUUIDsFromIds($UserId, $Group['Contacts']);
             }
 
