@@ -44,7 +44,7 @@ class CopyDataToContactsCardsTable extends Migration
 
                     $query = Capsule::connection()->table('contacts_cards')->select('contacts_cards.Id')
                         ->join('adav_addressbooks', 'contacts_cards.AddressBookId', '=', 'adav_addressbooks.id')
-                            ->join('adav_cards', 'contacts_cards.CardId','=','adav_cards.id')
+                            ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
                                 ->where('adav_addressbooks.principaluri', $userPrincipal)
                                 ->where('adav_cards.uri', $uid . '.vcf');
 
