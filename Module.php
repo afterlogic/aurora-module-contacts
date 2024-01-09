@@ -2315,52 +2315,54 @@ class Module extends \Aurora\System\Module\AbstractModule
         $oHandler = fopen($sTempFilePath, 'r');
         $oSplitter = new \Sabre\VObject\Splitter\VCard($oHandler, \Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES);
         $oContactsDecorator = Module::Decorator();
-        $oApiContactsManager = $oContactsDecorator ? $oContactsDecorator->GetApiContactsManager() : null;
-        if ($oApiContactsManager) {
-            $aGroupsData = [];
-            $aContactsData = [];
-            while ($oVCard = $oSplitter->getNext()) {
-                set_time_limit(30);
 
-                if ((isset($oVCard->KIND) && (string) $oVCard->KIND === 'GROUP') ||
-                    (isset($oVCard->{'X-ADDRESSBOOKSERVER-KIND'}) && (string) $oVCard->{'X-ADDRESSBOOKSERVER-KIND'} === 'GROUP')) {
-                    $aGroupsData[] = Classes\VCard\Helper::GetGroupDataFromVcard($oVCard);
-                } else {
-                    $aContactData = Classes\VCard\Helper::GetContactDataFromVcard($oVCard);
-                    $oContact = isset($aContactData['UUID']) ? self::Decorator()->GetContact($aContactData['UUID'], $iUserId) : null;
-                    $aImportResult['ParsedCount']++;
-                    if (!isset($oContact)) {
-                        if (isset($sStorage)) {
-                            $aContactData['Storage'] = $sStorage;
-                        }
-                        $aContactsData[(string) $oVCard->UID] = $aContactData;
-                    }
-                }
+        $aGroupsData = [];
+        $aContactsData = [];
+        while ($oVCard = $oSplitter->getNext()) {
+            set_time_limit(30);
+            
+            $Uid = (string) $oVCard->UID;
+            if (empty($Uid)) {
+                $Uid = UUIDUtil::getUUID();
             }
-
-            foreach ($aContactsData as $key => $aContactData) {
-                $CreatedContactData = $oContactsDecorator->CreateContact($aContactData, $iUserId);
-                if ($CreatedContactData) {
-                    $aImportResult['ImportedCount']++;
-                    $aImportResult['ImportedUids'][] = $CreatedContactData['UUID'];
-                    $aContactsData[$key]['NewUUID'] = $CreatedContactData['UUID'];
-                }
-            }
-
-            foreach ($aGroupsData as $aGroupData) {
-                if (isset($aGroupData['Contacts'])) {
-                    $aUuids = $aGroupData['Contacts'];
-                    $aGroupData['Contacts'] = [];
-                    foreach ($aUuids as $value) {
-                        if (isset($aContactsData[$value])) {
-                            $aGroupData['Contacts'][] = $aContactsData[$value]['NewUUID'];
-                        }
+            if ((isset($oVCard->KIND) && (string) $oVCard->KIND === 'GROUP') ||
+                (isset($oVCard->{'X-ADDRESSBOOKSERVER-KIND'}) && (string) $oVCard->{'X-ADDRESSBOOKSERVER-KIND'} === 'GROUP')) {
+                $aGroupsData[] = Classes\VCard\Helper::GetGroupDataFromVcard($oVCard, $Uid);
+            } else {
+                $aContactData = Classes\VCard\Helper::GetContactDataFromVcard($oVCard, $Uid);
+                $oContact = self::Decorator()->GetContact($Uid, $iUserId);
+                $aImportResult['ParsedCount']++;
+                if (!$oContact) {
+                    if (isset($sStorage)) {
+                        $aContactData['Storage'] = $sStorage;
                     }
+                    $aContactsData[$Uid] = $aContactData;
                 }
-                $aGroupData['UUID'] = UUIDUtil::getUUID();
-                $oContactsDecorator->CreateGroup($aGroupData, $iUserId);
             }
         }
+
+        foreach ($aContactsData as $key => $aContactData) {
+            $CreatedContactData = $oContactsDecorator->CreateContact($aContactData, $iUserId);
+            if ($CreatedContactData) {
+                $aImportResult['ImportedCount']++;
+                $aImportResult['ImportedUids'][] = $CreatedContactData['UUID'];
+                $aContactsData[$key]['NewUUID'] = $CreatedContactData['UUID'];
+            }
+        }
+
+        foreach ($aGroupsData as $aGroupData) {
+            if (isset($aGroupData['Contacts'])) {
+                $aUuids = $aGroupData['Contacts'];
+                $aGroupData['Contacts'] = [];
+                foreach ($aUuids as $value) {
+                    if (isset($aContactsData[$value])) {
+                        $aGroupData['Contacts'][] = $aContactsData[$value]['NewUUID'];
+                    }
+                }
+            }
+            $oContactsDecorator->CreateGroup($aGroupData, $iUserId);
+        }
+
         return $aImportResult;
     }
 
