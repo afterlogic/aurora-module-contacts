@@ -16,12 +16,28 @@ use Aurora\System\Classes\Model;
  * @property integer $Id
  * @property integer $CardId
  * @property integer|null $AddressBookId
- * @property string $FullName
+ * @property string $PrimaryEmail
  * @property string $ViewEmail
+ * @property string $PersonalEmail
+ * @property string $BusinessEmail
+ * @property string $OtherEmail
+ * @property string $BusinessCompany
+ * @property string $FullName
  * @property string $FirstName
  * @property string $LastName
  * @property integer $Frequency
+ * @property bool $IsGroup
  * @property array|null $Properties
+ * 
+ * @property bool $Auto
+ * @property bool $Shared
+ * @property bool $IsTeam
+ * 
+ * @property string $UUID
+ * @property string $ETag
+ * @property string $Storage
+ * 
+ * @method static \Illuminate\Database\Eloquent\Builder|ContactCard select(mixed ...$args)
  */
 class ContactCard extends Model
 {

@@ -1161,7 +1161,7 @@ class Module extends \Aurora\System\Module\AbstractModule
      * Returns list of contacts with specified emails.
      * @param string $Storage storage of contacts.
      * @param array $Emails List of emails of contacts to return.
-     * @return array
+     * @return \Illuminate\Database\Eloquent\Collection|array
      */
     public function GetContactsByEmails($UserId, $Storage, $Emails, $Filters = null, $AsArray = true)
     {
@@ -1339,7 +1339,7 @@ class Module extends \Aurora\System\Module\AbstractModule
     {
         Api::CheckAccess($UserId);
 
-        $oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserWithoutRoleCheck($UserId);
+        $oUser = CoreModule::getInstance()->GetUserWithoutRoleCheck($UserId);
 
         $mResult = false;
 
@@ -1347,12 +1347,12 @@ class Module extends \Aurora\System\Module\AbstractModule
             $oContact = new Classes\Contact();
             $oContact->IdUser = $oUser->Id;
             $oContact->IdTenant = $oUser->IdTenant;
-            $oContact->populate($Contact, true);
+            $oContact->populate($Contact);
 
             $oContact->Frequency = $this->getAutocreatedContactFrequencyAndDeleteIt($oUser->Id, $oContact->ViewEmail);
 
             $oVCard = new \Sabre\VObject\Component\VCard();
-            \Aurora\Modules\Contacts\Classes\VCard\Helper::UpdateVCardFromContact($oContact, $oVCard);
+            Helper::UpdateVCardFromContact($oContact, $oVCard);
 
             if (self::Decorator()->CheckAccessToAddressBook($oUser, $oContact->AddressBookId, Access::Write)) {
                 $cardUri = $oContact->UUID . '.vcf';
@@ -1476,7 +1476,7 @@ class Module extends \Aurora\System\Module\AbstractModule
     /**
      * Updates contact with specified parameters.
      * @param array $Contact Parameters of contact to update.
-     * @return bool
+     * @return array|bool
      */
     public function UpdateContact($UserId, $Contact)
     {
@@ -1487,7 +1487,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $oContact = self::Decorator()->GetContact($Contact['UUID'], $UserId);
         $oUser = Api::getUserById($UserId);
         if ($oContact && self::Decorator()->CheckAccessToAddressBook($oUser, $oContact->AddressBookId, Access::Write)) {
-            $oContact->populate($Contact, true);
+            $oContact->populate($Contact);
             if (self::Decorator()->UpdateContactObject($oContact)) {
                 if (is_array($oContact->GroupUUIDs)) {
                     $groups = self::Decorator()->GetGroups($UserId, $oContact->GroupUUIDs);
@@ -2393,12 +2393,10 @@ class Module extends \Aurora\System\Module\AbstractModule
         $aAddresses = $Args['Emails'];
         $iUserId = $Args['IdUser'];
         foreach ($aAddresses as $sEmail => $sName) {
-            /** @var $contactsColl  */
             $contactsColl = self::GetContactsByEmails($iUserId, StorageType::Personal, [$sEmail], null, false);
 
             $oContact = $contactsColl->first();
             if (!$oContact) {
-                /** @var $contactsColl  */
                 $contactsColl = self::GetContactsByEmails($iUserId, StorageType::Collected, [$sEmail], null, false);
                 $oContact = $contactsColl->first();
             }

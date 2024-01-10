@@ -285,7 +285,7 @@ class Helper
 
 
     /**
-    * @param \Aurora\Modules\Contacts\Models\Contact $oContact
+    * @param \Aurora\Modules\Contacts\Classes\Contact $oContact
     * @param \Sabre\VObject\Component $oVCard
     * @return void
     */
@@ -362,7 +362,7 @@ class Helper
     }
 
     /**
-    * @param \Aurora\Modules\Contacts\Models\Contact $oContact
+    * @param \Aurora\Modules\Contacts\Classes\Contact $oContact
     * @param \Sabre\VObject\Component\VCard $oVCard
     * @return void
     */
@@ -461,7 +461,7 @@ class Helper
     }
 
     /**
-    * @param \Aurora\Modules\Contacts\Models\Contact $oContact
+    * @param \Aurora\Modules\Contacts\Classes\Contact $oContact
     * @param \Sabre\VObject\Component $oVCard
     * @return void
     */
@@ -509,7 +509,7 @@ class Helper
     }
 
     /**
-    * @param \Aurora\Modules\Contacts\Models\Contact $oContact
+    * @param \Aurora\Modules\Contacts\Classes\Contact $oContact
     * @param \Sabre\VObject\Component\VCard $oVCard
     * @return void
     */
@@ -611,7 +611,7 @@ class Helper
     }
 
     /**
-    * @param \Aurora\Modules\Contacts\Models\Contact $oContact
+    * @param \Aurora\Modules\Contacts\Classes\Contact $oContact
     * @param \Sabre\VObject\Component\VCard $oVCard
     * @param bool $bIsUpdate = false
     * @return void

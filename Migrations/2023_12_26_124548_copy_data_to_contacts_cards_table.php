@@ -17,13 +17,13 @@ class CopyDataToContactsCardsTable extends Migration
     public function up()
     {
         Api::Init();
-        Capsule::connection()->table('contacts')->orderBy('Id')->chunk(100000, function ($rows) {
+        Capsule::connection()->table('contacts')->orderBy('Id')->chunk(100000, function (stdClass $rows) {
             foreach ($rows as $row) {
                 try {
                     $properties = null;
+                    $uid = $row->UUID;
                     if (isset($row->Properties)) {
                         $properties = json_decode($row->Properties, true);
-                        $uid = $row->UUID;
                         if (isset($properties['DavContacts::UID'])) {
                             $uid = $properties['DavContacts::UID'];
                             unset($properties['DavContacts::UID']);
