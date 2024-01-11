@@ -28,15 +28,15 @@ use Aurora\System\Classes\Model;
  * @property integer $Frequency
  * @property bool $IsGroup
  * @property array|null $Properties
- * 
+ *
  * @property bool $Auto
  * @property bool $Shared
  * @property bool $IsTeam
- * 
+ *
  * @property string $UUID
  * @property string $ETag
  * @property string $Storage
- * 
+ *
  * @method static \Illuminate\Database\Eloquent\Builder|ContactCard select(mixed ...$args)
  */
 class ContactCard extends Model

@@ -2320,7 +2320,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $aContactsData = [];
         while ($oVCard = $oSplitter->getNext()) {
             set_time_limit(30);
-            
+
             $Uid = (string) $oVCard->UID;
             if (empty($Uid)) {
                 $Uid = UUIDUtil::getUUID();

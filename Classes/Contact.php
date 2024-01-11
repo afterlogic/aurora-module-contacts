@@ -10,8 +10,6 @@ namespace Aurora\Modules\Contacts\Classes;
 use Aurora\Modules\Contacts\Classes\VCard\Helper;
 use Aurora\Modules\Contacts\Enums\StorageType;
 use Aurora\Modules\Contacts\Models\ContactCard;
-use Aurora\Modules\Contacts\Models\Group;
-use Aurora\Modules\Core\Models\User;
 use Aurora\System\EventEmitter;
 
 /**
