@@ -38,6 +38,10 @@ use Aurora\System\Classes\Model;
  * @property string $Storage
  *
  * @method static \Illuminate\Database\Eloquent\Builder|ContactCard select(mixed ...$args)
+ * @method static \Illuminate\Database\Eloquent\Builder|ContactCard firstWhere(Closure|string|array|\Illuminate\Database\Query\Expression $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
+ * @method static \Illuminate\Database\Eloquent\Builder|ContactCard whereNotNull(Closure|string|array|\Illuminate\Database\Query\Expression $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
+ * @method static \Illuminate\Database\Eloquent\Builder|ContactCard where(Closure|string|array|\Illuminate\Database\Query\Expression $column, mixed $operator = null, mixed $value = null, string $boolean = 'and')
+
  */
 class ContactCard extends Model
 {
