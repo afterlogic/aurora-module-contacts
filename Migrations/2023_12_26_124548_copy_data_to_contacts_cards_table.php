@@ -17,7 +17,7 @@ class CopyDataToContactsCardsTable extends Migration
     public function up()
     {
         Api::Init();
-        Capsule::connection()->table('contacts')->orderBy('Id')->chunk(100000, function (stdClass $rows) {
+        Capsule::connection()->table('contacts')->orderBy('Id')->chunk(100000, function ($rows) {
             foreach ($rows as $row) {
                 try {
                     $properties = null;
