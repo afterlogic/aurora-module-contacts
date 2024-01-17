@@ -829,28 +829,49 @@ class Module extends \Aurora\System\Module\AbstractModule
             $aContacts = $this->_getContacts($SortField, $SortOrder, $Offset, $Limit, $query)->toArray();
 
             $aContactsCol = collect($aContacts);
-            if ($Storage === StorageType::All && $WithoutTeamContactsDuplicates) {
-                $aPersonalContacsCol = $aContactsCol->filter(function ($aContact) {
+            if ($Storage === StorageType::All) {
+                $personalContacsCol = $aContactsCol->filter(function ($aContact) {
                     return (isset($aContact['IsTeam'], $aContact['Shared']) && !$aContact['IsTeam'] && !$aContact['Shared']);
                 });
 
-                foreach ($aContacts as $key => $aContact) {
-                    $sViewEmail = $aContact['ViewEmail'];
-                    if (isset($aContact['IsTeam']) && $aContact['IsTeam'] && $aPersonalContacsCol->unique()->contains('ViewEmail', $sViewEmail)) {
-                        unset($aContacts[$key]);
-                    } elseif (isset($aContact['Auto']) && $aContact['Auto']) { // is colllected contact
-                        foreach ($aContacts as $subKey => $aSubContact) {
-                            if (isset($aContact['IsTeam']) && $aContact['IsTeam'] && $aSubContact['ViewEmail'] === $sViewEmail) {
-                                $aContacts[$subKey]['AgeScore'] = $aContacts[$key]['AgeScore'];
-                                unset($aContacts[$key]);
-                            }
-                            if (isset($aContact['IsTeam']) && !$aContact['IsTeam'] &&
-                                isset($aContact['Shared']) && !$aContact['Shared'] &&
-                                isset($aContact['Auto']) && !$aContact['Auto'] &&
-                                $aSubContact['ViewEmail'] === $sViewEmail) {
-                                unset($aContacts[$key]);
+                if ($WithoutTeamContactsDuplicates) {
+                    foreach ($aContacts as $key => $aContact) {
+                        $sViewEmail = $aContact['ViewEmail'];
+                        if (isset($aContact['IsTeam']) && $aContact['IsTeam'] && $personalContacsCol->unique()->contains('ViewEmail', $sViewEmail)) {
+                            unset($aContacts[$key]);
+                        } elseif (isset($aContact['Auto']) && $aContact['Auto']) { // is collected contact
+                            foreach ($aContacts as $subKey => $aSubContact) {
+                                if (isset($aContact['IsTeam']) && $aContact['IsTeam'] && $aSubContact['ViewEmail'] === $sViewEmail) {
+                                    $aContacts[$subKey]['AgeScore'] = $aContacts[$key]['AgeScore'];
+                                    unset($aContacts[$key]);
+                                }
+                                if (isset($aContact['IsTeam']) && !$aContact['IsTeam'] &&
+                                    isset($aContact['Shared']) && !$aContact['Shared'] &&
+                                    isset($aContact['Auto']) && !$aContact['Auto'] &&
+                                    $aSubContact['ViewEmail'] === $sViewEmail) {
+                                    unset($aContacts[$key]);
+                                }
                             }
                         }
+                    }
+                } else {
+                    foreach ($aContacts as $key => $aContact) {
+                        $sViewEmail = $aContact['ViewEmail'];
+    
+                        $personalContact = $personalContacsCol->unique()->filter(function ($contact) use ($sViewEmail) {
+                            return strtolower($contact['ViewEmail']) === strtolower($sViewEmail);
+                        })->first();
+
+                        if (isset($aContact['IsTeam']) && $aContact['IsTeam']) {
+                            $aContacts[$key]['Frequency'] = $personalContact['Frequency'];
+
+                            if ($personalContact['Auto']) {
+                                $aContacts = array_filter($aContacts, function($contact) use ($sViewEmail) {
+                                    return (strtolower($contact['ViewEmail']) === strtolower($sViewEmail) && !$contact['Auto']) || 
+                                        strtolower($contact['ViewEmail']) !== strtolower($sViewEmail);
+                                });
+                            }
+                        } 
                     }
                 }
             }
@@ -917,7 +938,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         return [
             'ContactCount' => $count,
-            'List' => \Aurora\System\Managers\Response::GetResponseObject($aContacts)
+            'List' => \Aurora\System\Managers\Response::GetResponseObject(array_values($aContacts))
         ];
     }
 
@@ -943,6 +964,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     public function GetContactSuggestions($UserId, $Storage, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $WithGroups = false, $WithoutTeamContactsDuplicates = false, $WithUserGroups = false)
     {
+        $WithoutTeamContactsDuplicates = false;
         $aResult = $this->_getContactSuggestions($UserId, $Storage, $Limit, $SortField, $SortOrder, $Search, $WithGroups, $WithoutTeamContactsDuplicates);
 
         if ($WithUserGroups) {
