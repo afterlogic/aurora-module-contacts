@@ -857,7 +857,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 } else {
                     foreach ($aContacts as $key => $aContact) {
                         $sViewEmail = $aContact['ViewEmail'];
-    
+
                         $personalContact = $personalContacsCol->unique()->filter(function ($contact) use ($sViewEmail) {
                             return strtolower($contact['ViewEmail']) === strtolower($sViewEmail);
                         })->first();
@@ -866,12 +866,12 @@ class Module extends \Aurora\System\Module\AbstractModule
                             $aContacts[$key]['Frequency'] = $personalContact['Frequency'];
 
                             if ($personalContact['Auto']) {
-                                $aContacts = array_filter($aContacts, function($contact) use ($sViewEmail) {
-                                    return (strtolower($contact['ViewEmail']) === strtolower($sViewEmail) && !$contact['Auto']) || 
+                                $aContacts = array_filter($aContacts, function ($contact) use ($sViewEmail) {
+                                    return (strtolower($contact['ViewEmail']) === strtolower($sViewEmail) && !$contact['Auto']) ||
                                         strtolower($contact['ViewEmail']) !== strtolower($sViewEmail);
                                 });
                             }
-                        } 
+                        }
                     }
                 }
             }
