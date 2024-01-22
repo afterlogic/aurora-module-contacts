@@ -1219,7 +1219,7 @@ class Module extends \Aurora\System\Module\AbstractModule
      * @param string $Storage
      * @return array
      */
-    public function GetContactsByUids($UserId, $Uids, $Storage)
+    public function GetContactsByUids($UserId, $Uids, $Storage = '')
     {
         $aResult = [];
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
@@ -1230,19 +1230,21 @@ class Module extends \Aurora\System\Module\AbstractModule
             $query = $this->getGetContactsQueryBuilder($UserId, StorageType::All);
             $aResult = $query->whereIn('contacts_cards.CardId', $Uids)->get()->all();
 
-            //TODO: remove this after refactoring API and client
+            $oUser = Api::getUserById($UserId);
+            $aGroups = self::Decorator()->GetGroups($UserId);
+
             foreach($aResult as $oContact) {
-                $oUser = Api::getUserById($oContact->UserId);
                 $aGroupUUIDs = [];
-                $groups = self::Decorator()->GetGroups($oContact->UserId);
-                foreach ($groups as $group) {
-                    if (in_array($oContact->UUID, $group->Contacts)) {
-                        $aGroupUUIDs[] = $group->UUID;
+                foreach ($aGroups as $oGroup) {
+                    if (in_array($oContact->UUID, $oGroup->Contacts)) {
+                        $aGroupUUIDs[] = $oGroup->UUID;
                     }
                 }
 
                 $oContact->UUID = (string)$oContact->UUID;
                 $oContact->Storage = (string)$oContact->Storage;
+
+                //TODO: remove this after refactoring API and client
                 $oContact->EntityId = $oContact->Id;
                 $oContact->IdUser = $oContact->UserId;
                 $oContact->IdTenant = $oUser->IdTenant;
@@ -1250,7 +1252,9 @@ class Module extends \Aurora\System\Module\AbstractModule
                 $oContact->{'DavContacts::UID'} = (string)$oContact->UUID;
                 $oContact->{'DavContacts::VCardUID'} = (string)$oContact->UUID;
                 $oContact->GroupUUIDs = $aGroupUUIDs;
-                $oContact->Storage = $Storage;
+                if ($Storage) {
+                    $oContact->Storage = $Storage;
+                }
             };
         } else {
             throw new ApiException(Notifications::InvalidInputParameter);
