@@ -1216,9 +1216,10 @@ class Module extends \Aurora\System\Module\AbstractModule
      * Returns list of contacts with specified uids.
      * @param int $UserId
      * @param array $Uids List of uids of contacts to return.
+     * @param string $Storage
      * @return array
      */
-    public function GetContactsByUids($UserId, $Uids)
+    public function GetContactsByUids($UserId, $Uids, $Storage)
     {
         $aResult = [];
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
@@ -1231,8 +1232,25 @@ class Module extends \Aurora\System\Module\AbstractModule
 
             //TODO: remove this after refactoring API and client
             foreach($aResult as $oContact) {
+                $oUser = Api::getUserById($oContact->UserId);
+                $aGroupUUIDs = [];
+                $groups = self::Decorator()->GetGroups($oContact->UserId);
+                foreach ($groups as $group) {
+                    if (in_array($oContact->UUID, $group->Contacts)) {
+                        $aGroupUUIDs[] = $group->UUID;
+                    }
+                }
+
                 $oContact->UUID = (string)$oContact->UUID;
                 $oContact->Storage = (string)$oContact->Storage;
+                $oContact->EntityId = $oContact->Id;
+                $oContact->IdUser = $oContact->UserId;
+                $oContact->IdTenant = $oUser->IdTenant;
+                $oContact->UseFriendlyName = false;
+                $oContact->{'DavContacts::UID'} = (string)$oContact->UUID;
+                $oContact->{'DavContacts::VCardUID'} = (string)$oContact->UUID;
+                $oContact->GroupUUIDs = $aGroupUUIDs;
+                $oContact->Storage = $Storage;
             };
         } else {
             throw new ApiException(Notifications::InvalidInputParameter);
