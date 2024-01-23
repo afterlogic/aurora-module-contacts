@@ -1664,6 +1664,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     /**
      * Deletes contacts with specified UUIDs.
+     * @param int $UserId
+     * @param string $Storage
      * @param array $UUIDs Array of strings - UUIDs of contacts to delete.
      * @return bool
      */
@@ -1675,7 +1677,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
-        if (self::Decorator()->CheckAccessToAddressBook($oUser, $Storage, Enums\Access::Write)) {
+        $AddressBookId = $Storage; // It's trick for API compatibility. Method should accept numeric AddressBookId, but clients sends storage name as ID
+        if (self::Decorator()->CheckAccessToAddressBook($oUser, $AddressBookId, Enums\Access::Write)) {
             $query = Capsule::connection()->table('contacts_cards')
                 ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
                 ->join('adav_addressbooks', 'adav_cards.addressbookid', '=', 'adav_addressbooks.id')
