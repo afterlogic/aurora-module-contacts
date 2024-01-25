@@ -858,18 +858,20 @@ class Module extends \Aurora\System\Module\AbstractModule
                     foreach ($aContacts as $key => $aContact) {
                         $sViewEmail = $aContact['ViewEmail'];
 
-                        $personalContact = $personalContacsCol->unique()->filter(function ($contact) use ($sViewEmail) {
-                            return strtolower($contact['ViewEmail']) === strtolower($sViewEmail);
-                        })->first();
-
                         if (isset($aContact['IsTeam']) && $aContact['IsTeam']) {
-                            $aContacts[$key]['Frequency'] = $personalContact['Frequency'];
+                            $personalContact = $personalContacsCol->unique()->filter(function ($contact) use ($sViewEmail) {
+                                return strtolower($contact['ViewEmail']) === strtolower($sViewEmail);
+                            })->first(); // Find collected contact with same email
 
-                            if ($personalContact['Auto']) {
-                                $aContacts = array_filter($aContacts, function ($contact) use ($sViewEmail) {
-                                    return (strtolower($contact['ViewEmail']) === strtolower($sViewEmail) && !$contact['Auto']) ||
-                                        strtolower($contact['ViewEmail']) !== strtolower($sViewEmail);
-                                });
+                            if ($personalContact) {
+                                $aContacts[$key]['Frequency'] = $personalContact['Frequency'];
+
+                                if (isset($personalContact['Auto']) && $personalContact['Auto']) { // is collected contact
+                                    $aContacts = array_filter($aContacts, function ($contact) use ($sViewEmail) {
+                                        return (strtolower($contact['ViewEmail']) === strtolower($sViewEmail) && !$contact['Auto']) ||
+                                            strtolower($contact['ViewEmail']) !== strtolower($sViewEmail);
+                                    }); // remove all collected contacts
+                                }
                             }
                         }
                     }
