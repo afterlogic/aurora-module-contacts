@@ -871,12 +871,17 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$aContacts = [];
 		$this->broadcastEvent('GetContactSuggestions', $aArgs, $aContacts);
 		$aResultList = [];
+		$aTeamResultList = [];
 		foreach ($aContacts as $sStorage => $aStorageContacts)
 		{
-			$aResultList = array_merge(
-				$aResultList,
-				$aStorageContacts['List']
-			);
+			if ($sStorage === 'team') {
+				$aTeamResultList = $aStorageContacts['List'];
+			} else {
+				$aResultList = array_merge(
+					$aResultList,
+					$aStorageContacts['List']
+				);
+			}
 		}
 
 		$aPersonalContactEmails = [];
@@ -897,10 +902,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 		foreach ($aResultList as $key => $aContact)
 		{
-			if ($aContact['Storage'] === 'team' && in_array($aContact['ViewEmail'], $aUniquePersonalContactEmails))
-			{
-				unset($aResultList[$key]);
-			}
 			if ($aContact['Storage'] === 'personal' && isset($aContact['Auto']) && $aContact['Auto'] && in_array($aContact['ViewEmail'], $aIgnoreContacts)) {
 				unset($aResultList[$key]);
 			}
@@ -916,6 +917,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 				return ($a['AgeScore'] > $b['AgeScore']) ? +1 : -1;
 			}
 		);
+
+		foreach ($aStorageContacts['List'] as $key => $aContact) {
+			if ($aContact['Storage'] === 'team' && in_array($aContact['ViewEmail'], $aUniquePersonalContactEmails))
+			{
+				unset($aTeamResultList[$key]);
+			}
+		}
 
 		$aGroupUsersList = [];
 		if ($WithGroups)
@@ -957,6 +965,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 
 		$aResultList = array_slice($aResultList, 0, $Limit);
+
+		$aResultList = array_merge($aResultList, $aTeamResultList);
+
 		$aResultList = array_merge($aResultList, $aGroupUsersList);
 		$aResult['List'] = $aResultList;
 		$aResult['ContactCount'] = count($aResult['List']);
