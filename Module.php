@@ -1573,7 +1573,26 @@ class Module extends \Aurora\System\Module\AbstractModule
         $this->populateStorage($aArgsTo);
 
         foreach ($UUIDs as $uuid) {
-            Backend::Carddav()->updateCardAddressBook($aArgsFrom['AddressBookId'], $aArgsTo['AddressBookId'], $uuid);
+            $query = Capsule::connection()->table('contacts_cards')
+            ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
+            ->join('adav_addressbooks', 'adav_cards.addressbookid', '=', 'adav_addressbooks.id')
+            ->select('adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id');
+
+            $aArgs = [
+                'UserId' => $UserId,
+                'UUID' => $uuid
+            ];
+
+            // build a query to obtain the addressbook_id and card_uri with checking access to the contact
+            $query->where(function ($q) use ($aArgs, $query) {
+                $aArgs['Query'] = $query;
+                $this->broadcastEvent('Contacts::ContactQueryBuilder', $aArgs, $q);
+            });
+
+            $row = $query->first();
+            if ($row) {
+                Backend::Carddav()->updateCardAddressBook($aArgsFrom['AddressBookId'], $aArgsTo['AddressBookId'], $row->card_uri);
+            }
         }
 
         return true;
