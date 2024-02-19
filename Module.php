@@ -1831,7 +1831,10 @@ class Module extends \Aurora\System\Module\AbstractModule
                 if ($cardETag) {
                     $newCard = Backend::Carddav()->getCard($addressBook['id'], $cardUri);
                     if ($newCard) {
-                        $mResult = (string) $newCard['id'];
+                        $mResult = [
+                            'UUID' => (string) $newCard['id'],
+                            'ETag' => \trim($newCard['etag'], '"')
+                        ];
                     }
                 }
             }
