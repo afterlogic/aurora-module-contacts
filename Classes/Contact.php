@@ -193,7 +193,7 @@ class Contact
         }
 
         foreach ($aContact as $key => $value) {
-            if (property_exists($this, $key)) {
+            if (property_exists($this, $key) && $value!== null) {
                 $this->$key = $value;
             }
         }
