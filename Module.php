@@ -1831,7 +1831,10 @@ class Module extends \Aurora\System\Module\AbstractModule
                 if ($cardETag) {
                     $newCard = Backend::Carddav()->getCard($addressBook['id'], $cardUri);
                     if ($newCard) {
-                        $mResult = (string) $newCard['id'];
+                        $mResult = [
+                            'UUID' => (string) $newCard['id'],
+                            'ETag' => \trim($newCard['etag'], '"')
+                        ];
                     }
                 }
             }
@@ -2549,8 +2552,24 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $userPublicId = Api::getUserPublicIdById($UserId);
 
-        //TODO: later make it return book id and CTag
-        $mResult = !!Backend::Carddav()->createAddressBook(Constants::PRINCIPALS_PREFIX . $userPublicId, $sAddressBookUUID, ['{DAV:}displayname' => $AddressBookName]);
+        $iAddressBookId = Backend::Carddav()->createAddressBook(Constants::PRINCIPALS_PREFIX . $userPublicId, $sAddressBookUUID, ['{DAV:}displayname' => $AddressBookName]);
+
+        if (is_numeric($iAddressBookId)) {
+            $oAddressBook = Backend::Carddav()->getAddressBookById($iAddressBookId);
+            if ($oAddressBook) {
+                return [
+                    'Id' => StorageType::AddressBook . '-' . $oAddressBook['id'],
+                    'EntityId' => (int) $oAddressBook['id'],
+                    'CTag' => (int) $oAddressBook['{http://sabredav.org/ns}sync-token'],
+                    'Display' => true,
+                    'Owner' => basename($oAddressBook['principaluri']),
+                    'Order' => 1,
+                    'DisplayName' => $oAddressBook['{DAV:}displayname'],
+                    'Uri' => $oAddressBook['uri']
+                ];
+
+            }
+        }
 
         return $mResult;
     }
