@@ -1408,6 +1408,16 @@ class Module extends \Aurora\System\Module\AbstractModule
                     $newCard = Backend::Carddav()->getCard($oContact->AddressBookId, $cardUri);
                     if ($newCard) {
                         ContactCard::where('CardId', $newCard['id'])->update(['Frequency' => $oContact->Frequency]);
+
+                        $oGroups = self::Decorator()->GetGroups($UserId, $oContact->GroupUUIDs);
+                        if ($oGroups) {
+                            foreach ($oGroups as $oGroup) {
+                                $oGroup->Contacts = array_merge($oGroup->Contacts, [(string) $newCard['id']]);
+
+                                $this->UpdateGroupObject($UserId, $oGroup);
+                            }
+                        }
+
                         $mResult = [
                             'UUID' => (string) $newCard['id'],
                             'ETag' => \trim($newCard['etag'], '"')
