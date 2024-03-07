@@ -1885,14 +1885,26 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     protected function getContactsUUIDsFromIds($UserId, $Ids)
     {
-        $contactsIds = Capsule::connection()->table('adav_cards')
+        $query = Capsule::connection()->table('contacts_cards')
+            ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
             ->join('adav_addressbooks', 'adav_cards.addressbookid', '=', 'adav_addressbooks.id')
-            ->select('adav_cards.uri as card_uri')
-            ->where('principaluri', Constants::PRINCIPALS_PREFIX . Api::getUserPublicIdById($UserId))
-            ->whereIn('adav_cards.id', $Ids)->get()->all();
+            ->select('adav_cards.uri as card_uri');
+
+        $aArgs = [
+            'UserId' => $UserId,
+            'UUID' => $Ids
+        ];
+
+        // build a query to obtain the addressbook_id and card_uri with checking access to the contact
+        $query->where(function ($q) use ($aArgs, $query) {
+            $aArgs['Query'] = $query;
+            $this->broadcastEvent(self::GetName() . '::ContactQueryBuilder', $aArgs, $q);
+        });
+
+        $contactsIds = $query->pluck('card_uri')->all();
 
         return array_map(function ($item) {
-            $pathInfo = pathinfo($item->card_uri);
+            $pathInfo = pathinfo($item);
             return $pathInfo['filename'];
         }, $contactsIds);
     }
