@@ -1274,13 +1274,14 @@ class Module extends \Aurora\System\Module\AbstractModule
      */
     public function GetContactsInfo($Storage, $UserId = null, Builder $Filters = null)
     {
+        \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
+
+        Api::CheckAccess($UserId);
+
         $aResult = [
             'CTag' => 0,
             'Info' => []
         ];
-        \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-
-        Api::CheckAccess($UserId);
 
         $aArgs = [
             'UserId' => $UserId,
@@ -1289,7 +1290,6 @@ class Module extends \Aurora\System\Module\AbstractModule
         ];
         $this->populateStorage($aArgs);
 
-        $userPublicId = Api::getUserPublicIdById($UserId);
 
         if ((int) $aArgs['AddressBookId'] > 0) {
             $addressbook = Backend::Carddav()->getAddressBookById($aArgs['AddressBookId']);
@@ -1302,14 +1302,21 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $aContacts = $query->get(['UUID', 'ETag', 'Auto', 'Storage']);
 
+        $storagesMapToAddressbooks = \Aurora\Modules\Contacts\Module::Decorator()->GetStoragesMapToAddressbooks();
+
         foreach ($aContacts as $oContact) {
+            $StorageTextId = false;
+            if (!empty($addressbook)) {
+                $StorageTextId = array_search($addressbook['uri'], $storagesMapToAddressbooks);
+            }
+
             /**
              * @var \Aurora\Modules\Contacts\Models\ContactCard $oContact
              */
             $aResult['Info'][] = [
                 'UUID' => (string) $oContact->UUID,
                 'ETag' => $oContact->ETag,
-                'Storage' => $oContact->Auto ? 'collected' : $oContact->getStorageWithId(),
+                'Storage' => $StorageTextId ? $StorageTextId : (string) $oContact->Storage,
                 'IsTeam' => $oContact->IsTeam,
                 'Shared' => $oContact->Shared,
             ];
