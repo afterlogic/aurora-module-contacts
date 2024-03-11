@@ -1573,41 +1573,49 @@ class Module extends \Aurora\System\Module\AbstractModule
         return false;
     }
 
-    public function MoveContactToStorage($UserId, $FromStorage, $ToStorage, $UUID)
+    public function MoveContactsToStorage($UserId, $FromStorage, $ToStorage, $UUIDs)
     {
-        $result = false;
+        $result = true;
 
-        if ($ToStorage === 'team') {
-            return $result;
+        if ($ToStorage === StorageType::Team) { // skip moving to team storage
+            return false;
         }
 
-        $query = Capsule::connection()->table('contacts_cards')
+        $query = Capsule::connection()
+            ->table('contacts_cards')
             ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
             ->join('adav_addressbooks', 'adav_cards.addressbookid', '=', 'adav_addressbooks.id')
             ->select('adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id');
 
         $aArgs = [
             'UserId' => $UserId,
-            'UUID' => $UUID
+            'UUID' => $UUIDs
         ];
 
-        // build a query to obtain the addressbook_id and card_uri with checking access to the contact
-        $query->where(function ($q) use ($aArgs, $query) {
+        // build a query to obtain the card_uri and card_id with checking access to the contact
+        $cardsUri = $query->where(function ($q) use ($aArgs, $query) {
             $aArgs['Query'] = $query;
             $this->broadcastEvent('Contacts::ContactQueryBuilder', $aArgs, $q);
-        });
+        })->pluck('card_uri', 'card_id')->toArray();
 
-        $row = $query->first();
-        if ($row) {
+        $aArgsTo = [
+            'UserId' => $UserId,
+            'Storage' => $ToStorage,
+            'AddressBookId' => 0
+        ];
+        $this->populateStorage($aArgsTo);
 
+        $ToAddressBookId = (int) $aArgsTo['AddressBookId']; // getting ToAddressBookId from ToStorage
+
+        foreach ($cardsUri as $key => $val) {
             $FromAddressBookId = 0;
-            if (empty($FromStorage)) {
-                $oContact = self::Decorator()->GetContact($UUID, $UserId);
+            if ($FromStorage === StorageType::All) { // getting $FromAddressBookId from the contact
+                $oContact = self::Decorator()->GetContact($key, $UserId);
                 if ($oContact instanceof Contact) {
-                    if ($oContact->Storage === 'team') { // skip team contact
-                        return true;
+                    if ($oContact->Storage === StorageType::Team) { // skip the team contact
+                        continue;
                     }
-                    $FromAddressBookId = $oContact->AddressBookId;
+                    $FromAddressBookId = (int) $oContact->AddressBookId;
                 }
             } else {
                 $aArgsFrom = [
@@ -1617,29 +1625,11 @@ class Module extends \Aurora\System\Module\AbstractModule
                 ];
                 $this->populateStorage($aArgsFrom);
 
-                $FromAddressBookId = $aArgsFrom['AddressBookId'];
+                $FromAddressBookId = (int) $aArgsFrom['AddressBookId'];
             }
-
-            $aArgsTo = [
-                'UserId' => $UserId,
-                'Storage' => $ToStorage,
-                'AddressBookId' => 0
-            ];
-            $this->populateStorage($aArgsTo);
-
-            $ToAddressBookId = $aArgsTo['AddressBookId'];
-
-            $result = Backend::Carddav()->updateCardAddressBook($FromAddressBookId, $ToAddressBookId, $row->card_uri);
-        }
-
-        return $result;
-    }
-
-    public function MoveContactsToStorage($UserId, $FromStorage, $ToStorage, $UUIDs)
-    {
-        $result = true;
-        foreach ($UUIDs as $UUID) {
-            $result = $result && self::Decorator()->MoveContactToStorage($UserId, $FromStorage, $ToStorage, $UUID);
+            if ($FromAddressBookId != $ToAddressBookId) { // do not allow contact to be moved to its own storage
+                $result = $result && Backend::Carddav()->updateCardAddressBook($FromAddressBookId, $ToAddressBookId, $val);
+            }
         }
 
         return $result;
