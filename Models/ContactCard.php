@@ -136,13 +136,4 @@ class ContactCard extends Model
                 return (string) $this->OtherEmail;
         }
     }
-
-    public function getStorageWithId()
-    {
-        if ($this->Storage === StorageType::AddressBook) {
-            return $this->Storage . $this->AddressBookId;
-        } else {
-            return $this->Storage;
-        }
-    }
 }
