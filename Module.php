@@ -1234,6 +1234,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
             $oUser = Api::getUserById($UserId);
             $aGroups = self::Decorator()->GetGroups($UserId);
+            $aAddressbooksMap = \Aurora\Modules\Contacts\Module::Decorator()->GetStoragesMapToAddressbooks();
 
             foreach($aResult as $oContact) {
                 $aGroupUUIDs = [];
@@ -1244,7 +1245,14 @@ class Module extends \Aurora\System\Module\AbstractModule
                 }
 
                 $oContact->UUID = (string)$oContact->UUID;
-                $oContact->Storage = (string)$oContact->Storage;
+
+                $aAddressbook = Backend::Carddav()->getAddressBookById($oContact->Storage);
+
+                $StorageTextId = false;
+                if ($aAddressbook) {
+                    $StorageTextId = array_search($aAddressbook['uri'], $aAddressbooksMap);
+                }
+                $oContact->Storage = $StorageTextId ? $StorageTextId : (string)$oContact->Storage;
 
                 //TODO: remove this after refactoring API and client
                 $oContact->EntityId = $oContact->Id;
@@ -1254,10 +1262,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 $oContact->{'DavContacts::UID'} = (string)$oContact->UUID;
                 $oContact->{'DavContacts::VCardUID'} = (string)$oContact->UUID;
                 $oContact->GroupUUIDs = $aGroupUUIDs;
-                if ($Storage) {
-                    $oContact->Storage = $Storage;
-                }
-            };
+            }
         } else {
             throw new ApiException(Notifications::InvalidInputParameter);
         }
