@@ -820,7 +820,11 @@ class Module extends \Aurora\System\Module\AbstractModule
             if (!empty($GroupUUID)) {
                 $oGroup = self::Decorator()->GetGroup($UserId, $GroupUUID);
                 if ($oGroup) {
-                    $query->whereIn('adav_cards.id', $oGroup->Contacts);
+                    $contacts = $oGroup->Contacts;
+                    if (count($contacts) === 0) {
+                        $contacts = [null];
+                    }
+                    $query->whereIn('adav_cards.id', $contacts);
                 }
             }
 
