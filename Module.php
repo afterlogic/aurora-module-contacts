@@ -1594,7 +1594,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             ->table('contacts_cards')
             ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
             ->join('adav_addressbooks', 'adav_cards.addressbookid', '=', 'adav_addressbooks.id')
-            ->select('adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id');
+            ->select('adav_cards.uri as card_uri', 'adav_cards.id as card_id', 'adav_addressbooks.id as addressbook_id');
 
         $aArgs = [
             'UserId' => $UserId,
@@ -1602,7 +1602,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         ];
 
         // build a query to obtain the card_uri and card_id with checking access to the contact
-        $cardsUri = $query->where(function ($q) use ($aArgs, $query) {
+        $cardsUris = $query->where(function ($q) use ($aArgs, $query) {
             $aArgs['Query'] = $query;
             $this->broadcastEvent('Contacts::ContactQueryBuilder', $aArgs, $q);
         })->pluck('card_uri', 'card_id')->toArray();
@@ -1616,10 +1616,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $ToAddressBookId = (int) $aArgsTo['AddressBookId']; // getting ToAddressBookId from ToStorage
 
-        foreach ($cardsUri as $key => $val) {
+        foreach ($cardsUris as $cardId => $cardUri) {
             $FromAddressBookId = 0;
             if ($FromStorage === StorageType::All) { // getting $FromAddressBookId from the contact
-                $oContact = self::Decorator()->GetContact($key, $UserId);
+                $oContact = self::Decorator()->GetContact($cardId, $UserId);
                 if ($oContact instanceof Contact) {
                     if ($oContact->Storage === StorageType::Team) { // skip the team contact
                         continue;
@@ -1637,7 +1637,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 $FromAddressBookId = (int) $aArgsFrom['AddressBookId'];
             }
             if ($FromAddressBookId != $ToAddressBookId) { // do not allow contact to be moved to its own storage
-                $result = $result && Backend::Carddav()->updateCardAddressBook($FromAddressBookId, $ToAddressBookId, $val);
+                $result = $result && Backend::Carddav()->updateCardAddressBook($FromAddressBookId, $ToAddressBookId, $cardUri);
             }
         }
 
