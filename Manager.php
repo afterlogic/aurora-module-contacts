@@ -330,11 +330,16 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		$iOffset = 0, $iLimit = 20, $aFilters = array(), $aViewAttrs = array())
 	{
 		$sSortField = 'FullName';
+		$sSortFieldSecond = 'ViewEmail';
 		$sCustomSelect = '';
 		switch ($iSortField)
 		{
+			case \Aurora\Modules\Contacts\Enums\SortField::Name:
+				$sSortField = 'FullName';
+				break;
 			case \Aurora\Modules\Contacts\Enums\SortField::Email:
 				$sSortField = 'ViewEmail';
+				$sSortFieldSecond = 'FullName';
 				break;
 			case \Aurora\Modules\Contacts\Enums\SortField::Frequency:
 				$sSortField = 'AgeScore';
@@ -342,17 +347,33 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 				break;
 		}
 
-		return (new \Aurora\System\EAV\Query())
+		$aList = (new \Aurora\System\EAV\Query())
 			->select($aViewAttrs)
 			->customSelect($sCustomSelect)
 			->whereType(Classes\Contact::class)
 			->where($aFilters)
 			->offset($iOffset)
 			->limit($iLimit)
-			->orderBy([$sSortField, 'ViewEmail'])
+			->orderBy([$sSortField, $sSortFieldSecond])
 			->sortOrder($iSortOrder)
 			->asArray()
 			->exec();
+
+		// display contacts with non-empty sort filed first
+		$aContactsWithField = [];
+		$aContactsWithoutField = [];
+
+		foreach ($aList as $aContact) {
+			if ($aContact[$sSortField]) {
+				$aContactsWithField[] = $aContact;
+			} else {
+				$aContactsWithoutField[] = $aContact;
+			}
+		}
+
+		$aList = array_merge($aContactsWithField, $aContactsWithoutField);
+
+		return $aList;
 	}
 
 	/**
