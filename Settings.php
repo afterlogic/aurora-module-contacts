@@ -55,14 +55,13 @@ class Settings extends \Aurora\System\Module\Settings
             ),
             "ContactsSortBy" => new SettingsProperty(
                 [
-
                     "Allow" => false,
                     "DisplayOptions" => [
                         "Name",
-                        "Email"
+                        "Email",
                     ],
                     "DefaultSortBy" => "Name",
-                    "DefaultSortOrder" => "Asc"
+                    "DefaultSortOrder" => "Asc",
                 ],
                 "array",
                 null,

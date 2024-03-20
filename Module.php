@@ -12,18 +12,18 @@ use Afterlogic\DAV\Constants;
 use Aurora\Api;
 use Aurora\Modules\Contacts\Enums\Access;
 use Aurora\Modules\Contacts\Enums\StorageType;
-use Aurora\Modules\Contacts\Models\AddressBook;
+use Aurora\Modules\Contacts\Enums\SortField;
+use Aurora\System\Enums\SortOrder;
 use Aurora\Modules\Contacts\Classes\Contact;
 use Aurora\Modules\Contacts\Classes\VCard\Helper;
-use Aurora\Modules\Contacts\Enums\SortField;
 use Aurora\Modules\Contacts\Models\ContactCard;
 use Aurora\Modules\Contacts\Classes\Group;
 use Aurora\Modules\Core\Module as CoreModule;
 use Aurora\System\Exceptions\ApiException;
 use Aurora\System\Notifications;
 use Illuminate\Database\Eloquent\Builder;
-use Sabre\DAV\UUIDUtil;
 use Illuminate\Database\Capsule\Manager as Capsule;
+use Sabre\DAV\UUIDUtil;
 use Sabre\DAV\PropPatch;
 
 /**
@@ -154,7 +154,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             'PrimaryEmail' => (new Enums\PrimaryEmail())->getMap(),
             'PrimaryPhone' => (new Enums\PrimaryPhone())->getMap(),
             'PrimaryAddress' => (new Enums\PrimaryAddress())->getMap(),
-            'SortField' => (new Enums\SortField())->getMap(),
+            'SortField' => (new SortField())->getMap(),
             'ImportExportFormats' => $this->aImportExportFormats,
             'SaveVcfServerModuleName' => \Aurora\System\Api::GetModuleManager()->ModuleExists('DavContacts') ? 'DavContacts' : '',
             'ContactsPerPage' => $this->oModuleSettings->ContactsPerPage,
@@ -284,12 +284,15 @@ class Module extends \Aurora\System\Module\AbstractModule
         return array_merge($priority_books, $non_priority_books);
     }
 
-    protected function _getContacts($iSortField = SortField::Name, $iSortOrder = \Aurora\System\Enums\SortOrder::ASC, $iOffset = 0, $iLimit = 20, $oFilters = null)
+    protected function _getContacts($iSortField = SortField::Name, $iSortOrder = SortOrder::ASC, $iOffset = 0, $iLimit = 20, $oFilters = null)
     {
         $sSortField = 'FullName';
+        $sSortFieldSecond = 'ViewEmail';
+        $sSortOrder = $iSortOrder === SortOrder::ASC ? 'asc' : 'desc';
         switch ($iSortField) {
             case SortField::Email:
                 $sSortField = 'ViewEmail';
+                $sSortFieldSecond = 'FullName';
                 break;
             case SortField::Frequency:
                 $sSortField = 'AgeScore';
@@ -312,9 +315,13 @@ class Module extends \Aurora\System\Module\AbstractModule
             $oFilters->limit($iLimit);
         }
 
-        return $oFilters
-            ->orderBy($sSortField, $iSortOrder === \Aurora\System\Enums\SortOrder::ASC ? 'asc' : 'desc')
-            ->get();
+        $oFilters
+            ->orderBy(Capsule::connection()->raw("CASE WHEN `" . $sSortField . "` = '' THEN 1 ELSE 0 END"))
+            ->orderBy($sSortField, $sSortOrder)
+            ->orderBy($sSortFieldSecond, $sSortOrder)
+        ;
+
+        return $oFilters->get();
     }
 
     /**
@@ -795,7 +802,7 @@ class Module extends \Aurora\System\Module\AbstractModule
      * @param bool $Suggestions
      * @return array
      */
-    public function GetContacts($UserId, $Storage = '', $Offset = 0, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $GroupUUID = '', Builder $Filters = null, $WithGroups = false, $WithoutTeamContactsDuplicates = false, $Suggestions = false, $AddressBookId = null)
+    public function GetContacts($UserId, $Storage = '', $Offset = 0, $Limit = 20, $SortField = SortField::Name, $SortOrder = SortOrder::ASC, $Search = '', $GroupUUID = '', Builder $Filters = null, $WithGroups = false, $WithoutTeamContactsDuplicates = false, $Suggestions = false, $AddressBookId = null)
     {
         // $Storage is used by subscribers to prepare filters.
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
@@ -948,7 +955,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         ];
     }
 
-    protected function _getContactSuggestions($UserId, $Storage, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $WithGroups = false, $WithoutTeamContactsDuplicates = false)
+    protected function _getContactSuggestions($UserId, $Storage, $Limit = 20, $SortField = SortField::Name, $SortOrder = SortOrder::ASC, $Search = '', $WithGroups = false, $WithoutTeamContactsDuplicates = false)
     {
         // $Storage is used by subscribers to prepare filters.
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
@@ -968,7 +975,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         return $aResult;
     }
 
-    public function GetContactSuggestions($UserId, $Storage, $Limit = 20, $SortField = Enums\SortField::Name, $SortOrder = \Aurora\System\Enums\SortOrder::ASC, $Search = '', $WithGroups = false, $WithoutTeamContactsDuplicates = false, $WithUserGroups = false)
+    public function GetContactSuggestions($UserId, $Storage, $Limit = 20, $SortField = SortField::Name, $SortOrder = SortOrder::ASC, $Search = '', $WithGroups = false, $WithoutTeamContactsDuplicates = false, $WithUserGroups = false)
     {
         $WithoutTeamContactsDuplicates = false;
         $aResult = $this->_getContactSuggestions($UserId, $Storage, $Limit, $SortField, $SortOrder, $Search, $WithGroups, $WithoutTeamContactsDuplicates);
@@ -1210,7 +1217,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $aArgs['AddressBookId'], $Filters);
             $query->whereIn('ViewEmail', $Emails);
 
-            $aContacts = $this->_getContacts(Enums\SortField::Name, \Aurora\System\Enums\SortOrder::ASC, 0, 0, $query);
+            $aContacts = $this->_getContacts(SortField::Name, SortOrder::ASC, 0, 0, $query);
             if ($AsArray) {
                 $aContacts = $aContacts->toArray();
             }
@@ -1472,7 +1479,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $oAutocreatedContacts = $this->_getContacts(
             SortField::Name,
-            \Aurora\System\Enums\SortOrder::ASC,
+            SortOrder::ASC,
             0,
             1,
             $oQuery
