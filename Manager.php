@@ -330,18 +330,24 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		$iOffset = 0, $iLimit = 20, $aFilters = array(), $aViewAttrs = array())
 	{
 		$sSortField = 'FullName';
-		$sSortFieldSecond = 'ViewEmail';
+		$aSortFields = [];
 		$sCustomSelect = '';
 		switch ($iSortField)
 		{
+			case \Aurora\Modules\Contacts\Enums\SortField::LastName:
+				$aSortFields = ['LastName', 'FirstName', 'ViewEmail'];
+				$sSortField = 'LastName';
+				break;
 			case \Aurora\Modules\Contacts\Enums\SortField::Name:
+				$aSortFields = ['FullName', 'ViewEmail'];
 				$sSortField = 'FullName';
 				break;
 			case \Aurora\Modules\Contacts\Enums\SortField::Email:
+				$aSortFields = ['ViewEmail', 'FullName'];
 				$sSortField = 'ViewEmail';
-				$sSortFieldSecond = 'FullName';
 				break;
 			case \Aurora\Modules\Contacts\Enums\SortField::Frequency:
+				$aSortFields = ['AgeScore', 'ViewEmail'];
 				$sSortField = 'AgeScore';
 				$sCustomSelect = ', (attr_Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, attr_DateModified)/30)) as attr_AgeScore';
 				break;
@@ -354,7 +360,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 			->where($aFilters)
 			->offset($iOffset)
 			->limit($iLimit)
-			->orderBy([$sSortField, $sSortFieldSecond])
+			->orderBy($aSortFields)
 			->sortOrder($iSortOrder)
 			->asArray()
 			->exec();
@@ -364,7 +370,9 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		$aContactsWithoutField = [];
 
 		foreach ($aList as $aContact) {
-			if ($aContact[$sSortField]) {
+			if (count($aSortFields) > 2 && ($aContact[$aSortFields[0]] || $aContact[$aSortFields[1]])) {
+				$aContactsWithField[] = $aContact;
+			} else if (count($aSortFields) == 2 && $aContact[$aSortFields[0]]) {
 				$aContactsWithField[] = $aContact;
 			} else {
 				$aContactsWithoutField[] = $aContact;
