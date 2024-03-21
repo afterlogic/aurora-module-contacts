@@ -76,6 +76,10 @@ class Module extends \Aurora\System\Module\AbstractModule
         $this->subscribeEvent('Mail::GetBodyStructureParts', array($this, 'onGetBodyStructureParts'));
         $this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
         $this->subscribeEvent('Core::DeleteUser::after', array($this, 'onAfterDeleteUser'));
+
+        $this->denyMethodsCallByWebApi([
+            'UpdateContactObject'
+        ]);
     }
 
     /***** public functions might be called with web API *****/
@@ -1590,7 +1594,8 @@ class Module extends \Aurora\System\Module\AbstractModule
         $oUser = Api::getUserById($UserId);
         if ($oContact && self::Decorator()->CheckAccessToAddressBook($oUser, $oContact->AddressBookId, Access::Write)) {
             $oContact->populate($Contact);
-            if (self::Decorator()->UpdateContactObject($oContact)) {
+            $result = self::Decorator()->UpdateContactObject($oContact);
+            if ($result) {
                 if (is_array($oContact->GroupUUIDs)) {
                     $groups = self::Decorator()->GetGroups($UserId, $oContact->GroupUUIDs);
                     foreach ($groups as $group) {
@@ -1602,7 +1607,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
                 return [
                     'UUID' => (string) $oContact->UUID,
-                    'ETag' => $oContact->ETag
+                    'ETag' => $result
                 ];
             } else {
                 return false;
@@ -1674,6 +1679,12 @@ class Module extends \Aurora\System\Module\AbstractModule
         return $result;
     }
 
+    /**
+     * !Not public
+     * This method is restricted to be called by web API (see denyMethodsCallByWebApi method).
+     * @param Contact $Contact
+     * @return string|bool
+     */
     public function UpdateContactObject($Contact)
     {
         $mResult = false;
@@ -1705,7 +1716,8 @@ class Module extends \Aurora\System\Module\AbstractModule
         if ($row) {
             $oVCard = new \Sabre\VObject\Component\VCard();
             \Aurora\Modules\Contacts\Classes\VCard\Helper::UpdateVCardFromContact($Contact, $oVCard);
-            $mResult = !!Backend::Carddav()->updateCard($row->addressbook_id, $row->card_uri, $oVCard->serialize());
+            $mResult = Backend::Carddav()->updateCard($row->addressbook_id, $row->card_uri, $oVCard->serialize());
+            $mResult = str_replace('"', '', $mResult);
         }
 
         return $mResult;
