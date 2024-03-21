@@ -804,6 +804,7 @@ class Module extends \Aurora\System\Module\AbstractModule
      * @param bool $WithGroups Indicates whether contact groups should be included in the contact list
      * @param bool $WithoutTeamContactsDuplicates Do not show a contact from the global address book if the contact with the same email address already exists in personal address book
      * @param bool $Suggestions
+     * @param bool $AddressBookId
      * @return array
      */
     public function GetContacts($UserId, $Storage = '', $Offset = 0, $Limit = 20, $SortField = SortField::Name, $SortOrder = SortOrder::ASC, $Search = '', $GroupUUID = '', Builder $Filters = null, $WithGroups = false, $WithoutTeamContactsDuplicates = false, $Suggestions = false, $AddressBookId = null)
@@ -912,7 +913,9 @@ class Module extends \Aurora\System\Module\AbstractModule
                 if ($aAddressBooks[$aContact['Storage']]) {
                     $StorageTextId = array_search($aAddressBooks[$aContact['Storage']]['uri'], $aAddressbooksMap);
                 }
-                $aContact['Storage'] = $StorageTextId ? $StorageTextId : (string)$aContact['Storage'];
+
+                $aContact['AddressBookId'] = (int) $aContact['Storage'];
+                $aContact['Storage'] = $StorageTextId ? $StorageTextId : (StorageType::AddressBook . '-' . $aContact['Storage']);
             }
             // end ids resolve
 
@@ -1288,7 +1291,8 @@ class Module extends \Aurora\System\Module\AbstractModule
                 if ($aAddressBooks[$oContact->Storage]) {
                     $StorageTextId = array_search($aAddressBooks[$oContact->Storage]['uri'], $aAddressbooksMap);
                 }
-                $oContact->Storage = $StorageTextId ? $StorageTextId : (string)$oContact->Storage;
+                $oContact->AddressBookId = (int) $oContact->Storage;
+                $oContact->Storage = $StorageTextId ? $StorageTextId : StorageType::AddressBook . '-' . $oContact->Storage;
 
                 $oContact->GroupUUIDs = $aGroupUUIDs;
 
@@ -1693,7 +1697,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $aStorageParts = \explode('-', $Contact->Storage);
         if (isset($aStorageParts[0], $aStorageParts[1]) && $aStorageParts[0] === StorageType::AddressBook) {
             $Contact->AddressBookId = (int) $aStorageParts[1];
-            $Contact->Storage =  StorageType::AddressBook;
+            $Contact->Storage = StorageType::AddressBook;
         }
 
         $query = Capsule::connection()->table('contacts_cards')

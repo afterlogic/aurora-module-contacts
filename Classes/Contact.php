@@ -184,10 +184,8 @@ class Contact
     {
         if (isset($aContact['Storage'])) {
             $aStorageParts = \explode('-', (string)$aContact['Storage']);
-            if (isset($aStorageParts[0]) && $aStorageParts[0] === StorageType::AddressBook) {
-                if (isset($aStorageParts[1])) {
-                    $aContact['AddressBookId'] = (int) $aStorageParts[1];
-                }
+            if (isset($aStorageParts[0], $aStorageParts[1]) && $aStorageParts[0] === StorageType::AddressBook) {
+                $aContact['AddressBookId'] = (int) $aStorageParts[1];
                 $aContact['Storage'] = StorageType::AddressBook;
             }
         }
