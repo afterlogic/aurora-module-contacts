@@ -839,16 +839,16 @@ class Module extends \Aurora\System\Module\AbstractModule
 
             $aContacts = $this->_getContacts($SortField, $SortOrder, $Offset, $Limit, $query)->toArray();
 
-            $aContactsCol = collect($aContacts);
+            $aContactsColection = collect($aContacts);
             if ($Storage === StorageType::All) {
-                $personalContacsCol = $aContactsCol->filter(function ($aContact) {
+                $personalContacsCollection = $aContactsColection->filter(function ($aContact) {
                     return (isset($aContact['IsTeam'], $aContact['Shared']) && !$aContact['IsTeam'] && !$aContact['Shared']);
                 });
 
                 if ($WithoutTeamContactsDuplicates) {
                     foreach ($aContacts as $key => $aContact) {
                         $sViewEmail = $aContact['ViewEmail'];
-                        if (isset($aContact['IsTeam']) && $aContact['IsTeam'] && $personalContacsCol->unique()->contains('ViewEmail', $sViewEmail)) {
+                        if (isset($aContact['IsTeam']) && $aContact['IsTeam'] && $personalContacsCollection->unique()->contains('ViewEmail', $sViewEmail)) {
                             unset($aContacts[$key]);
                         } elseif (isset($aContact['Auto']) && $aContact['Auto']) { // is collected contact
                             foreach ($aContacts as $subKey => $aSubContact) {
@@ -870,7 +870,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                         $sViewEmail = $aContact['ViewEmail'];
 
                         if (isset($aContact['IsTeam']) && $aContact['IsTeam']) {
-                            $personalContact = $personalContacsCol->unique()->filter(function ($contact) use ($sViewEmail) {
+                            $personalContact = $personalContacsCollection->unique()->filter(function ($contact) use ($sViewEmail) {
                                 return strtolower($contact['ViewEmail']) === strtolower($sViewEmail);
                             })->first(); // Find collected contact with same email
 
@@ -888,6 +888,29 @@ class Module extends \Aurora\System\Module\AbstractModule
                     }
                 }
             }
+
+            // resolve addressbooks' numeric ids to text text ids
+            $aAddressbooksMap = self::Decorator()->GetStoragesMapToAddressbooks();
+            $aAddressBooks = [];
+            $aPersonalAddressBooks = Backend::Carddav()->getAddressBooksForUser(Constants::PRINCIPALS_PREFIX . $oUser->PublicId);
+            foreach ($aPersonalAddressBooks as $oAddressBook) {
+                $aAddressBooks[$oAddressBook['id']] = $oAddressBook;
+            }
+
+            foreach($aContacts as &$aContact) {
+                $aContact['UUID'] = (string)$aContact['UUID'];
+
+                if (!isset($aAddressBooks[$aContact['Storage']])) {
+                    $aAddressBooks[$aContact['Storage']] = Backend::Carddav()->getAddressBookById($aContact['Storage']);
+                }
+
+                $StorageTextId = false;
+                if ($aAddressBooks[$aContact['Storage']]) {
+                    $StorageTextId = array_search($aAddressBooks[$aContact['Storage']]['uri'], $aAddressbooksMap);
+                }
+                $aContact['Storage'] = $StorageTextId ? $StorageTextId : (string)$aContact['Storage'];
+            }
+            // end ids resolve
 
             if ($WithGroups) {
                 $groups = self::Decorator()->GetGroups($UserId, [], $Search);
@@ -923,7 +946,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                                 }
 
                                 $aGroupUsersList[] = [
-                                    'UUID' => $group->UUID,
+                                    'UUID' => (string)$group->UUID,
                                     'IdUser' => $group->IdUser,
                                     'FullName' => $group->Name,
                                     'FirstName' => '',
@@ -943,11 +966,6 @@ class Module extends \Aurora\System\Module\AbstractModule
         } else {
             throw new ApiException(Notifications::AccessDenied, null, 'AccessDenied');
         }
-
-        foreach($aContacts as &$aContact) {
-            $aContact['UUID'] = (string)$aContact['UUID'];
-            $aContact['Storage'] = (string)$aContact['Storage'];
-        };
 
         return [
             'ContactCount' => $count,
@@ -996,10 +1014,9 @@ class Module extends \Aurora\System\Module\AbstractModule
         return $aResult;
     }
 
-    /*
-        This method used as trigger for subscibers. Check these modules: PersonalContacts, SharedContacts, TeamContacts
-    */
-
+    /**
+     * This method used as trigger for subscibers. Check these modules: PersonalContacts, SharedContacts, TeamContacts
+     */
     public function CheckAccessToObject($User, $Contact, $Access = null)
     {
         return true;
@@ -1110,7 +1127,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                     $mResult->UUID = $UUID;
                     $mResult->ETag = \trim($card['etag'], '"');
 
-                    $storagesMapToAddressbooks = \Aurora\Modules\Contacts\Module::Decorator()->GetStoragesMapToAddressbooks();
+                    $storagesMapToAddressbooks = self::Decorator()->GetStoragesMapToAddressbooks();
                     $addressbook = Backend::Carddav()->getAddressBookById($row->addressbook_id);
 
                     $key = false;
@@ -1229,10 +1246,9 @@ class Module extends \Aurora\System\Module\AbstractModule
      * Returns list of contacts with specified uids.
      * @param int $UserId
      * @param array $Uids List of uids of contacts to return.
-     * @param string $Storage
      * @return array
      */
-    public function GetContactsByUids($UserId, $Uids, $Storage = '')
+    public function GetContactsByUids($UserId, $Uids)
     {
         $aResult = [];
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
@@ -1245,7 +1261,12 @@ class Module extends \Aurora\System\Module\AbstractModule
 
             $oUser = Api::getUserById($UserId);
             $aGroups = self::Decorator()->GetGroups($UserId);
-            $aAddressbooksMap = \Aurora\Modules\Contacts\Module::Decorator()->GetStoragesMapToAddressbooks();
+            $aAddressbooksMap = self::Decorator()->GetStoragesMapToAddressbooks();
+            $aAddressBooks = [];
+            $aPersonalAddressBooks = Backend::Carddav()->getAddressBooksForUser(Constants::PRINCIPALS_PREFIX . $oUser->PublicId);
+            foreach ($aPersonalAddressBooks as $oAddressBook) {
+                $aAddressBooks[$oAddressBook['id']] = $oAddressBook;
+            }
 
             foreach($aResult as $oContact) {
                 $aGroupUUIDs = [];
@@ -1255,24 +1276,26 @@ class Module extends \Aurora\System\Module\AbstractModule
                     }
                 }
 
-                $oContact->UUID = (string)$oContact->UUID;
-
-                $aAddressbook = Backend::Carddav()->getAddressBookById($oContact->Storage);
+                if (!isset($aAddressBooks[$oContact->Storage])) {
+                    $aAddressBooks[$oContact->Storage] = Backend::Carddav()->getAddressBookById($oContact->Storage);
+                }
 
                 $StorageTextId = false;
-                if ($aAddressbook) {
-                    $StorageTextId = array_search($aAddressbook['uri'], $aAddressbooksMap);
+                if ($aAddressBooks[$oContact->Storage]) {
+                    $StorageTextId = array_search($aAddressBooks[$oContact->Storage]['uri'], $aAddressbooksMap);
                 }
                 $oContact->Storage = $StorageTextId ? $StorageTextId : (string)$oContact->Storage;
 
+                $oContact->GroupUUIDs = $aGroupUUIDs;
+
                 //TODO: remove this after refactoring API and client
+                $oContact->UUID = (string)$oContact->UUID;
                 $oContact->EntityId = $oContact->Id;
                 $oContact->IdUser = $oContact->UserId;
                 $oContact->IdTenant = $oUser->IdTenant;
                 $oContact->UseFriendlyName = false;
                 $oContact->{'DavContacts::UID'} = (string)$oContact->UUID;
                 $oContact->{'DavContacts::VCardUID'} = (string)$oContact->UUID;
-                $oContact->GroupUUIDs = $aGroupUUIDs;
             }
         } else {
             throw new ApiException(Notifications::InvalidInputParameter);
@@ -1318,7 +1341,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $aContacts = $query->get(['UUID', 'ETag', 'Auto', 'Storage']);
 
-        $storagesMapToAddressbooks = \Aurora\Modules\Contacts\Module::Decorator()->GetStoragesMapToAddressbooks();
+        $storagesMapToAddressbooks = self::Decorator()->GetStoragesMapToAddressbooks();
 
         foreach ($aContacts as $oContact) {
             $StorageTextId = false;
@@ -2589,7 +2612,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $principalUri = Constants::PRINCIPALS_PREFIX . \Aurora\System\Api::getUserPublicIdById($UserId);
 
-        return Backend::Carddav()->getAddressBookByUriForUser($principalUri, $UUID);
+        return Backend::Carddav()->getAddressBookForUser($principalUri, $UUID);
     }
 
     public function GetAddressBooks($UserId = null)
