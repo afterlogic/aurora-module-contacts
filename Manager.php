@@ -329,26 +329,22 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 	public function getContactsAsArray($iSortField = \Aurora\Modules\Contacts\Enums\SortField::Name, $iSortOrder = \Aurora\System\Enums\SortOrder::ASC,
 		$iOffset = 0, $iLimit = 20, $aFilters = array(), $aViewAttrs = array())
 	{
-		$sSortField = 'FullName';
 		$aSortFields = [];
 		$sCustomSelect = '';
 		switch ($iSortField)
 		{
 			case \Aurora\Modules\Contacts\Enums\SortField::LastName:
 				$aSortFields = ['LastName', 'FirstName', 'ViewEmail'];
-				$sSortField = 'LastName';
 				break;
 			case \Aurora\Modules\Contacts\Enums\SortField::Name:
 				$aSortFields = ['FullName', 'ViewEmail'];
-				$sSortField = 'FullName';
+			
 				break;
 			case \Aurora\Modules\Contacts\Enums\SortField::Email:
 				$aSortFields = ['ViewEmail', 'FullName'];
-				$sSortField = 'ViewEmail';
 				break;
 			case \Aurora\Modules\Contacts\Enums\SortField::Frequency:
 				$aSortFields = ['AgeScore', 'ViewEmail'];
-				$sSortField = 'AgeScore';
 				$sCustomSelect = ', (attr_Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, attr_DateModified)/30)) as attr_AgeScore';
 				break;
 		}

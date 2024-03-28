@@ -86,8 +86,8 @@ class Contact extends \Aurora\System\EAV\Entity
 			'ViewEmail'			=> array('string', '', true),
 
 			'Title'				=> array('string', ''),
-			'FirstName'			=> array('string', ''),
-			'LastName'			=> array('string', ''),
+			'FirstName'			=> array('string', '', true),
+			'LastName'			=> array('string', '', true),
 			'NickName'			=> array('string', ''),
 			'Skype'				=> array('string', ''),
 			'Facebook'			=> array('string', ''),
