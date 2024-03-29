@@ -334,7 +334,7 @@ class Manager extends \Aurora\System\Managers\AbstractManager
 		switch ($iSortField)
 		{
 			case \Aurora\Modules\Contacts\Enums\SortField::LastName:
-				$aSortFields = ['LastName', 'FirstName', 'ViewEmail'];
+				$aSortFields = ['LastName', 'FirstName', 'FullName', 'ViewEmail'];
 				break;
 			case \Aurora\Modules\Contacts\Enums\SortField::Name:
 				$aSortFields = ['FullName', 'ViewEmail'];
