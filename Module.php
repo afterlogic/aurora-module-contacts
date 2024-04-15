@@ -2747,7 +2747,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         return [];
     }
 
-    protected function getGetContactsQueryBuilder($UserId, $Storage = '', $AddressBookId = 0, Builder $Filters = null)
+    protected function getGetContactsQueryBuilder($UserId, $Storage = '', $AddressBookId = null, Builder $Filters = null)
     {
         if ($Filters instanceof Builder) {
             $query = & $Filters;
