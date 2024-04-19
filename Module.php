@@ -985,8 +985,9 @@ class Module extends \Aurora\System\Module\AbstractModule
         ];
     }
 
-    protected function _getContactSuggestions($UserId, $Storage, $Limit = 20, $SortField = SortField::Name, $SortOrder = SortOrder::ASC, $Search = '', $WithGroups = false, $WithoutTeamContactsDuplicates = false)
+    public function GetContactSuggestions($UserId, $Storage, $Limit = 20, $SortField = SortField::Name, $SortOrder = SortOrder::ASC, $Search = '', $WithGroups = false, $WithoutTeamContactsDuplicates = false, $WithUserGroups = false)
     {
+        $WithoutTeamContactsDuplicates = false;
         // $Storage is used by subscribers to prepare filters.
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
@@ -1002,13 +1003,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $aResult['List'] = $aResultList;
         $aResult['ContactCount'] = count($aResultList);
-        return $aResult;
-    }
-
-    public function GetContactSuggestions($UserId, $Storage, $Limit = 20, $SortField = SortField::Name, $SortOrder = SortOrder::ASC, $Search = '', $WithGroups = false, $WithoutTeamContactsDuplicates = false, $WithUserGroups = false)
-    {
-        $WithoutTeamContactsDuplicates = false;
-        $aResult = $this->_getContactSuggestions($UserId, $Storage, $Limit, $SortField, $SortOrder, $Search, $WithGroups, $WithoutTeamContactsDuplicates);
 
         if ($WithUserGroups) {
             $oUser = CoreModule::Decorator()->GetUserWithoutRoleCheck($UserId);
