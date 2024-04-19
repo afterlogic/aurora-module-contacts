@@ -144,10 +144,6 @@ class Contact
         }
         $this->Properties = [];
 
-        foreach ($this->ExtendedInformation as $sKey => $mValue) {
-            $aRes[$sKey] = $mValue;
-        }
-
         return array_merge($aRes, (array) $this);
     }
 

@@ -248,7 +248,12 @@ class Module extends \Aurora\System\Module\AbstractModule
             $oAddressBook['DisplayName'] = $this->GetStorageDisplayNameOverride($oAddressBook['DisplayName'], $oAddressBook['Id']);
         }
 
-        $aStoragesOrder = array("personal", "collected", "shared", "team");
+        $aStoragesOrder = [
+            StorageType::Personal,
+            StorageType::Collected,
+            StorageType::Shared,
+            StorageType::Team
+        ];
         return $this->sortAddressBooks($aAddressBooks, $aStoragesOrder);
     }
 
