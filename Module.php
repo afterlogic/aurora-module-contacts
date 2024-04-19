@@ -1468,12 +1468,14 @@ class Module extends \Aurora\System\Module\AbstractModule
                     if ($newCard) {
                         ContactCard::where('CardId', $newCard['id'])->update(['Frequency' => $oContact->Frequency]);
 
-                        $oGroups = self::Decorator()->GetGroups($UserId, $oContact->GroupUUIDs);
-                        if ($oGroups) {
-                            foreach ($oGroups as $oGroup) {
-                                $oGroup->Contacts = array_merge($oGroup->Contacts, [(string) $newCard['id']]);
+                        if (is_array($oContact->GroupUUIDs) && count($oContact->GroupUUIDs) > 0) {
+                            $oGroups = self::Decorator()->GetGroups($UserId, $oContact->GroupUUIDs);
+                            if ($oGroups) {
+                                foreach ($oGroups as $oGroup) {
+                                    $oGroup->Contacts = array_merge($oGroup->Contacts, [(string) $newCard['id']]);
 
-                                $this->UpdateGroupObject($UserId, $oGroup);
+                                    $this->UpdateGroupObject($UserId, $oGroup);
+                                }
                             }
                         }
 
