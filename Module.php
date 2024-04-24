@@ -1602,11 +1602,16 @@ class Module extends \Aurora\System\Module\AbstractModule
             $result = self::Decorator()->UpdateContactObject($oContact);
             if ($result) {
                 if (is_array($oContact->GroupUUIDs)) {
-                    $groups = self::Decorator()->GetGroups($UserId, $oContact->GroupUUIDs);
+                    $groups = self::Decorator()->GetGroups($UserId);
                     foreach ($groups as $group) {
-                        $group->Contacts = array_merge($group->Contacts, [$oContact->UUID]);
-
-                        $this->UpdateGroupObject($UserId, $group);
+                        if ($group) {
+                            if (!in_array($group->UUID, $oContact->GroupUUIDs)) {
+                                $group->Contacts = array_diff($group->Contacts, [$oContact->UUID]);
+                            } else {
+                                $group->Contacts = array_merge($group->Contacts, [$oContact->UUID]);
+                            }
+                            $this->UpdateGroupObject($UserId, $group);
+                        }
                     }
                 }
 
