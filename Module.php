@@ -2578,23 +2578,26 @@ class Module extends \Aurora\System\Module\AbstractModule
         $aAddresses = $Args['Emails'];
         $iUserId = $Args['IdUser'];
         foreach ($aAddresses as $sEmail => $sName) {
-            $contactsColl = self::GetContactsByEmails($iUserId, StorageType::Personal, [$sEmail], null, false);
+            try {
+                $contactsColl = self::GetContactsByEmails($iUserId, StorageType::Personal, [$sEmail], null, false);
 
-            $oContact = $contactsColl->first();
-            if (!$oContact) {
-                $contactsColl = self::GetContactsByEmails($iUserId, StorageType::Collected, [$sEmail], null, false);
                 $oContact = $contactsColl->first();
-            }
+                if (!$oContact) {
+                    $contactsColl = self::GetContactsByEmails($iUserId, StorageType::Collected, [$sEmail], null, false);
+                    $oContact = $contactsColl->first();
+                }
 
-            if ($oContact) {
-                ContactCard::where('CardId', $oContact->Id)->update(['Frequency' => $oContact->Frequency + 1]);
-            } else {
-                self::Decorator()->CreateContact([
-                    'FullName' => $sName,
-                    'PersonalEmail' => $sEmail,
-                    'Auto' => true,
-                    'Storage' => StorageType::Collected,
-                ], $iUserId);
+                if ($oContact) {
+                    ContactCard::where('CardId', $oContact->Id)->update(['Frequency' => $oContact->Frequency + 1]);
+                } else {
+                    self::Decorator()->CreateContact([
+                        'FullName' => $sName,
+                        'PersonalEmail' => $sEmail,
+                        'Auto' => true,
+                        'Storage' => StorageType::Collected,
+                    ], $iUserId);
+                }
+            } catch (\Exception $ex) {
             }
         }
     }
