@@ -74,7 +74,7 @@ class Group
     public function populate($aGroup)
     {
         foreach ($aGroup as $key => $value) {
-            if (property_exists($this, $key)) {
+            if (property_exists($this, $key) && ($key !== 'Contacts')) {
                 $this->$key = $value;
             }
         }
