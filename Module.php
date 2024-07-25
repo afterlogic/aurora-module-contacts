@@ -77,6 +77,8 @@ class Module extends \Aurora\System\Module\AbstractModule
         $this->subscribeEvent('Core::DeleteUser::before', array($this, 'onBeforeDeleteUser'));
         $this->subscribeEvent('Core::DeleteUser::after', array($this, 'onAfterDeleteUser'));
 
+        $this->subscribeEvent('System::toResponseArray::after', array($this, 'onContactToResponseArray'));
+
         $this->denyMethodsCallByWebApi([
             'UpdateContactObject'
         ]);
@@ -325,7 +327,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         }
 
         $oFilters
-            ->orderBy(Capsule::connection()->raw("CASE WHEN `" . $sSortField . "` = '' THEN 1 ELSE 0 END"))
+            ->orderBy(Capsule::connection()->raw("CASE WHEN `$sSortField` = '' THEN 1 ELSE 0 END"))
             ->orderBy($sSortField, $sSortOrder)
             ->orderBy($sSortFieldSecond, $sSortOrder)
         ;
@@ -597,7 +599,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             }
 
             if (!empty($Search)) {
-                $query->where('FullName', 'LIKE', '%' . $Search . '%');
+                $query->where('FullName', 'LIKE', "%$Search%");
             }
 
             $groups = $query->get();
@@ -700,7 +702,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $query = Capsule::connection()->table('contacts_cards')
                 ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
                 ->join('adav_addressbooks', 'adav_cards.addressbookid', '=', 'adav_addressbooks.id')
-                ->select('adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id');
+                ->select('adav_cards.id as card_id', 'adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id', 'carddata');
 
             $aArgs = [
                 'UUID' => $UUID,
@@ -713,26 +715,26 @@ class Module extends \Aurora\System\Module\AbstractModule
             });
 
             $row = $query->where('contacts_cards.IsGroup', true)->first();
-
             if ($row) {
-                $card = Backend::Carddav()->getCard($row->addressbook_id, $row->card_uri);
-                if ($card) {
-                    $mResult = new Group();
-                    $mResult->IdUser = $UserId;
-                    $mResult->Id = $card['id'];
-
-                    $mResult->populate(
-                        Helper::GetGroupDataFromVcard(
-                            \Sabre\VObject\Reader::read(
-                                $card['carddata'],
-                                \Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES
-                            ),
-                            $card['uri']
-                        )
-                    );
-
-                    $mResult->UUID = $UUID;
+                if (!self::Decorator()->CheckAccessToAddressBook($oUser, $row->addressbook_id, Access::Read)) {
+                    throw new ApiException(Notifications::AccessDenied, null, 'AccessDenied');
                 }
+
+                $mResult = new Group();
+                $mResult->IdUser = $UserId;
+                $mResult->Id = $row->card_id;
+
+                $mResult->populate(
+                    Helper::GetGroupDataFromVcard(
+                        \Sabre\VObject\Reader::read(
+                            $row->carddata,
+                            \Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES
+                        ),
+                        $row->card_uri
+                    )
+                );
+
+                $mResult->UUID = $UUID;
             }
         }
 
@@ -828,11 +830,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 
             if (!empty($Search)) {
                 $query = $query->where(function ($query) use ($Search) {
-                    $query->where('FullName', 'LIKE', '%' . $Search . '%')
-                    ->orWhere('PersonalEmail', 'LIKE', '%' . $Search . '%')
-                    ->orWhere('BusinessEmail', 'LIKE', '%' . $Search . '%')
-                    ->orWhere('OtherEmail', 'LIKE', '%' . $Search . '%')
-                    ->orWhere('BusinessCompany', 'LIKE', '%' . $Search . '%');
+                    $query->where('FullName', 'LIKE', "%$Search%")
+                    ->orWhere('PersonalEmail', 'LIKE', "%$Search%")
+                    ->orWhere('BusinessEmail', 'LIKE', "%$Search%")
+                    ->orWhere('OtherEmail', 'LIKE', "%$Search%")
+                    ->orWhere('BusinessCompany', 'LIKE', "%$Search%");
                 });
             }
 
@@ -1110,7 +1112,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $query = Capsule::connection()->table('contacts_cards')
                 ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
                 ->join('adav_addressbooks', 'adav_cards.addressbookid', '=', 'adav_addressbooks.id')
-                ->select('adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id', 'Properties');
+                ->select('adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id', 'Properties', 'carddata', 'etag');
 
             $aArgs = [
                 'UUID' => $UUID,
@@ -1127,32 +1129,28 @@ class Module extends \Aurora\System\Module\AbstractModule
                     throw new ApiException(Notifications::AccessDenied, null, 'AccessDenied');
                 }
 
-                $card = Backend::Carddav()->getCard($row->addressbook_id, $row->card_uri);
-                if ($card) {
-                    $mResult = new Contact();
-                    $mResult->Id = $UUID;
-                    $mResult->InitFromVCardStr($UserId, $card['carddata']);
-                    $mResult->UUID = $UUID;
-                    $mResult->ETag = \trim($card['etag'], '"');
+                $mResult = new Contact();
+                $mResult->Id = $UUID;
+                $mResult->InitFromVCardStr($UserId, $row->carddata);
+                $mResult->ETag = \trim($row->etag, '"');
 
-                    $storagesMapToAddressbooks = self::Decorator()->GetStoragesMapToAddressbooks();
-                    $addressbook = Backend::Carddav()->getAddressBookById($row->addressbook_id);
+                $storagesMapToAddressbooks = self::Decorator()->GetStoragesMapToAddressbooks();
+                $addressbook = Backend::Carddav()->getAddressBookById($row->addressbook_id);
 
-                    $key = false;
-                    if ($addressbook) {
-                        $key = array_search($addressbook['uri'], $storagesMapToAddressbooks);
-                    }
+                $key = false;
+                if ($addressbook) {
+                    $key = array_search($addressbook['uri'], $storagesMapToAddressbooks);
+                }
 
-                    $mResult->Storage = $key !== false ? $key : (string) $row->addressbook_id;
-                    $mResult->AddressBookId = (int) $row->addressbook_id;
-                    if ($mResult->Properties) {
-                        $mResult->Properties = \json_decode($row->Properties);
-                    }
-                    $groups = self::Decorator()->GetGroups($UserId);
-                    foreach ($groups as $group) {
-                        if (in_array($UUID, $group->Contacts)) {
-                            $mResult->GroupUUIDs[] = $group->UUID;
-                        }
+                $mResult->Storage = $key !== false ? $key : (string) $row->addressbook_id;
+                $mResult->AddressBookId = (int) $row->addressbook_id;
+                if ($mResult->Properties) {
+                    $mResult->Properties = \json_decode($row->Properties);
+                }
+                $groups = self::Decorator()->GetGroups($UserId);
+                foreach ($groups as $group) {
+                    if (in_array($UUID, $group->Contacts)) {
+                        $mResult->GroupUUIDs[] = $group->UUID;
                     }
                 }
             }
@@ -1305,8 +1303,6 @@ class Module extends \Aurora\System\Module\AbstractModule
                 $oContact->IdUser = $oContact->UserId;
                 $oContact->IdTenant = $oUser->IdTenant;
                 $oContact->UseFriendlyName = false;
-                $oContact->{'DavContacts::UID'} = (string)$oContact->UUID;
-                $oContact->{'DavContacts::VCardUID'} = (string)$oContact->UUID;
             }
         } else {
             throw new ApiException(Notifications::InvalidInputParameter);
@@ -1718,7 +1714,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $query = Capsule::connection()->table('contacts_cards')
             ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
             ->join('adav_addressbooks', 'adav_cards.addressbookid', '=', 'adav_addressbooks.id')
-            ->select('adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id');
+            ->select('adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id', 'carddata');
 
         $aArgs = [
             'UserId' => $oUser->Id,
@@ -1733,8 +1729,16 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $row = $query->first();
         if ($row) {
-            $oVCard = new \Sabre\VObject\Component\VCard();
-            \Aurora\Modules\Contacts\Classes\VCard\Helper::UpdateVCardFromContact($Contact, $oVCard);
+            $oVCard = \Sabre\VObject\Reader::read($row->carddata);
+            $uidVal = $oVCard->UID->getValue();
+            if (empty($uidVal) || is_numeric($uidVal)) {
+                $uriInfo = pathinfo($row->card_uri);
+                if (isset($uriInfo['filename'])) {
+                    $oVCard->UID = $uriInfo['filename'];
+                }
+            }
+
+            Helper::UpdateVCardFromContact($Contact, $oVCard);
             $mResult = Backend::Carddav()->updateCard($row->addressbook_id, $row->card_uri, $oVCard->serialize());
             $mResult = str_replace('"', '', $mResult);
         }
@@ -1916,7 +1920,9 @@ class Module extends \Aurora\System\Module\AbstractModule
         if (is_array($Group)) {
             \Aurora\System\Validator::validate($Group, [
                 'Name'	=>	'required'
-            ], ['required' => 'The :attribute field is required.']);
+            ], [
+                'required' => 'The :attribute field is required.'
+            ]);
 
             $oGroup = new Classes\Group();
             $oGroup->IdUser = (int) $UserId;
@@ -2050,22 +2056,19 @@ class Module extends \Aurora\System\Module\AbstractModule
     protected function UpdateGroupObject($UserId, $oGroup)
     {
         $mResult = false;
-        $oVCard = new \Sabre\VObject\Component\VCard();
 
         if (is_array($oGroup->Contacts) && count($oGroup->Contacts)) {
             $oGroup->Contacts = $this->getContactsUUIDsFromIds($UserId, $oGroup->Contacts);
         }
 
-        Helper::UpdateVCardFromGroup($oGroup, $oVCard);
-
         $query = Capsule::connection()->table('contacts_cards')
             ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
             ->join('adav_addressbooks', 'adav_cards.addressbookid', '=', 'adav_addressbooks.id')
-            ->select('adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id');
+            ->select('adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id', 'carddata');
 
         $aArgs = [
             'UserId' => $UserId,
-            'UUID' => $oGroup->UUID
+            'UUID' => $oGroup->Id
         ];
 
         // build a query to obtain the addressbook_id and card_uri with checking access to the contact
@@ -2076,6 +2079,15 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $row = $query->first();
         if ($row) {
+            $oVCard = \Sabre\VObject\Reader::read($row->carddata);
+            $uidVal = $oVCard->UID->getValue();
+            if (empty($uidVal) || is_numeric($uidVal)) {
+                $uriInfo = pathinfo($row->card_uri);
+                if (isset($uriInfo['filename'])) {
+                    $oVCard->UID = $uriInfo['filename'];
+                }
+            }
+            Helper::UpdateVCardFromGroup($oGroup, $oVCard);
             $mResult = !!Backend::Carddav()->updateCard($row->addressbook_id, $row->card_uri, $oVCard->serialize());
         }
 
@@ -2308,17 +2320,12 @@ class Module extends \Aurora\System\Module\AbstractModule
         if (is_array($ContactUUIDs) && !empty($ContactUUIDs)) {
             $oGroup = self::Decorator()->GetGroup($UserId, $GroupUUID);
             if ($oGroup) {
-                Api::Log('#1 Group contact uuids: ' . implode(', ', $oGroup->Contacts), \Aurora\System\Enums\LogLevel::Full, 'rcfg-');
                 $aContacts = self::Decorator()->GetContactsByUids($UserId, $ContactUUIDs);
                 $newContactUUIDs = array_map(function ($item) {
                     return $item->UUID;
                 }, $aContacts);
-                Api::Log('#2 Contact uuids: ' . implode(', ', $newContactUUIDs), \Aurora\System\Enums\LogLevel::Full, 'rcfg-');
                 $oGroup->Contacts = array_diff($oGroup->Contacts, $newContactUUIDs);
-                Api::Log('#3 Group new contact uuids: ' . implode(', ', $oGroup->Contacts), \Aurora\System\Enums\LogLevel::Full, 'rcfg-');
                 $mResult = $this->UpdateGroupObject($UserId, $oGroup);
-            } else {
-                Api::Log('#4 Group with uuid: ' . $GroupUUID . ' not found', \Aurora\System\Enums\LogLevel::Full, 'rcfg-');
             }
         }
 
@@ -2646,6 +2653,13 @@ class Module extends \Aurora\System\Module\AbstractModule
                     Backend::Carddav()->deleteAddressBook($book['id']);
                 }
             }
+        }
+    }
+
+    public function onContactToResponseArray($aArgs, &$mResult)
+    {
+        if (isset($aArgs[0]) && $aArgs[0] instanceof Contact && is_array($mResult)) {
+            $mResult['UUID'] = $mResult['Id'];
         }
     }
     /***** private functions *****/
