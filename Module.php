@@ -462,8 +462,9 @@ class Module extends \Aurora\System\Module\AbstractModule
      * @param Builder $Filters Filters for obtaining specified contacts.
      * @param string $GroupUUID UUID of group that should contain contacts for export.
      * @param array $ContactUUIDs List of UUIDs of contacts that should be exported.
+     * @param bool $AddressBookId
      */
-    public function Export($UserId, $Storage, $Format, Builder $Filters = null, $GroupUUID = '', $ContactUUIDs = [])
+    public function Export($UserId, $Storage, $Format, Builder $Filters = null, $GroupUUID = '', $ContactUUIDs = [], $AddressBookId = null)
     {
         Api::CheckAccess($UserId);
 
@@ -475,22 +476,27 @@ class Module extends \Aurora\System\Module\AbstractModule
             $oGroup = self::Decorator()->GetGroup($UserId, $GroupUUID);
             if ($oGroup) {
                 $ContactUUIDs = array_merge(
-                    $this->getContactsIdsFromUUIDs($UserId, $oGroup->Contacts),
+                    $oGroup->Contacts,
                     $ContactUUIDs
                 );
             }
         }
 
-        if (is_array($ContactUUIDs) && count($ContactUUIDs) > 0) {
+        if (is_array($ContactUUIDs)) {
+            $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $AddressBookId, $Filters);
             if ($Format === 'vcf') {
-                $query = $this->getGetContactsQueryBuilder($UserId, StorageType::All, 0, $Filters);
-                $rows = $query->whereIn('contacts_cards.CardId', $ContactUUIDs)->select('carddata')->get()->all();
-
+                if (count($ContactUUIDs) > 0) {
+                    $query = $query->whereIn('contacts_cards.CardId', $ContactUUIDs);
+                }
+                $rows = $query->select('carddata')->pluck('carddata')->toArray();
                 foreach ($rows as $row) {
-                    $sOutput .= $row->carddata;
+                    $sOutput .= $row;
                 }
             } elseif ($Format === 'csv') {
                 $oSync = new Classes\Csv\Sync();
+                if (count($ContactUUIDs) === 0) {
+                    $ContactUUIDs = $query->select('CardId')->pluck('CardId')->toArray();
+                }
                 $aContacts = self::Decorator()->GetContactsByUids($UserId, $ContactUUIDs);
                 $sOutput = $oSync->Export($aContacts);
             }
