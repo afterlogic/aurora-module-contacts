@@ -475,10 +475,10 @@ class Module extends \Aurora\System\Module\AbstractModule
         if (!empty($GroupUUID)) {
             $oGroup = self::Decorator()->GetGroup($UserId, $GroupUUID);
             if ($oGroup) {
-                $ContactUUIDs = array_merge(
+                $ContactUUIDs = (is_array($ContactUUIDs) && count($ContactUUIDs) > 0) ? array_intersect(
                     $oGroup->Contacts,
                     $ContactUUIDs
-                );
+                ) : $oGroup->Contacts;
             }
         }
 
