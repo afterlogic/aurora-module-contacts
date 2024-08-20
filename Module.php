@@ -483,7 +483,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         }
 
         if (is_array($ContactUUIDs)) {
-            $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $AddressBookId, $Filters);
+            $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $AddressBookId, $Filters, false, true);
             if ($Format === 'vcf') {
                 if (count($ContactUUIDs) > 0) {
                     $query = $query->whereIn('contacts_cards.CardId', $ContactUUIDs);
@@ -2797,7 +2797,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         return [];
     }
 
-    protected function getGetContactsQueryBuilder($UserId, $Storage = '', $AddressBookId = null, Builder $Filters = null, $Suggestions = false)
+    protected function getGetContactsQueryBuilder($UserId, $Storage = '', $AddressBookId = null, Builder $Filters = null, $Suggestions = false, $withGroups = false)
     {
         if ($Filters instanceof Builder) {
             $query = & $Filters;
@@ -2829,7 +2829,10 @@ class Module extends \Aurora\System\Module\AbstractModule
             )
             ->where(function ($wherQuery) use ($UserId, $Storage, $AddressBookId, $query, $Suggestions) {
                 $this->prepareFiltersFromStorage($UserId, $Storage, $AddressBookId, $query, $wherQuery, $Suggestions);
-            })->where('IsGroup', false);
+            });
+        if (!$withGroups) {
+            $query->where('IsGroup', false);
+        }
 
         return $query;
     }
