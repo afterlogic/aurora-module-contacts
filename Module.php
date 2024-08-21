@@ -2833,6 +2833,9 @@ class Module extends \Aurora\System\Module\AbstractModule
         if (!$withGroups) {
             $query->where('IsGroup', false);
         }
+        if ($Suggestions) {
+            $query->where('Frequency', '>=', 0);
+        }
 
         return $query;
     }
