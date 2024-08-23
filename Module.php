@@ -295,7 +295,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         return array_merge($priority_books, $non_priority_books);
     }
 
-    protected function _getContacts($iSortField = SortField::Name, $iSortOrder = SortOrder::ASC, $iOffset = 0, $iLimit = 20, $oFilters = null)
+    protected function getContactsCollection($iSortField = SortField::Name, $iSortOrder = SortOrder::ASC, $iOffset = 0, $iLimit = 20, $oFilters = null)
     {
         $sSortField = 'FullName';
         $sSortFieldSecond = 'ViewEmail';
@@ -333,6 +333,37 @@ class Module extends \Aurora\System\Module\AbstractModule
         ;
 
         return $oFilters->get();
+    }
+
+    /**
+     * Resolve addressbooks numeric ids to text text ids
+     *
+     * @param mixed $oUser
+     * @param mixed $aContactsCollection
+     * @return void
+     */
+    protected function resolveAddressbooksIdsForContacts($oUser, &$aContactsCollection)
+    {
+        $aAddressbooksMap = self::Decorator()->GetStoragesMapToAddressbooks();
+        $aAddressBooks = [];
+        $aPersonalAddressBooks = Backend::Carddav()->getAddressBooksForUser(Constants::PRINCIPALS_PREFIX . $oUser->PublicId);
+        foreach ($aPersonalAddressBooks as $oAddressBook) {
+            $aAddressBooks[$oAddressBook['id']] = $oAddressBook;
+        }
+
+        $aContactsCollection->each(function (&$contact) use ($aAddressBooks, $aAddressbooksMap) {
+            $contact->UUID = (string) $contact->UUID;
+            if (!isset($aAddressBooks[$contact->Storage])) {
+                $aAddressBooks[$contact->Storage] = Backend::Carddav()->getAddressBookById($contact->Storage);
+            }
+            $StorageTextId = false;
+            if ($aAddressBooks[$contact->Storage]) {
+                $StorageTextId = array_search($aAddressBooks[$contact->Storage]['uri'], $aAddressbooksMap);
+            }
+
+            $contact->AddressBookId = (int) $contact->Storage;
+            $contact->Storage = $StorageTextId ? $StorageTextId : (StorageType::AddressBook . '-' . $contact->Storage);
+        });
     }
 
     /**
@@ -858,83 +889,53 @@ class Module extends \Aurora\System\Module\AbstractModule
 
             $count = $query->count();
 
-            $aContacts = $this->_getContacts($SortField, $SortOrder, $Offset, $Limit, $query)->toArray();
+            $aContactsCollection = $this->getContactsCollection($SortField, $SortOrder, $Offset, $Limit, $query);
 
-            $aContactsColection = collect($aContacts);
             if ($Storage === StorageType::All) {
-                $personalContacsCollection = $aContactsColection->filter(function ($aContact) {
-                    return (isset($aContact['IsTeam'], $aContact['Shared']) && !$aContact['IsTeam'] && !$aContact['Shared']);
+                $personalContacsCollection = $aContactsCollection->filter(function ($contact) {
+                    return !$contact->IsTeam && !$contact->Shared;
                 });
 
                 if ($WithoutTeamContactsDuplicates) {
-                    foreach ($aContacts as $key => $aContact) {
-                        $sViewEmail = $aContact['ViewEmail'];
-                        if (isset($aContact['IsTeam']) && $aContact['IsTeam'] && $personalContacsCollection->unique()->contains('ViewEmail', $sViewEmail)) {
-                            unset($aContacts[$key]);
-                        } elseif (isset($aContact['Auto']) && $aContact['Auto']) { // is collected contact
-                            foreach ($aContacts as $subKey => $aSubContact) {
-                                if (isset($aContact['IsTeam']) && $aContact['IsTeam'] && $aSubContact['ViewEmail'] === $sViewEmail) {
-                                    $aContacts[$subKey]['AgeScore'] = $aContacts[$key]['AgeScore'];
-                                    unset($aContacts[$key]);
+                    $aContactsCollection->each(function ($contact, $key) use (&$aContactsCollection, $personalContacsCollection) {
+                        if ($contact->IsTeam && $personalContacsCollection->unique()->contains('ViewEmail', $contact->ViewEmail)) {
+                            $aContactsCollection->forget($key);
+                        } elseif ($contact->Auto) { // is collected contact
+                            $aContactsCollection->each(function (&$subContact) use (&$aContactsCollection, $contact, $key) {
+                                if ($subContact->IsTeam && $subContact->ViewEmail === $contact->ViewEmail) {
+                                    $subContact->AgeScore = $contact->AgeScore;
+                                    $aContactsCollection->forget($key);
                                 }
-                                if (isset($aContact['IsTeam']) && !$aContact['IsTeam'] &&
-                                    isset($aContact['Shared']) && !$aContact['Shared'] &&
-                                    isset($aContact['Auto']) && !$aContact['Auto'] &&
-                                    $aSubContact['ViewEmail'] === $sViewEmail) {
-                                    unset($aContacts[$key]);
+                                if (!$contact->IsTeam && !$contact->Shared && !$contact->Auto && $subContact->ViewEmail === $contact->ViewEmail) {
+                                    $aContactsCollection->forget($key);
                                 }
-                            }
+                            });
                         }
-                    }
+                    });
                 } else {
-                    foreach ($aContacts as $key => $aContact) {
-                        $sViewEmail = $aContact['ViewEmail'];
-
-                        if (isset($aContact['IsTeam']) && $aContact['IsTeam']) {
-                            $personalContact = $personalContacsCollection->unique()->filter(function ($contact) use ($sViewEmail) {
-                                return strtolower($contact['ViewEmail']) === strtolower($sViewEmail);
+                    $aContactsCollection->each(function (&$contact, $key) use (&$aContactsCollection, $personalContacsCollection) {
+                        if ($contact->IsTeam) {
+                            $personalContact = $personalContacsCollection->unique()->filter(function ($subContact) use (&$contact) {
+                                return strtolower($contact->ViewEmail) === strtolower($subContact->ViewEmail);
                             })->first(); // Find collected contact with same email
 
                             if ($personalContact) {
-                                $aContacts[$key]['Frequency'] = $personalContact['Frequency'];
-
-                                if (isset($personalContact['Auto']) && $personalContact['Auto']) { // is collected contact
-                                    $aContacts = array_filter($aContacts, function ($contact) use ($sViewEmail) {
-                                        return (strtolower($contact['ViewEmail']) === strtolower($sViewEmail) && !$contact['Auto']) ||
-                                            strtolower($contact['ViewEmail']) !== strtolower($sViewEmail);
+                                $contact->Frequency = $personalContact->Frequency;
+                                if ($contact->Auto) { // is collected contact
+                                    $aContactsCollection = $aContactsCollection->filter(function ($subContact) use ($contact) {
+                                        return (strtolower($subContact->ViewEmail) === strtolower($contact->ViewEmail) && !$contact->Auto) ||
+                                            strtolower($subContact->ViewEmail) !== strtolower($contact->ViewEmail);
                                     }); // remove all collected contacts
                                 }
                             }
                         }
-                    }
+                    });
                 }
             }
 
-            // resolve addressbooks' numeric ids to text text ids
-            $aAddressbooksMap = self::Decorator()->GetStoragesMapToAddressbooks();
-            $aAddressBooks = [];
-            $aPersonalAddressBooks = Backend::Carddav()->getAddressBooksForUser(Constants::PRINCIPALS_PREFIX . $oUser->PublicId);
-            foreach ($aPersonalAddressBooks as $oAddressBook) {
-                $aAddressBooks[$oAddressBook['id']] = $oAddressBook;
-            }
+            $this->resolveAddressbooksIdsForContacts($oUser, $aContactsCollection);
 
-            foreach($aContacts as &$aContact) {
-                $aContact['UUID'] = (string)$aContact['UUID'];
-
-                if (!isset($aAddressBooks[$aContact['Storage']])) {
-                    $aAddressBooks[$aContact['Storage']] = Backend::Carddav()->getAddressBookById($aContact['Storage']);
-                }
-
-                $StorageTextId = false;
-                if ($aAddressBooks[$aContact['Storage']]) {
-                    $StorageTextId = array_search($aAddressBooks[$aContact['Storage']]['uri'], $aAddressbooksMap);
-                }
-
-                $aContact['AddressBookId'] = (int) $aContact['Storage'];
-                $aContact['Storage'] = $StorageTextId ? $StorageTextId : (StorageType::AddressBook . '-' . $aContact['Storage']);
-            }
-            // end ids resolve
-
+            $aContacts = $aContactsCollection->toArray();
             if ($WithGroups) {
                 $groups = self::Decorator()->GetGroups($UserId, [], $Search);
 
@@ -1226,35 +1227,25 @@ class Module extends \Aurora\System\Module\AbstractModule
      * Returns list of contacts with specified emails.
      * @param string $Storage storage of contacts.
      * @param array $Emails List of emails of contacts to return.
-     * @return \Illuminate\Database\Eloquent\Collection|array
+     * @param int|null $AddressBookId
+     * @return \Illuminate\Database\Eloquent\Collection|null
      */
-    public function GetContactsByEmails($UserId, $Storage, $Emails, $Filters = null, $AsArray = true)
+    public function GetContactsByEmails($UserId, $Storage, $Emails, $AddressBookId = null)
     {
+        $result = [];
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
-        $aContacts = [];
 
         Api::CheckAccess($UserId);
-
         $oUser = Api::getUserById($UserId);
-        $aArgs = [
-            'UserId' => $UserId,
-            'Storage' => $Storage,
-            'AddressBookId' => null
-        ];
 
-        if ($this->populateContactArguments($aArgs)) {
-            if (self::Decorator()->CheckAccessToAddressBook($oUser, $aArgs['AddressBookId'], Access::Read)) {
-                $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $aArgs['AddressBookId'], $Filters);
-                $query->whereIn('ViewEmail', $Emails);
-
-                $aContacts = $this->_getContacts(SortField::Name, SortOrder::ASC, 0, 0, $query);
-                if ($AsArray) {
-                    $aContacts = $aContacts->toArray();
-                }
-            }
+        if (self::Decorator()->CheckAccessToAddressBook($oUser, $AddressBookId, Access::Read)) {
+            $filter = ContactCard::whereIn('ViewEmail', $Emails);
+            $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $AddressBookId, $filter);
+            $result = $query->get();
+            $this->resolveAddressbooksIdsForContacts($oUser, $result);
         }
 
-        return $aContacts;
+        return $result;
     }
 
     /**
@@ -1516,7 +1507,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 ['ViewEmail', '=', $sViewEmail]
             ]);
 
-            $oAutocreatedContacts = $this->_getContacts(
+            $oAutocreatedContacts = $this->getContactsCollection(
                 SortField::Name,
                 SortOrder::ASC,
                 0,
@@ -2611,11 +2602,11 @@ class Module extends \Aurora\System\Module\AbstractModule
         $iUserId = $Args['IdUser'];
         foreach ($aAddresses as $sEmail => $sName) {
             try {
-                $contactsColl = self::GetContactsByEmails($iUserId, StorageType::Personal, [$sEmail], null, false);
+                $contactsColl = self::Decorator()->GetContactsByEmails($iUserId, StorageType::Personal, [$sEmail]);
 
                 $oContact = $contactsColl->first();
                 if (!$oContact) {
-                    $contactsColl = self::GetContactsByEmails($iUserId, StorageType::Collected, [$sEmail], null, false);
+                    $contactsColl = self::Decorator()->GetContactsByEmails($iUserId, StorageType::Collected, [$sEmail]);
                     $oContact = $contactsColl->first();
                 }
 
