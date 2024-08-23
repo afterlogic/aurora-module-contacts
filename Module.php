@@ -2666,7 +2666,7 @@ class Module extends \Aurora\System\Module\AbstractModule
     public function onContactToResponseArray($aArgs, &$mResult)
     {
         if (isset($aArgs[0]) && $aArgs[0] instanceof Contact && is_array($mResult)) {
-            $mResult['UUID'] = $mResult['Id'];
+            $mResult['UUID'] = (string) $mResult['Id']; // The UUID property type must be a string.
         }
     }
     /***** private functions *****/
