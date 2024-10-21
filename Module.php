@@ -1820,7 +1820,8 @@ class Module extends \Aurora\System\Module\AbstractModule
             $query = Capsule::connection()->table('contacts_cards')
                 ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
                 ->join('adav_addressbooks', 'adav_cards.addressbookid', '=', 'adav_addressbooks.id')
-                ->select('adav_cards.id as card_id', 'adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id');
+                ->select('adav_cards.id as card_id', 'adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id')
+                ->where('adav_cards.addressbookid', '=', $AddressBookId);
 
             $aArgs = [
                 'UUID' => $UUIDs,
