@@ -594,7 +594,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         if ($this->populateContactArguments($aArgs)) {
             $query = Capsule::connection()->table('contacts_cards')
                 ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
-                ->select('adav_cards.id as UUID', 'carddata');
+                ->select('adav_cards.id as card_id', 'carddata');
 
             $query->where(function ($whereQuery) use ($UserId, $aArgs, $query) {
                 $this->prepareFiltersFromStorage($UserId, StorageType::Personal, $aArgs['AddressBookId'], $query, $whereQuery);
@@ -612,13 +612,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 
             foreach ($groups as $group) {
                 $groupObj = new Group();
+                $groupObj->Id = (int) $group->card_id;
                 $groupObj->IdUser = $UserId;
                 $groupObj->populate(Helper::GetGroupDataFromVcard(
                     \Sabre\VObject\Reader::read(
                         $group->carddata,
                         \Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES
                     ),
-                    $group->UUID
+                    $group->card_id
                 ));
                 $result[] = $groupObj;
             }
@@ -2075,7 +2076,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $aArgs = [
             'UserId' => $UserId,
-            'UUID' => $oGroup->Id
+            'UUID' => $oGroup->UUID
         ];
 
         // build a query to obtain the addressbook_id and card_uri with checking access to the contact
