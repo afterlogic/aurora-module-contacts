@@ -200,9 +200,9 @@ class Formatter
     {
         $iMonth = $iDay = $iYear = 0;
         if ($this->oContainer) {
-            $iDay = $this->oContainer->{$sDayFieldName};
-            $iMonth = $this->oContainer->{$sMonthFieldName};
-            $iYear = $this->oContainer->{$sYearFieldName};
+            $iDay = $this->oContainer->{$sDayFieldName} ?? 0;
+            $iMonth = $this->oContainer->{$sMonthFieldName} ?? 0;
+            $iYear = $this->oContainer->{$sYearFieldName} ?? 0;
         }
 
         return checkdate($iMonth, $iDay, $iYear) ? $iDay . '/' . $iMonth . '/' . $iYear : '';
@@ -216,6 +216,7 @@ class Formatter
      */
     protected function escapeValue($sValue, $bAddQuotation = false)
     {
+        $sValue = $sValue !== null ? $sValue : '';
         $sValue = str_replace('"', '""', $sValue);
         return $bAddQuotation ?
             (empty($sValue) ? '' : '"' . $sValue . '"') : $sValue;
