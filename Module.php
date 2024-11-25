@@ -80,7 +80,9 @@ class Module extends \Aurora\System\Module\AbstractModule
         $this->subscribeEvent('System::toResponseArray::after', array($this, 'onContactToResponseArray'));
 
         $this->denyMethodsCallByWebApi([
-            'UpdateContactObject'
+            'UpdateContactObject',
+            'CheckAccessToAddressBook',
+            'CheckAccessToObject'
         ]);
     }
 
@@ -1243,6 +1245,8 @@ class Module extends \Aurora\System\Module\AbstractModule
             $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $AddressBookId, $filter);
             $result = $query->get();
             $this->resolveAddressbooksIdsForContacts($oUser, $result);
+        } else {
+            throw new ApiException(Notifications::AccessDenied, null, 'AccessDenied');
         }
 
         return $result;
@@ -1477,6 +1481,8 @@ class Module extends \Aurora\System\Module\AbstractModule
                         ];
                     }
                 }
+            } else {
+                throw new ApiException(Notifications::AccessDenied, null, 'AccessDenied');
             }
         }
 
@@ -1597,7 +1603,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $oContact = self::Decorator()->GetContact($Contact['UUID'], $UserId);
         $oUser = Api::getUserById($UserId);
-        if ($oContact && self::Decorator()->CheckAccessToAddressBook($oUser, $oContact->AddressBookId, Access::Write)) {
+        if ($oContact && self::Decorator()->CheckAccessToObject($oUser, $oContact, Access::Write)) {
             $oContact->populate($Contact);
             $result = self::Decorator()->UpdateContactObject($oContact);
             if ($result) {
@@ -1622,6 +1628,8 @@ class Module extends \Aurora\System\Module\AbstractModule
             } else {
                 return false;
             }
+        } else {
+            throw new ApiException(Notifications::AccessDenied, null, 'AccessDenied');
         }
 
         return false;
@@ -1848,6 +1856,8 @@ class Module extends \Aurora\System\Module\AbstractModule
             }
 
             $mResult = true;
+        } else {
+            throw new ApiException(Notifications::AccessDenied, null, 'AccessDenied');
         }
 
         return $mResult;
@@ -2735,6 +2745,8 @@ class Module extends \Aurora\System\Module\AbstractModule
             ]);
             Backend::Carddav()->updateAddressBook($EntityId, $propParch);
             $mResult = $propParch->commit();
+        } else {
+            throw new ApiException(Notifications::AccessDenied, null, 'AccessDenied');
         }
 
         return $mResult;
