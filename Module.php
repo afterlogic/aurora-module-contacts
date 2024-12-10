@@ -1694,7 +1694,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 $FromAddressBookId = (int) $aArgsFrom['AddressBookId'];
             }
             if ($FromAddressBookId != $ToAddressBookId && $resultFrom && $resultTo) { // do not allow contact to be moved to its own storage
-                $result = $result && Backend::Carddav()->updateCardAddressBook($FromAddressBookId, $ToAddressBookId, $cardUri);
+                $result = Backend::Carddav()->updateCardAddressBook($FromAddressBookId, $ToAddressBookId, $cardUri);
             }
         }
 
