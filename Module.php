@@ -1120,9 +1120,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         if ($oUser instanceof \Aurora\Modules\Core\Models\User) {
             $query = Capsule::connection()->table('contacts_cards')
+                ->select('adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id', 'contacts_cards.Properties', 'carddata', 'etag', 'core_users.Id as UserId')
                 ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
                 ->join('adav_addressbooks', 'adav_cards.addressbookid', '=', 'adav_addressbooks.id')
-                ->select('adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id', 'Properties', 'carddata', 'etag');
+                ->leftJoin('core_users', 'adav_addressbooks.principaluri', '=', Capsule::connection()->raw("CONCAT('principals/', " . Capsule::connection()->getTablePrefix() . "core_users.PublicId)"));
 
             $aArgs = [
                 'UUID' => $UUID,
@@ -1141,7 +1142,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
                 $mResult = new Contact();
                 $mResult->Id = $UUID;
-                $mResult->InitFromVCardStr($UserId, $row->carddata);
+                $mResult->InitFromVCardStr($row->UserId, $row->carddata);
                 $mResult->ETag = \trim($row->etag, '"');
 
                 $storagesMapToAddressbooks = self::Decorator()->GetStoragesMapToAddressbooks();
@@ -2811,27 +2812,27 @@ class Module extends \Aurora\System\Module\AbstractModule
         }
 
         $con = Capsule::connection();
-        $query->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
-            ->select(
-                'adav_cards.id as Id',
-                'adav_cards.id as UUID',
-                'adav_cards.uri as Uri',
-                'adav_cards.addressbookid as Storage',
-                'etag as ETag',
-                $con->raw('FROM_UNIXTIME(lastmodified) as DateModified'),
-                'PrimaryEmail',
-                'PersonalEmail',
-                'BusinessEmail',
-                'OtherEmail',
-                'BusinessCompany',
-                'FullName',
-                'FirstName',
-                'LastName',
-                'Frequency',
-                'Properties',
-                $con->raw('(Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, FROM_UNIXTIME(lastmodified))/30)) as AgeScore'),
-                $con->raw($UserId . ' as UserId')
-            )
+        $query->select(
+            'adav_cards.id as Id',
+            'adav_cards.id as UUID',
+            'adav_cards.uri as Uri',
+            'adav_cards.addressbookid as Storage',
+            'etag as ETag',
+            $con->raw('FROM_UNIXTIME(lastmodified) as DateModified'),
+            'contacts_cards.PrimaryEmail',
+            'contacts_cards.PersonalEmail',
+            'contacts_cards.BusinessEmail',
+            'contacts_cards.OtherEmail',
+            'contacts_cards.BusinessCompany',
+            'contacts_cards.FullName',
+            'contacts_cards.FirstName',
+            'contacts_cards.LastName',
+            'contacts_cards.Frequency',
+            'contacts_cards.Properties',
+            $con->raw('(Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, FROM_UNIXTIME(lastmodified))/30)) as AgeScore'),
+            'core_users.Id as UserId'
+        )
+            ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
             ->where(function ($wherQuery) use ($UserId, $Storage, $AddressBookId, $query, $Suggestions) {
                 $this->prepareFiltersFromStorage($UserId, $Storage, $AddressBookId, $query, $wherQuery, $Suggestions);
             });
@@ -2841,6 +2842,8 @@ class Module extends \Aurora\System\Module\AbstractModule
         if ($Suggestions) {
             $query->where('Frequency', '>=', 0);
         }
+
+        $query->leftJoin('core_users', 'adav_addressbooks.principaluri', '=', Capsule::connection()->raw("CONCAT('principals/', " . Capsule::connection()->getTablePrefix() . "core_users.PublicId)"));
 
         return $query;
     }
