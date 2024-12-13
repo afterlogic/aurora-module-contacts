@@ -1153,7 +1153,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                     $key = array_search($addressbook['uri'], $storagesMapToAddressbooks);
                 }
 
-                $mResult->Storage = $key !== false ? $key : (string) $row->addressbook_id;
+                $mResult->Storage = $key !== false ? $key : StorageType::AddressBook;
                 $mResult->AddressBookId = (int) $row->addressbook_id;
                 if ($mResult->Properties) {
                     $mResult->Properties = \json_decode($row->Properties);
