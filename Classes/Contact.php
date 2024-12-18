@@ -7,6 +7,7 @@
 
 namespace Aurora\Modules\Contacts\Classes;
 
+use Aurora\Api;
 use Aurora\Modules\Contacts\Classes\VCard\Helper;
 use Aurora\Modules\Contacts\Enums\StorageType;
 use Aurora\Modules\Contacts\Models\ContactCard;
@@ -143,6 +144,14 @@ class Contact
             $aRes[$sKey] = $mValue;
         }
         $this->Properties = [];
+
+        // TODO: workaround for mobile APP
+        if (!$this->IdUser) {
+            $oUser = Api::getAuthenticatedUser();
+            if ($oUser) {
+                $this->IdUser = $oUser->Id;
+            }
+        }
 
         return array_merge($aRes, (array) $this);
     }
