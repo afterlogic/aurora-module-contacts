@@ -188,6 +188,19 @@ class Helper
         if (isset($oVCard->{'X-USE-FRIENDLY-NAME'})) {
             $aContact['UseFriendlyName'] = '1' === (string) $oVCard->{'X-USE-FRIENDLY-NAME'};
         }
+
+        if ($oVCard->IMPP && count($oVCard->IMPP) > 0) {
+            foreach ($oVCard->IMPP as $impp) {
+                [$type, $value] = explode(':', $impp->getValue());
+                if (strtolower($type) === 'skype') {
+                    $aContact['Skype'] = $value;
+                }
+                if (strtolower($type) === 'facebook') {
+                    $aContact['Facebook'] = $value;
+                }
+            }
+        }
+
         $aContact['Storage'] = StorageType::Personal;
 
         return $aContact;
@@ -674,6 +687,29 @@ class Helper
             $sBDayDT = $oContact->BirthYear . '-' . $oContact->BirthMonth . '-' . $oContact->BirthDay;
             $oVCard->add('BDAY', $sBDayDT);
         }
+
+        $bFoundSkype = false;
+        $bFoundFacebook = false;
+        if ($oVCard->IMPP && count($oVCard->IMPP) > 0) {
+            foreach ($oVCard->IMPP as $impp) {
+                [$type, $value] = explode(':', $impp->getValue());
+                if (strtolower($type) === 'skype') {
+                    $bFoundSkype = true;
+                    $impp->setValue('skype:' . $oContact->Skype);
+                }
+                if (strtolower($type) === 'facebook') {
+                    $bFoundFacebook = true;
+                    $impp->setValue('facebook:' . $oContact->Facebook);
+                }
+            }
+        }
+        if (!$bFoundSkype) {
+            $oVCard->add('IMPP', 'skype:' . $oContact->Skype);
+        }
+        if (!$bFoundFacebook) {
+            $oVCard->add('IMPP', 'facebook:' . $oContact->Facebook);
+        }
+        
 
         // $props = $oContact->getExtendedProps();
         // foreach ($props as $key => $prop) {
