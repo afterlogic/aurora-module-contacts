@@ -939,7 +939,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
             // TODO: workaround for mobile APP
             $aContactsCollection->each(function($contact) use ($UserId) {
-                if ($contact->UserId === null) {
+                if (!$contact->UserId) {
                     $contact->UserId = $UserId;
                 }
             });
@@ -1310,7 +1310,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 //TODO: remove this after refactoring API and client
                 $oContact->UUID = (string)$oContact->UUID;
                 $oContact->EntityId = $oContact->Id;
-                $oContact->IdUser = $oContact->UserId;
+                $oContact->IdUser = $oContact->UserId ? $oContact->UserId : $UserId; // TODO: workaround for mobile APP
                 $oContact->IdTenant = $oUser->IdTenant;
                 $oContact->UseFriendlyName = false;
             }
