@@ -145,13 +145,21 @@ class Contact
         }
         $this->Properties = [];
 
-        // TODO: workaround for mobile APP
+        // TODO: workaround for mobile APP that requires 'IdUser' to be integer
         if (!$this->IdUser) {
             $oUser = Api::getAuthenticatedUser();
             if ($oUser) {
                 $this->IdUser = $oUser->Id;
             }
         }
+
+        // TODO: this is propersty is used in mobile APP to calculate ageScore
+        $aRes['DateModified'] = '';
+
+        // TODO: this is needded for mobile APP that reads these properties
+        $aRes['ParentUUID'] = "";
+        $aRes['DavContacts::UID'] = '';
+        $aRes['DavContacts::VCardUID'] = '';
 
         return array_merge($aRes, (array) $this);
     }
