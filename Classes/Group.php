@@ -126,6 +126,11 @@ class Group
 
     public function toResponseArray()
     {
-        return (array) $this;
+        $aRes = [];
+
+        // TODO: this is needded for mobile APP that reads these properties
+        $aRes['ParentUUID'] = "";
+
+        return array_merge($aRes, (array) $this);
     }
 }
