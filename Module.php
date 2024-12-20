@@ -1257,6 +1257,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 $oContact->Id = $row->CardId;
                 $oContact->InitFromVCardStr($row->UserId, $row->carddata);
                 $oContact->ETag = \trim($row->etag, '"');
+                $oContact->UUID = (string)$row->CardId;
 
                 $storagesMapToAddressbooks = self::Decorator()->GetStoragesMapToAddressbooks();
                 $addressbook = Backend::Carddav()->getAddressBookById($row->addressbook_id);
