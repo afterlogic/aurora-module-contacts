@@ -709,7 +709,7 @@ class Helper
         if (!$bFoundFacebook) {
             $oVCard->add('IMPP', 'facebook:' . $oContact->Facebook);
         }
-        
+
 
         // $props = $oContact->getExtendedProps();
         // foreach ($props as $key => $prop) {

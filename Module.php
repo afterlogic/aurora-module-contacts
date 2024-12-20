@@ -938,7 +938,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $this->resolveAddressbooksIdsForContacts($oUser, $aContactsCollection);
 
             // TODO: workaround for mobile APP
-            $aContactsCollection->each(function($contact) use ($UserId) {
+            $aContactsCollection->each(function ($contact) use ($UserId) {
                 if (!$contact->UserId) {
                     $contact->UserId = $UserId;
                 }
