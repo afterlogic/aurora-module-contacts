@@ -1117,61 +1117,16 @@ class Module extends \Aurora\System\Module\AbstractModule
      */
     public function GetContact($UUID, $UserId = null)
     {
+        $mResult = false;
+
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
         Api::CheckAccess($UserId);
 
-        $oUser = Api::getUserById($UserId);
+        $aContacts = self::Decorator()->GetContactsByUids($UserId, [$UUID]);
 
-        $mResult = false;
-
-        if ($oUser instanceof \Aurora\Modules\Core\Models\User) {
-            $query = Capsule::connection()->table('contacts_cards')
-                ->select('adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id', 'contacts_cards.Properties', 'carddata', 'etag', 'core_users.Id as UserId')
-                ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
-                ->join('adav_addressbooks', 'adav_cards.addressbookid', '=', 'adav_addressbooks.id')
-                ->leftJoin('core_users', 'adav_addressbooks.principaluri', '=', Capsule::connection()->raw("CONCAT('principals/', " . Capsule::connection()->getTablePrefix() . "core_users.PublicId)"));
-
-            $aArgs = [
-                'UUID' => $UUID,
-                'UserId' => $UserId
-            ];
-            $query->where(function ($q) use ($aArgs, $query) {
-                $aArgs['Query'] = $query;
-                $this->broadcastEvent(self::GetName() . '::ContactQueryBuilder', $aArgs, $q);
-            });
-
-            $row = $query->first();
-            if ($row) {
-                if (!self::Decorator()->CheckAccessToAddressBook($oUser, $row->addressbook_id, Access::Read)) {
-                    throw new ApiException(Notifications::AccessDenied, null, 'AccessDenied');
-                }
-
-                $mResult = new Contact();
-                $mResult->Id = $UUID;
-                $mResult->InitFromVCardStr($row->UserId, $row->carddata);
-                $mResult->ETag = \trim($row->etag, '"');
-
-                $storagesMapToAddressbooks = self::Decorator()->GetStoragesMapToAddressbooks();
-                $addressbook = Backend::Carddav()->getAddressBookById($row->addressbook_id);
-
-                $key = false;
-                if ($addressbook) {
-                    $key = array_search($addressbook['uri'], $storagesMapToAddressbooks);
-                }
-
-                $mResult->Storage = $key !== false ? $key : StorageType::AddressBook;
-                $mResult->AddressBookId = (int) $row->addressbook_id;
-                if ($mResult->Properties) {
-                    $mResult->Properties = \json_decode($row->Properties);
-                }
-                $groups = self::Decorator()->GetGroups($UserId);
-                foreach ($groups as $group) {
-                    if (in_array($UUID, $group->Contacts)) {
-                        $mResult->GroupUUIDs[] = $group->UUID;
-                    }
-                }
-            }
+        if (count($aContacts) > 0) {
+            $mResult = $aContacts[0];
         }
 
         return $mResult;
@@ -1268,57 +1223,66 @@ class Module extends \Aurora\System\Module\AbstractModule
      */
     public function GetContactsByUids($UserId, $Uids)
     {
-        $aResult = [];
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
         Api::CheckAccess($UserId);
 
-        if (is_array($Uids) && count($Uids) > 0) {
-            $query = $this->getGetContactsQueryBuilder($UserId, StorageType::All);
-            $aResult = $query->whereIn('contacts_cards.CardId', $Uids)->get()->all();
+        $oUser = Api::getUserById($UserId);
 
-            $oUser = Api::getUserById($UserId);
-            $aGroups = self::Decorator()->GetGroups($UserId);
-            $aAddressbooksMap = self::Decorator()->GetStoragesMapToAddressbooks();
-            $aAddressBooks = [];
-            $aPersonalAddressBooks = Backend::Carddav()->getAddressBooksForUser(Constants::PRINCIPALS_PREFIX . $oUser->PublicId);
-            foreach ($aPersonalAddressBooks as $oAddressBook) {
-                $aAddressBooks[$oAddressBook['id']] = $oAddressBook;
-            }
+        $mResult = [];
 
-            foreach($aResult as $oContact) {
-                $aGroupUUIDs = [];
-                foreach ($aGroups as $oGroup) {
-                    if (in_array($oContact->UUID, $oGroup->Contacts)) {
-                        $aGroupUUIDs[] = $oGroup->UUID;
+        if ($oUser instanceof \Aurora\Modules\Core\Models\User) {
+            $query = Capsule::connection()->table('contacts_cards')
+                ->select('adav_cards.id as CardId', 'adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id', 'contacts_cards.Properties', 'carddata', 'etag', 'core_users.Id as UserId')
+                ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
+                ->join('adav_addressbooks', 'adav_cards.addressbookid', '=', 'adav_addressbooks.id')
+                ->leftJoin('core_users', 'adav_addressbooks.principaluri', '=', Capsule::connection()->raw("CONCAT('principals/', " . Capsule::connection()->getTablePrefix() . "core_users.PublicId)"));
+
+            $aArgs = [
+                'UUID' => $Uids,
+                'UserId' => $UserId
+            ];
+            $query->where(function ($q) use ($aArgs, $query) {
+                $aArgs['Query'] = $query;
+                $this->broadcastEvent(self::GetName() . '::ContactQueryBuilder', $aArgs, $q);
+            });
+
+            $rows = $query->get();
+            foreach($rows as $row) {
+                if (!self::Decorator()->CheckAccessToAddressBook($oUser, $row->addressbook_id, Access::Read)) {
+                    throw new ApiException(Notifications::AccessDenied, null, 'AccessDenied');
+                }
+
+                $oContact = new Contact();
+                $oContact->Id = $row->CardId;
+                $oContact->InitFromVCardStr($row->UserId, $row->carddata);
+                $oContact->ETag = \trim($row->etag, '"');
+
+                $storagesMapToAddressbooks = self::Decorator()->GetStoragesMapToAddressbooks();
+                $addressbook = Backend::Carddav()->getAddressBookById($row->addressbook_id);
+
+                $key = false;
+                if ($addressbook) {
+                    $key = array_search($addressbook['uri'], $storagesMapToAddressbooks);
+                }
+
+                $oContact->Storage = $key !== false ? $key : StorageType::AddressBook;
+                $oContact->AddressBookId = (int) $row->addressbook_id;
+                if ($oContact->Properties) {
+                    $oContact->Properties = \json_decode($row->Properties);
+                }
+                $groups = self::Decorator()->GetGroups($UserId);
+                foreach ($groups as $group) {
+                    if (in_array($row->CardId, $group->Contacts)) {
+                        $oContact->GroupUUIDs[] = $group->UUID;
                     }
                 }
 
-                if (!isset($aAddressBooks[$oContact->Storage])) {
-                    $aAddressBooks[$oContact->Storage] = Backend::Carddav()->getAddressBookById($oContact->Storage);
-                }
-
-                $StorageTextId = false;
-                if ($aAddressBooks[$oContact->Storage]) {
-                    $StorageTextId = array_search($aAddressBooks[$oContact->Storage]['uri'], $aAddressbooksMap);
-                }
-                $oContact->AddressBookId = (int) $oContact->Storage;
-                $oContact->Storage = $StorageTextId ? $StorageTextId : StorageType::AddressBook . '-' . $oContact->Storage;
-
-                $oContact->GroupUUIDs = $aGroupUUIDs;
-
-                //TODO: remove this after refactoring API and client
-                $oContact->UUID = (string)$oContact->UUID;
-                $oContact->EntityId = $oContact->Id;
-                $oContact->IdUser = $oContact->UserId ? $oContact->UserId : $UserId; // TODO: workaround for mobile APP
-                $oContact->IdTenant = $oUser->IdTenant;
-                $oContact->UseFriendlyName = false;
+                $mResult[] = $oContact;
             }
-        } else {
-            throw new ApiException(Notifications::InvalidInputParameter);
         }
 
-        return $aResult;
+        return $mResult;
     }
 
     /**
@@ -1665,7 +1629,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         // build a query to obtain the card_uri and card_id with checking access to the contact
         $cardsUris = $query->where(function ($q) use ($aArgs, $query) {
             $aArgs['Query'] = $query;
-            $this->broadcastEvent('Contacts::ContactQueryBuilder', $aArgs, $q);
+            $this->broadcastEvent(self::GetName() . '::ContactQueryBuilder', $aArgs, $q);
         })->pluck('card_uri', 'card_id')->toArray();
 
         $aArgsTo = [
