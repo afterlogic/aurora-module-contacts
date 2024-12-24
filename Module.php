@@ -2174,15 +2174,15 @@ class Module extends \Aurora\System\Module\AbstractModule
      * @apiParam {string=AddContactsToGroup} Method Method name
      * @apiParam {string} Parameters JSON.stringified object <br>
      * {<br>
-     * &emsp; **GroupUUID** *string* UUID of group.<br>
-     * &emsp; **ContactUUIDs** *array* Array of strings - UUIDs of contacts to add to group.<br>
+     * &emsp; **GroupUUID** *string* Id of the group.<br>
+     * &emsp; **ContactUUIDs** *array* Array of strings - IDs of contacts to add to group.<br>
      * }
      *
      * @apiParamExample {json} Request-Example:
      * {
      *	Module: 'Contacts',
      *	Method: 'AddContactsToGroup',
-     *	Parameters: '{ GroupUUID: "group_uuid", ContactUUIDs: ["contact1_uuid", "contact2_uuid"] }'
+     *	Parameters: '{ GroupUUID: "group_id", ContactUUIDs: ["contact1_id", "contact2_id"] }'
      * }
      *
      * @apiSuccess {object[]} Result Array of response objects.
@@ -2209,26 +2209,34 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     /**
      * Adds specified contacts to specified group.
-     * @param string $GroupUUID UUID of group.
-     * @param array $ContactUUIDs Array of strings - UUIDs of contacts to add to group.
+     *
+     * @param string $GroupUUID ID of group.
+     * @param array $ContactUUIDs Array of strings - IDs of contacts to add to group.
+     *
      * @return boolean
      */
     public function AddContactsToGroup($UserId, $GroupUUID, $ContactUUIDs)
     {
-        $mResult = false;
-        Api::CheckAccess($UserId);
-
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
-        if (is_array($ContactUUIDs) && !empty($ContactUUIDs)) {
+        $mResult = false;
 
-            $oGroup = self::Decorator()->GetGroup($UserId, $GroupUUID);
+        Api::CheckAccess($UserId);
+
+        // currently method accepts Ids (not UUIDs), argument names are kept for compatibility
+        $GroupId = $GroupUUID;
+        $ContactIds = $ContactUUIDs;
+
+        if (is_array($ContactIds) && !empty($ContactIds)) {
+
+            $oGroup = self::Decorator()->GetGroup($UserId, $GroupId);
             if ($oGroup) {
-                $aContacts = self::Decorator()->GetContactsByUids($UserId, $ContactUUIDs);
-                $newContactUUIDs = array_map(function ($item) {
-                    return $item->UUID;
+                //getting contacts by ids is needed here just for making sure that they exist
+                $aContacts = self::Decorator()->GetContactsByUids($UserId, $ContactIds);
+                $newContactIds = array_map(function ($item) {
+                    return $item->Id;
                 }, $aContacts);
-                $oGroup->Contacts = array_merge($oGroup->Contacts, $newContactUUIDs);
+                $oGroup->Contacts = array_merge($oGroup->Contacts, $newContactIds);
 
                 $mResult = $this->UpdateGroupObject($UserId, $oGroup);
             }
@@ -2253,15 +2261,15 @@ class Module extends \Aurora\System\Module\AbstractModule
      * @apiParam {string=RemoveContactsFromGroup} Method Method name
      * @apiParam {string} Parameters JSON.stringified object <br>
      * {<br>
-     * &emsp; **GroupUUID** *string* UUID of group.<br>
-     * &emsp; **ContactUUIDs** *array* Array of strings - UUIDs of contacts to remove from group.<br>
+     * &emsp; **GroupUUID** *string* ID of group.<br>
+     * &emsp; **ContactUUIDs** *array* Array of strings - IDs of contacts to remove from group.<br>
      * }
      *
      * @apiParamExample {json} Request-Example:
      * {
      *	Module: 'Contacts',
      *	Method: 'RemoveContactsFromGroup',
-     *	Parameters: '{ GroupUUID: "group_uuid", ContactUUIDs: ["contact1_uuid", "contact2_uuid"] }'
+     *	Parameters: '{ GroupUUID: "group_id", ContactUUIDs: ["contact1_id", "contact2_id"] }'
      * }
      *
      * @apiSuccess {object[]} Result Array of response objects.
@@ -2288,25 +2296,28 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     /**
      * Removes specified contacts from specified group.
-     * @param string $GroupUUID UUID of group.
-     * @param array $ContactUUIDs Array of strings - UUIDs of contacts to remove from group.
+     * @param string $GroupUUID ID of group.
+     * @param array $ContactUUIDs Array of strings - IDs of contacts to remove from group.
      * @return boolean
      */
     public function RemoveContactsFromGroup($UserId, $GroupUUID, $ContactUUIDs)
     {
-        $mResult = false;
-        Api::CheckAccess($UserId);
-
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
-        if (is_array($ContactUUIDs) && !empty($ContactUUIDs)) {
-            $oGroup = self::Decorator()->GetGroup($UserId, $GroupUUID);
+        Api::CheckAccess($UserId);
+        $mResult = false;
+
+        // currently method accepts Ids (not UUIDs), argument names are kept for compatibility
+        $GroupId = $GroupUUID;
+        $ContactIds = $ContactUUIDs;
+
+        if (is_array($ContactIds) && !empty($ContactIds)) {
+            $oGroup = self::Decorator()->GetGroup($UserId, $GroupId);
             if ($oGroup) {
-                $aContacts = self::Decorator()->GetContactsByUids($UserId, $ContactUUIDs);
-                $newContactUUIDs = array_map(function ($item) {
-                    return $item->UUID;
-                }, $aContacts);
-                $oGroup->Contacts = array_diff($oGroup->Contacts, $newContactUUIDs);
+                $ContactIds = array_map(function ($id) {
+                    return (int) $id;
+                }, $ContactIds);
+                $oGroup->Contacts = array_diff($oGroup->Contacts, $ContactIds);
                 $mResult = $this->UpdateGroupObject($UserId, $oGroup);
             }
         }
