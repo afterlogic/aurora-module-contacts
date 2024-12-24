@@ -249,50 +249,26 @@ class Contact
 
     public function setExtendedProp($key, $value)
     {
-        $card = ContactCard::select('Id', 'Properties')->where('CardId', $this->Id)->first();
-        if ($card) {
-            $properties = $card->Properties;
-            $properties[$key] = $value;
-            $card->Properties = $properties;
-
-            $card->save();
-        }
+        $this->Properties[$key] = $value;
     }
 
     public function unsetExtendedProp($key)
     {
-        $card = ContactCard::where('CardId', $this->Id)->first();
-        if ($card) {
-            $properties = $card->Properties;
-            if (isset($properties[$key])) {
-                unset($properties[$key]);
-            }
-            $card->Properties = $properties;
-
-            $card->save();
+        if (isset($this->Properties[$key])) {
+            unset($this->Properties[$key]);
         }
     }
 
     public function setExtendedProps($props)
     {
-        $card = ContactCard::where('CardId', $this->Id)->first();
-        if ($card) {
-            $properties = is_array($card->Properties) ? $card->Properties : [];
-            $card->Properties = array_merge($properties, $props);
-
-            $card->save();
-        }
+        $this->Properties = array_merge($this->Properties, $props);
     }
 
     public function getExtendedProp($key)
     {
         $result = null;
-        $card = ContactCard::select('Properties')->where('CardId', $this->Id)->first();
-
-        if ($card) {
-            if (isset($card->Properties[$key])) {
-                $result =  $card->Properties[$key];
-            }
+        if (isset($this->Properties[$key])) {
+            $result = $this->Properties[$key];
         }
 
         return $result;
@@ -300,13 +276,34 @@ class Contact
 
     public function getExtendedProps()
     {
-        $result = [];
-        $card = ContactCard::select('Properties')->where('CardId', $this->Id)->first();
+        return $this->Properties;
+    }
 
-        if ($card) {
-            if (isset($card->Properties)) {
-                $result =  $card->Properties;
+    /**
+     * Dynamically retrieve attributes on the model.
+     *
+     * @param  string  $key
+     * @return mixed
+     */
+    public function __get($key)
+    {
+        $value = null;
+        if (property_exists($this, $key)) {
+            $value = $this->{$key};
+        } elseif ($key !== 'Properties') {
+            if (isset($this->Properties[$key])) {
+                $value = $this->Properties[$key];
             }
+        }
+        return $value;
+    }
+
+    public function saveExtendedProps() {
+        $result = false;
+
+        $contactCard = ContactCard::where('CardId', $this->Id)->first();
+        if ($contactCard) {
+            $result = !!$contactCard->update(['Properties' => $this->Properties]);
         }
 
         return $result;

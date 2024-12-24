@@ -1269,8 +1269,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 
                 $oContact->Storage = $key !== false ? $key : StorageType::AddressBook;
                 $oContact->AddressBookId = (int) $row->addressbook_id;
-                if ($oContact->Properties) {
-                    $oContact->Properties = \json_decode($row->Properties);
+                if ($row->Properties) {
+                    $oContact->Properties = \json_decode($row->Properties, true);
                 }
                 $groups = self::Decorator()->GetGroups($UserId);
                 foreach ($groups as $group) {
