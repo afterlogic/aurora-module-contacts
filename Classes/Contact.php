@@ -153,7 +153,10 @@ class Contact
             }
         }
 
-        // TODO: this is propersty is used in mobile APP to calculate ageScore
+        // TODO: mobile app relies on this property and uses it to identify the contact object
+        $aRes['UUID'] = (string)$this->Id;
+
+        // TODO: this is property is used in mobile APP to calculate ageScore
         $aRes['DateModified'] = '';
 
         // TODO: this is needded for mobile APP that reads these properties
@@ -298,7 +301,8 @@ class Contact
         return $value;
     }
 
-    public function saveExtendedProps() {
+    public function saveExtendedProps()
+    {
         $result = false;
 
         $contactCard = ContactCard::where('CardId', $this->Id)->first();
