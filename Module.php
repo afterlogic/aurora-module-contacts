@@ -1250,7 +1250,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $rows = $query->get();
             foreach($rows as $row) {
                 if (!self::Decorator()->CheckAccessToAddressBook($oUser, $row->addressbook_id, Access::Read)) {
-                    throw new ApiException(Notifications::AccessDenied, null, 'AccessDenied');
+                    continue;
                 }
 
                 $oContact = new Contact();
