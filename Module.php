@@ -963,7 +963,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
                     if (count($contactsUuids) > 0) {
                         foreach (self::Decorator()->GetContactsByUids($UserId, $contactsUuids) as $groupContact) {
-                            $groupContacts[$groupContact->UUID] = $groupContact;
+                            $groupContacts[$groupContact->Id] = $groupContact;
                         }
 
                         $aGroupUsersList = [];
@@ -979,16 +979,13 @@ class Module extends \Aurora\System\Module\AbstractModule
                                 }
 
                                 $aGroupUsersList[] = [
+                                    'Id' => $group->UUID,
                                     'UUID' => (string)$group->UUID,
                                     'IdUser' => $group->IdUser,
-                                    'FullName' => $group->Name,
-                                    'FirstName' => '',
-                                    'LastName' => '',
-                                    'ViewEmail' => implode(', ', $aGroupContactsEmails),
-                                    'Storage' => '',
-                                    'Frequency' => 0,
-                                    'DateModified' => '',
+                                    'Name' => $group->Name,
+                                    'Emails' => implode(', ', $aGroupContactsEmails),
                                     'IsGroup' => true,
+                                    'Storage' => '',
                                 ];
                             }
                         }
