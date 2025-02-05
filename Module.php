@@ -1023,7 +1023,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $aResult['ContactCount'] = count($aResultList);
 
         if ($WithUserGroups) {
-            $oUser = CoreModule::Decorator()->GetUserWithoutRoleCheck($UserId);
+            $oUser = \Aurora\Api::getUserById($UserId);
             if ($oUser) {
                 $aGroups = CoreModule::Decorator()->GetGroups($oUser->IdTenant, $Search);
                 foreach ($aGroups['Items'] as $aGroup) {
@@ -1409,7 +1409,7 @@ class Module extends \Aurora\System\Module\AbstractModule
     {
         Api::CheckAccess($UserId);
 
-        $oUser = CoreModule::getInstance()->GetUserWithoutRoleCheck($UserId);
+        $oUser = \Aurora\Api::getUserById($UserId);
 
         $mResult = false;
 
@@ -2383,7 +2383,7 @@ class Module extends \Aurora\System\Module\AbstractModule
     {
         Api::CheckAccess($UserId);
 
-        $oUser = CoreModule::getInstance()->GetUserWithoutRoleCheck($UserId);
+        $oUser = \Aurora\Api::getUserById($UserId);
 
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
@@ -2441,7 +2441,7 @@ class Module extends \Aurora\System\Module\AbstractModule
     {
         Api::CheckAccess($UserId);
 
-        $oUser = CoreModule::getInstance()->GetUserWithoutRoleCheck($UserId);
+        $oUser = \Aurora\Api::getUserById($UserId);
 
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 

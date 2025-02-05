@@ -230,7 +230,7 @@ class Contact
      */
     public function InitFromVCardStr($iUserId, $sData, $sUid = '')
     {
-        $oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserWithoutRoleCheck($iUserId);
+        $oUser = \Aurora\Api::getUserById($iUserId);
         if ($oUser instanceof \Aurora\Modules\Core\Models\User) {
             $this->IdUser = $oUser->Id;
             $this->IdTenant = $oUser->IdTenant;
