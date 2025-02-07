@@ -334,7 +334,12 @@ class Module extends \Aurora\System\Module\AbstractModule
             ->orderBy($sSortFieldSecond, $sSortOrder)
         ;
 
-        return $oFilters->get();
+        $aArgs = [];
+        $mResult = $oFilters->get();
+
+        $this->broadcastEvent('getContactsCollection', $aArgs, $mResult);
+
+        return $mResult;
     }
 
     /**
