@@ -874,6 +874,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $AddressBookId, $Filters, $Suggestions);
 
             if (!empty($Search)) {
+                $Search = str_replace(['%', '_'], ['\%', '\_'], $Search);
                 $query = $query->where(function ($query) use ($Search) {
                     $query->where('FullName', 'LIKE', "%$Search%")
                     ->orWhere('PersonalEmail', 'LIKE', "%$Search%")
