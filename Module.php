@@ -1239,7 +1239,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 ->select('adav_cards.id as CardId', 'adav_cards.uri as card_uri', 'adav_addressbooks.id as addressbook_id', 'contacts_cards.Properties', 'carddata', 'etag', 'core_users.Id as UserId')
                 ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
                 ->join('adav_addressbooks', 'adav_cards.addressbookid', '=', 'adav_addressbooks.id')
-                ->leftJoin('core_users', 'adav_addressbooks.principaluri', '=', Capsule::connection()->raw("CONCAT('principals/', " . Capsule::connection()->getTablePrefix() . "core_users.PublicId)"));
+                ->leftJoin('core_users', 'adav_addressbooks.principal_email', '=', "core_users.PublicId");
 
             $aArgs = [
                 'UUID' => $Uids,
@@ -2828,7 +2828,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             $query->where('Frequency', '>=', 0);
         }
 
-        $query->leftJoin('core_users', 'adav_addressbooks.principaluri', '=', Capsule::connection()->raw("CONCAT('principals/', " . Capsule::connection()->getTablePrefix() . "core_users.PublicId)"));
+        $query->leftJoin('core_users', 'adav_addressbooks.principal_email', '=', "core_users.PublicId");
 
         return $query;
     }
