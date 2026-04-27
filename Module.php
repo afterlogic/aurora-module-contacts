@@ -2783,7 +2783,7 @@ class Module extends \Aurora\System\Module\AbstractModule
     protected function getGetContactsQueryBuilder($UserId, $Storage = '', $AddressBookId = null, Builder $Filters = null, $Suggestions = false, $withGroups = false)
     {
         if ($Filters instanceof Builder) {
-            $query = & $Filters;
+            $query = &$Filters;
         } else {
             $query = ContactCard::query();
         }
