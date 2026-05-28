@@ -1304,7 +1304,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             'AddressBookId' => 0
         ];
 
-        if ($this->populateContactArguments($aArgs)) {
+        if ($this->populateContactArguments($aArgs) || $Storage == StorageType::All) {
             if ((int) $aArgs['AddressBookId'] > 0) {
                 $addressbook = Backend::Carddav()->getAddressBookById($aArgs['AddressBookId']);
 
