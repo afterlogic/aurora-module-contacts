@@ -2086,6 +2086,10 @@ class Module extends \Aurora\System\Module\AbstractModule
         $oGroup = self::Decorator()->GetGroup($UserId, $Group['UUID']);
         if ($oGroup) {
             $oGroup->populate($Group);
+
+            if (isset($Group['Contacts']) && is_array($Group['Contacts'])) {
+                $oGroup->Contacts = $Group['Contacts'];
+            }
             $mResult = $this->UpdateGroupObject($UserId, $oGroup);
         }
 
