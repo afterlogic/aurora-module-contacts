@@ -209,6 +209,22 @@ class Formatter
     }
 
     /**
+     * Summary of sanitizeForCsvFormula
+     * @param string $value
+     * @return string
+     */
+    protected function sanitizeForCsvFormula(string $value): string
+    {
+        if ($value !== '' &&
+            preg_match('/^\s*([=+\-@]|\t|\r|\n)/u', $value))
+        {
+            return "'" . $value;
+        }
+
+        return $value;
+    }
+
+    /**
      * @param string $sValue
      * @param bool $bAddQuotation Default value is **false**.
      *
@@ -216,9 +232,14 @@ class Formatter
      */
     protected function escapeValue($sValue, $bAddQuotation = false)
     {
-        $sValue = $sValue !== null ? $sValue : '';
+        $sValue = (string)($sValue ?? '');
+
+        $sValue = $this->sanitizeForCsvFormula($sValue);
+
         $sValue = str_replace('"', '""', $sValue);
-        return $bAddQuotation ?
-            (empty($sValue) ? '' : '"' . $sValue . '"') : $sValue;
+
+        return $bAddQuotation
+            ? '"' . $sValue . '"'
+            : $sValue;
     }
 }
