@@ -354,6 +354,20 @@ class Module extends \Aurora\System\Module\AbstractModule
             $aAddressBooks[$oAddressBook['id']] = $oAddressBook;
         }
 
+        $oFilters = Capsule::connection()->table('adav_addressbooks');
+        $missingIds = [];
+        $aContactsCollection->each(function ($contact) use (&$missingIds, $aAddressBooks) {
+            if (!isset($aAddressBooks[$contact->AddressBookId])) {
+                $missingIds[(int) $contact->AddressBookId] = true;
+            }
+        });
+        if (!empty($missingIds)) {
+            $rows = $oFilters->select('id', 'uri')->whereIn('id', array_keys($missingIds))->get();
+            foreach ($rows as $row) {
+                $aAddressBooks[$row->id] = ['id' => $row->id, 'uri' => $row->uri];
+            }
+        }
+
         $aContactsCollection->each(function (&$contact) use ($aAddressBooks, $aAddressbooksMap) {
             $contact->UUID = (string) $contact->UUID;
             if (!isset($aAddressBooks[$contact->AddressBookId])) {
@@ -2832,7 +2846,8 @@ class Module extends \Aurora\System\Module\AbstractModule
             $query->where('Frequency', '>=', 0);
         }
 
-        $query->leftJoin('core_users', 'adav_addressbooks.principal_email', '=', "core_users.PublicId");
+        $query->join('adav_addressbooks', 'adav_addressbooks.id', '=', 'adav_cards.addressbookid')
+            ->leftJoin('core_users', 'adav_addressbooks.principal_email', '=', "core_users.PublicId");
 
         return $query;
     }
