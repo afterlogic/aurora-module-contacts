@@ -328,6 +328,8 @@ class Module extends \Aurora\System\Module\AbstractModule
             ->orderBy($sSortFieldSecond, $sSortOrder)
         ;
 
+        $oFilters->addSelect(Capsule::connection()->raw('COUNT(*) OVER() as TotalCount'));
+
         $aArgs = [];
         $mResult = $oFilters->get();
 
@@ -354,16 +356,16 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $aContactsCollection->each(function (&$contact) use ($aAddressBooks, $aAddressbooksMap) {
             $contact->UUID = (string) $contact->UUID;
-            if (!isset($aAddressBooks[$contact->Storage])) {
-                $aAddressBooks[$contact->Storage] = Backend::Carddav()->getAddressBookById($contact->Storage);
+            if (!isset($aAddressBooks[$contact->AddressBookId])) {
+                $aAddressBooks[$contact->AddressBookId] = Backend::Carddav()->getAddressBookById($contact->AddressBookId);
             }
             $StorageTextId = false;
-            if ($aAddressBooks[$contact->Storage]) {
-                $StorageTextId = array_search($aAddressBooks[$contact->Storage]['uri'], $aAddressbooksMap);
+            if ($aAddressBooks[$contact->AddressBookId]) {
+                $StorageTextId = array_search($aAddressBooks[$contact->AddressBookId]['uri'], $aAddressbooksMap);
             }
 
-            $contact->AddressBookId = (int) $contact->Storage;
-            $contact->Storage = $StorageTextId ? $StorageTextId : (StorageType::AddressBook . '-' . $contact->Storage);
+            $contact->AddressBookId = (int) $contact->AddressBookId;
+            $contact->Storage = $StorageTextId ? $StorageTextId : (StorageType::AddressBook . '-' . $contact->AddressBookId);
         });
     }
 
@@ -889,9 +891,12 @@ class Module extends \Aurora\System\Module\AbstractModule
                 }
             }
 
-            $count = $query->count();
-
             $aContactsCollection = $this->getContactsCollection($SortField, $SortOrder, $Offset, $Limit, $query);
+
+            $count = 0;
+            if ($aContactsCollection->isNotEmpty()) {
+                $count = (int) $aContactsCollection->first()->TotalCount;
+            }
 
             if ($Storage === StorageType::All) {
                 $personalContacsCollection = $aContactsCollection->filter(function ($contact) {
@@ -1316,7 +1321,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             }
             $query = $this->getGetContactsQueryBuilder($UserId, $Storage, $aArgs['AddressBookId'], $Filters);
 
-            $aContacts = $query->get(['UUID', 'ETag', 'Auto', 'Storage']);
+            $aContacts = $query->get(['UUID', 'ETag', 'Auto', 'AddressBookId']);
 
             $storagesMapToAddressbooks = self::Decorator()->GetStoragesMapToAddressbooks();
 
@@ -1332,7 +1337,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                 $aResult['Info'][] = [
                     'UUID' => (string) $oContact->UUID,
                     'ETag' => $oContact->ETag,
-                    'Storage' => $StorageTextId ? $StorageTextId : (string) $oContact->Storage,
+                    'Storage' => $StorageTextId ? $StorageTextId : (string) $oContact->AddressBookId,
                     'IsTeam' => $oContact->IsTeam,
                     'Shared' => $oContact->Shared,
                 ];
@@ -2801,7 +2806,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             'adav_cards.id as Id',
             'adav_cards.id as UUID',
             'adav_cards.uri as Uri',
-            'adav_cards.addressbookid as Storage',
+            'adav_cards.addressbookid as AddressBookId',
             'etag as ETag',
             $con->raw('FROM_UNIXTIME(lastmodified) as DateModified'),
             'contacts_cards.PrimaryEmail',

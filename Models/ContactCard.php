@@ -77,12 +77,17 @@ class ContactCard extends Model
     protected $appends = [
         'UUID',
         'AgeScore',
+        'AddressBookId',
         'UserId',
         'Storage',
         "DateModified",
         "ETag",
         'ViewEmail',
         'Uri',
+    ];
+
+    protected $hidden = [
+        'TotalCount',
     ];
 
     public function getUUIDAttribute()
@@ -119,9 +124,14 @@ class ContactCard extends Model
         return $this->attributes['UserId'];
     }
 
+    public function getAddressBookIdAttribute()
+    {
+        return $this->attributes['AddressBookId'];
+    }
+
     public function getStorageAttribute()
     {
-        return $this->attributes['Storage'];
+        return $this->attributes['Storage'] ?? null;
     }
 
     public function getDateModifiedAttribute()
