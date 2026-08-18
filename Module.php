@@ -299,10 +299,12 @@ class Module extends \Aurora\System\Module\AbstractModule
                 $sSortField = 'ViewEmail';
                 $sSortFieldSecond = 'FullName';
                 break;
-            case SortField::Frequency:
-                $sSortField = 'AgeScore';
-                // $oFilters->select(Capsule::connection()->raw('*, (Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, DateModified)/30)) as AgeScore'));
-                break;
+        case SortField::Frequency:
+            $sSortField = 'AgeScore';
+            $oFilters->addSelect(Capsule::connection()->raw(
+                '(Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, FROM_UNIXTIME(lastmodified))/30)) as AgeScore'
+            ));
+            break;
             case SortField::FirstName:
                 $sSortField = 'FirstName';
                 break;
@@ -2812,7 +2814,6 @@ class Module extends \Aurora\System\Module\AbstractModule
             'contacts_cards.LastName',
             'contacts_cards.Frequency',
             'contacts_cards.Properties',
-            $con->raw('(Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, FROM_UNIXTIME(lastmodified))/30)) as AgeScore'),
             'core_users.Id as UserId'
         )
             ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')

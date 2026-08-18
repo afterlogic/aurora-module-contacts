@@ -92,7 +92,26 @@ class ContactCard extends Model
 
     public function getAgeScoreAttribute()
     {
-        return round($this->attributes['AgeScore']);
+        if (isset($this->attributes['AgeScore'])) {
+            return round($this->attributes['AgeScore']);
+        }
+
+        $frequency = $this->attributes['Frequency'] ?? 0;
+        $dateModified = $this->attributes['DateModified'] ?? null;
+
+        if ($frequency <= 0 || !$dateModified) {
+            return 0;
+        }
+
+        $lastModifiedTs = \strtotime($dateModified);
+        if ($lastModifiedTs === false) {
+            return 0;
+        }
+
+        $daysDiff = (int) floor((\strtotime('tomorrow') - $lastModifiedTs) / 86400);
+        $monthsDiff = $daysDiff > 0 ? (int) ceil($daysDiff / 30) : 1;
+
+        return round($frequency / $monthsDiff);
     }
 
     public function getUserIdAttribute()
