@@ -216,8 +216,7 @@ class Formatter
     protected function sanitizeForCsvFormula(string $value): string
     {
         if ($value !== '' &&
-            preg_match('/^\s*([=+\-@]|\t|\r|\n)/u', $value))
-        {
+            preg_match('/^\s*([=+\-@]|\t|\r|\n)/u', $value)) {
             return "'" . $value;
         }
 
@@ -225,7 +224,7 @@ class Formatter
     }
 
     /**
-     * @param string $sValue
+     * @param string|null $sValue
      * @param bool $bAddQuotation Default value is **false**.
      *
      * @return string

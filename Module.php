@@ -1605,7 +1605,7 @@ class Module extends \Aurora\System\Module\AbstractModule
     public function MoveContactsToStorage($UserId, $FromStorage, $ToStorage, $UUIDs)
     {
         Api::CheckAccess($UserId);
-        
+
         $result = false;
 
         if ($ToStorage === StorageType::Team) { // skip moving to team storage
