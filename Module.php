@@ -865,7 +865,6 @@ class Module extends \Aurora\System\Module\AbstractModule
      */
     public function GetContacts($UserId, $Storage = '', $Offset = 0, $Limit = 20, $SortField = SortField::Name, $SortOrder = SortOrder::ASC, $Search = '', $GroupUUID = '', Builder $Filters = null, $WithGroups = false, $WithoutTeamContactsDuplicates = false, $Suggestions = false, $AddressBookId = null)
     {
-        // $Storage is used by subscribers to prepare filters.
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
         Api::CheckAccess($UserId);
@@ -1052,7 +1051,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     public function GetContactSuggestions($UserId, $Storage, $Limit = 20, $SortField = SortField::Name, $SortOrder = SortOrder::ASC, $Search = '', $WithGroups = false, $WithoutTeamContactsDuplicates = false, $WithUserGroups = false)
     {
-        // $Storage is used by subscribers to prepare filters.
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
         Api::CheckAccess($UserId);
@@ -1084,9 +1082,6 @@ class Module extends \Aurora\System\Module\AbstractModule
         return $aResult;
     }
 
-    /**
-     * This method used as trigger for subscibers. Check these modules: PersonalContacts, SharedContacts, TeamContacts
-     */
     public function CheckAccessToObject($User, $Contact, $Access = null)
     {
         return true;
