@@ -504,7 +504,7 @@ class Module extends \Aurora\System\Module\AbstractModule
      * @param array $ContactUUIDs List of UUIDs of contacts that should be exported.
      * @param bool $AddressBookId
      */
-    public function Export($UserId, $Storage, $Format, Builder $Filters = null, $GroupUUID = '', $ContactUUIDs = [], $AddressBookId = null)
+    public function Export($UserId, $Storage, $Format, ?Builder $Filters = null, $GroupUUID = '', $ContactUUIDs = [], $AddressBookId = null)
     {
         Api::CheckAccess($UserId);
 
@@ -863,7 +863,7 @@ class Module extends \Aurora\System\Module\AbstractModule
      * @param bool $AddressBookId
      * @return array
      */
-    public function GetContacts($UserId, $Storage = '', $Offset = 0, $Limit = 20, $SortField = SortField::Name, $SortOrder = SortOrder::ASC, $Search = '', $GroupUUID = '', Builder $Filters = null, $WithGroups = false, $WithoutTeamContactsDuplicates = false, $Suggestions = false, $AddressBookId = null)
+    public function GetContacts($UserId, $Storage = '', $Offset = 0, $Limit = 20, $SortField = SortField::Name, $SortOrder = SortOrder::ASC, $Search = '', $GroupUUID = '', ?Builder $Filters = null, $WithGroups = false, $WithoutTeamContactsDuplicates = false, $Suggestions = false, $AddressBookId = null)
     {
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
@@ -1366,7 +1366,7 @@ class Module extends \Aurora\System\Module\AbstractModule
      * @param Builder $Filters
      * @return array
      */
-    public function GetContactsInfo($Storage, $UserId = null, Builder $Filters = null)
+    public function GetContactsInfo($Storage, $UserId = null, ?Builder $Filters = null)
     {
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::NormalUser);
 
@@ -2865,7 +2865,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         return [];
     }
 
-    protected function getGetContactsQueryBuilder($UserId, $Storage = '', $AddressBookId = null, Builder $Filters = null, $Suggestions = false, $withGroups = false)
+    protected function getGetContactsQueryBuilder($UserId, $Storage = '', $AddressBookId = null, ?Builder $Filters = null, $Suggestions = false, $withGroups = false)
     {
         if ($Filters instanceof Builder) {
             $query = &$Filters;
