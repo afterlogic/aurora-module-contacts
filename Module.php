@@ -1559,14 +1559,9 @@ class Module extends \Aurora\System\Module\AbstractModule
                 ['ViewEmail', '=', $sViewEmail]
             ]);
 
-            $oAutocreatedContacts = $this->getContactsCollection(
-                SortField::Name,
-                SortOrder::ASC,
-                0,
-                1,
-                $oQuery
-            );
-            $oContact = $oAutocreatedContacts->first();
+            // getContactsCollection() can't be used here: it adds a TotalCount select, and
+            // the query has no explicit select, so only TotalCount would be fetched
+            $oContact = $oQuery->first();
             if ($oContact instanceof ContactCard) {
                 $card_uri = Capsule::connection()->table('adav_cards')
                     ->where('id', $oContact->CardId)
