@@ -121,7 +121,8 @@ class ContactCard extends Model
 
     public function getUserIdAttribute()
     {
-        return $this->attributes['UserId'];
+        // COALESCE() in the contacts query returns DECIMAL, which PDO fetches as a string
+        return isset($this->attributes['UserId']) ? (int) $this->attributes['UserId'] : null;
     }
 
     public function getAddressBookIdAttribute()
