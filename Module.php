@@ -1567,7 +1567,12 @@ class Module extends \Aurora\System\Module\AbstractModule
                     ->where('id', $oContact->CardId)
                     ->pluck('uri')->first();
 
-                Backend::Carddav()->deleteCard($oContact->AddressBookId, $card_uri);
+                if ($card_uri !== null) {
+                    Backend::Carddav()->deleteCard($oContact->AddressBookId, $card_uri);
+                } else {
+                    // The card itself is already gone, only its record in contacts_cards is left
+                    ContactCard::where('AddressBookId', $oContact->AddressBookId)->where('CardId', $oContact->CardId)->delete();
+                }
                 $iFrequency = $oContact->Frequency;
             }
         }
