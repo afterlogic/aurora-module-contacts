@@ -291,12 +291,12 @@ class Module extends \Aurora\System\Module\AbstractModule
                 $sSortField = 'ViewEmail';
                 $sSortFieldSecond = 'FullName';
                 break;
-        case SortField::Frequency:
-            $sSortField = 'AgeScore';
-            $oFilters->addSelect(Capsule::connection()->raw(
-                '(Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, FROM_UNIXTIME(lastmodified))/30)) as AgeScore'
-            ));
-            break;
+            case SortField::Frequency:
+                $sSortField = 'AgeScore';
+                $oFilters->addSelect(Capsule::connection()->raw(
+                    '(Frequency/CEIL(DATEDIFF(CURDATE() + INTERVAL 1 DAY, FROM_UNIXTIME(lastmodified))/30)) as AgeScore'
+                ));
+                break;
             case SortField::FirstName:
                 $sSortField = 'FirstName';
                 break;
@@ -911,7 +911,9 @@ class Module extends \Aurora\System\Module\AbstractModule
                 if ($WithoutTeamContactsDuplicates) {
                     $personalEmails = [];
                     $personalContacsCollection->each(function ($c) use (&$personalEmails) {
-                        $personalEmails[$c->ViewEmail] = true;
+                        if (!$c->Auto) {
+                            $personalEmails[$c->ViewEmail] = true;
+                        }
                     });
 
                     $emailEntries = [];
@@ -929,8 +931,12 @@ class Module extends \Aurora\System\Module\AbstractModule
                         $autoEntry = null;
 
                         foreach ($entries as $entry) {
-                            if ($entry['contact']->IsTeam && !$teamEntry) $teamEntry = $entry;
-                            if ($entry['contact']->Auto && !$entry['contact']->IsTeam && !$autoEntry) $autoEntry = $entry;
+                            if ($entry['contact']->IsTeam && !$teamEntry) {
+                                $teamEntry = $entry;
+                            }
+                            if ($entry['contact']->Auto && !$entry['contact']->IsTeam && !$autoEntry) {
+                                $autoEntry = $entry;
+                            }
                         }
 
                         if ($teamEntry && isset($personalEmails[$email])) {
