@@ -635,7 +635,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         if ($this->populateContactArguments($aArgs)) {
             $query = Capsule::connection()->table('contacts_cards')
-                ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
+                ->join('adav_cards', function ($join) {
+                    $this->joinCards($join);
+                })
                 ->select('adav_cards.id as card_id', 'carddata');
 
             $query->where(function ($whereQuery) use ($UserId, $aArgs, $query) {
@@ -2893,6 +2895,19 @@ class Module extends \Aurora\System\Module\AbstractModule
         return [];
     }
 
+    /**
+     * Contacts are filtered by contacts_cards.AddressBookId. A contact with an outdated value must not be
+     * shown to the users of another address book, so the value is compared with the one of the card.
+     *
+     * @param \Illuminate\Database\Query\JoinClause $join
+     * @return void
+     */
+    private function joinCards($join)
+    {
+        $join->on('contacts_cards.CardId', '=', 'adav_cards.id')
+            ->on('contacts_cards.AddressBookId', '=', 'adav_cards.addressbookid');
+    }
+
     protected function getGetContactsQueryBuilder($UserId, $Storage = '', $AddressBookId = null, ?Builder $Filters = null, $Suggestions = false, $withGroups = false)
     {
         if ($Filters instanceof Builder) {
@@ -2921,7 +2936,9 @@ class Module extends \Aurora\System\Module\AbstractModule
             'contacts_cards.Properties',
             $con->raw('COALESCE(' . $con->getTablePrefix() . 'core_users.Id, ' . (int) $UserId . ') as UserId')
         )
-            ->join('adav_cards', 'contacts_cards.CardId', '=', 'adav_cards.id')
+            ->join('adav_cards', function ($join) {
+                $this->joinCards($join);
+            })
             ->join('adav_addressbooks', 'adav_addressbooks.id', '=', 'adav_cards.addressbookid')
             ->leftJoin('core_users', 'adav_addressbooks.principal_email', '=', "core_users.PublicId")
             ->where(function ($wherQuery) use ($UserId, $Storage, $AddressBookId, $query, $Suggestions) {
