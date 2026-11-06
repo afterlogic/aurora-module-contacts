@@ -281,7 +281,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         return array_merge($priority_books, $non_priority_books);
     }
 
-    protected function getContactsCollection($iSortField = SortField::Name, $iSortOrder = SortOrder::ASC, $iOffset = 0, $iLimit = 20, $oFilters = null)
+    protected function getContactsCollection($iSortField = SortField::Name, $iSortOrder = SortOrder::ASC, $iOffset = 0, $iLimit = 20, $oFilters = null, $bWithTotalCount = true)
     {
         $sSortField = 'FullName';
         $sSortFieldSecond = 'ViewEmail';
@@ -320,7 +320,9 @@ class Module extends \Aurora\System\Module\AbstractModule
             ->orderBy($sSortFieldSecond, $sSortOrder)
         ;
 
-        $oFilters->addSelect(Capsule::connection()->raw('COUNT(*) OVER() as TotalCount'));
+        if ($bWithTotalCount) {
+            $oFilters->addSelect(Capsule::connection()->raw('COUNT(*) OVER() as TotalCount'));
+        }
 
         $aArgs = [];
         $mResult = $oFilters->get();
@@ -896,10 +898,10 @@ class Module extends \Aurora\System\Module\AbstractModule
                 }
             }
 
-            $aContactsCollection = $this->getContactsCollection($SortField, $SortOrder, $Offset, $Limit, $query);
+            $aContactsCollection = $this->getContactsCollection($SortField, $SortOrder, $Offset, $Limit, $query, !$Suggestions);
 
-            $count = 0;
-            if ($aContactsCollection->isNotEmpty()) {
+            $count = $aContactsCollection->count();
+            if (!$Suggestions && $aContactsCollection->isNotEmpty()) {
                 $count = (int) $aContactsCollection->first()->TotalCount;
             }
 
@@ -1065,6 +1067,11 @@ class Module extends \Aurora\System\Module\AbstractModule
             'ContactCount' => 0,
             'List' => []
         );
+
+        // An empty search is allowed: it lists the most used contacts when the field is clicked
+        if (mb_strlen((string) $Search) === 1) {
+            return $aResult;
+        }
 
         $aContacts = $this->Decorator()->GetContacts($UserId, $Storage, 0, $Limit, $SortField, $SortOrder, $Search, '', null, $WithGroups, $WithoutTeamContactsDuplicates, true);
         $aResultList = $aContacts['List'];
@@ -2679,15 +2686,30 @@ class Module extends \Aurora\System\Module\AbstractModule
     {
         $aAddresses = $Args['Emails'];
         $iUserId = $Args['IdUser'];
+
+        $aContacts = [];
+        try {
+            $aMissingEmails = array_keys($aAddresses);
+            foreach ([StorageType::Personal, StorageType::Collected] as $sStorage) {
+                if (count($aMissingEmails) > 0) {
+                    foreach (self::Decorator()->GetContactsByEmails($iUserId, $sStorage, $aMissingEmails) as $oContact) {
+                        $sEmail = strtolower($oContact->ViewEmail);
+                        if (!isset($aContacts[$sEmail])) {
+                            $aContacts[$sEmail] = $oContact;
+                        }
+                    }
+                    $aMissingEmails = array_values(array_filter($aMissingEmails, function ($sEmail) use ($aContacts) {
+                        return !isset($aContacts[strtolower($sEmail)]);
+                    }));
+                }
+            }
+        } catch (\Exception $ex) {
+            return;
+        }
+
         foreach ($aAddresses as $sEmail => $sName) {
             try {
-                $contactsColl = self::Decorator()->GetContactsByEmails($iUserId, StorageType::Personal, [$sEmail]);
-
-                $oContact = $contactsColl->first();
-                if (!$oContact) {
-                    $contactsColl = self::Decorator()->GetContactsByEmails($iUserId, StorageType::Collected, [$sEmail]);
-                    $oContact = $contactsColl->first();
-                }
+                $oContact = $aContacts[strtolower($sEmail)] ?? null;
 
                 if ($oContact) {
                     ContactCard::where('CardId', $oContact->Id)->update(['Frequency' => $oContact->Frequency + 1]);
